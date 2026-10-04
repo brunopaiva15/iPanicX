@@ -1,0 +1,41 @@
+{"app_name":"itunescloudd","timestamp":"2021-10-22 00:14:53.00 +0300","app_version":"","slice_uuid":"ca63a72d-e9ee-3ba2-835b-50ddda3fb008","build_version":"","platform":2,"share_with_app_devs":0,"is_first_party":1,"bug_type":"109","os_version":"iPhone OS 14.8 (18H17)","incident_id":"13917FF0-E1B1-4652-84C2-85516D101DFE","name":"itunescloudd"}
+Incident Identifier: 13917FF0-E1B1-4652-84C2-85516D101DFE
+CrashReporter Key:   CRASHREPORTER_KEY
+Hardware Model:      iPhone11,8
+Process:             itunescloudd [692]
+Path:                /System/Library/PrivateFrameworks/iTunesCloud.framework/Support/itunescloudd
+Identifier:          itunescloudd
+Version:             ???
+Code Type:           ARM-64 (Native)
+Role:                Unspecified
+Parent Process:      launchd [1]
+Coalition:           com.apple.itunescloudd [275]
+
+
+Date/Time:           2021-10-22 00:14:53.0749 +0300
+Launch Time:         2021-10-21 06:37:27.4735 +0300
+OS Version:          iPhone OS 14.8 (18H17)
+Release Type:        User
+Baseband Version:    3.05.00
+Report Version:      104
+
+Exception Type:  EXC_CRASH (SIGABRT)
+Exception Codes: 0x0000000000000000, 0x0000000000000000
+Exception Note:  EXC_CORPSE_NOTIFY
+Triggered by Thread:  7
+
+Application Specific Information:
+abort() called
+
+Thread 0 name:  Dispatch queue: com.apple.main-thread
+Thread 0:
+0   libsystem_kernel.dylib        	0x00000001c3df54fc 0x1c3df1000 + 17660
+1   libsystem_kernel.dylib        	0x00000001c3df4884 0x1c3df1000 + 14468
+2   CoreFoundation                	0x0000000195b58544 0x195ab5000 + 668996
+3   CoreFoundation                	0x0000000195b523e4 0x195ab5000 + 644068
+4   CoreFoundation                	0x0000000195b519f4 0x195ab5000 + 641524
+5   Foundation                    	0x0000000196e41d8c 0x196e39000 + 36236
+6   Foundation                    	0x0000000196e7543c 0x196e39000 + 246844
+7   itunescloudd                  	0x0000000100cad920 0x100be4000 + 825632
+8   libdyld.dylib                 	0x000000019580dcf8 0x19580c000 + 7416
+

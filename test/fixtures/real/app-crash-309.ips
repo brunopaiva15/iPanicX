@@ -1,0 +1,16 @@
+{"app_name":"Runner","timestamp":"2023-10-20 13:10:18.00 +0200","app_version":"1.0.0","slice_uuid":"6bcb0d7b-38c2-3e7e-a6d3-baca75036c4f","build_version":"1","platform":2,"bundleID":"com.example.objectboxCrash","share_with_app_devs":1,"is_first_party":0,"bug_type":"309","os_version":"iPhone OS 17.0.3 (21A360)","roots_installed":0,"name":"Runner","incident_id":"2D21B6AB-C44F-4FD1-8B9A-19E2FBEF1228"}
+{
+  "incident" : "2D21B6AB-C44F-4FD1-8B9A-19E2FBEF1228",
+  "bug_type" : "309",
+  "modelCode" : "iPhone14,5",
+  "exception" : {
+    "codes" : "0x0000000000000001, 0x0000000000000000",
+    "rawCodes" : [
+      1,
+      0
+    ],
+    "type" : "EXC_BAD_ACCESS",
+    "signal" : "SIGSEGV",
+    "subtype" : "KERN_INVALID_ADDRESS at 0x0000000000000000"
+  }
+}

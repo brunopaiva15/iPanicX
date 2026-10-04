@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	iPaniX is distributed outside the Mac App Store (Developer ID + notarization).
+	The App Sandbox is disabled because the app must launch the libimobiledevice
+	tools and talk to usbmuxd (/var/run/usbmuxd), which the sandbox forbids.
+	-->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+	<!-- Debug only: required by the Dart VM (JIT) and the Flutter tooling connection. -->
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	<key>com.apple.security.network.server</key>
+	<true/>
+</dict>
+</plist>

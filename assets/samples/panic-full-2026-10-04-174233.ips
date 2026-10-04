@@ -1,0 +1,25 @@
+{"bug_type":"210","timestamp":"2026-10-04 17:42:33.00 +0200","os_version":"iPhone OS 26.0.1 (23A355)","roots_installed":0,"incident_id":"8C1F2A44-7B1E-4D59-9E7A-3F7C1B2D9A10"}
+{
+  "build" : "iPhone OS 26.0.1 (23A355)",
+  "product" : "iPhone15,2",
+  "socId" : "8120",
+  "socRevision" : "11",
+  "incident" : "8C1F2A44-7B1E-4D59-9E7A-3F7C1B2D9A10",
+  "crashReporterKey" : "c0ffee00deadbeef1234567890abcdef00112233",
+  "kernel" : "Darwin Kernel Version 25.0.0: Mon Sep  1 21:14:52 PDT 2026; root:xnu-12377.2.6~2/RELEASE_ARM64_T8120",
+  "date" : "2026-10-04 17:42:33.18 +0200",
+  "panicString" : "panic(cpu 0 caller 0xfffffff02b3c1d8c): SMC PANIC - ASSERTION FAILED: SMC BSC failure: sensor array 1310720 (TAOP TAOJ) @smc_bsc.c:412\nRTKit: RTKit-2836.0.12 - Client: iphone15smc.RELEASE\n!UUID: 6A1D3C55-2B0E-3F8A-9C41-7E02B5D8F913\nTime: 0x0000000034f2a1b3\n\nFaulting task stack frame:\n  lr: 0xfffffff02b3c1a40  fp: 0xfffffe1b8d4f3f20\n\nDebugger message: panic\nMemory ID: 0x6\nOS release type: User\nOS version: 23A355\nKernel version: Darwin Kernel Version 25.0.0: Mon Sep  1 21:14:52 PDT 2026; root:xnu-12377.2.6~2/RELEASE_ARM64_T8120\nFileset Kernelcache UUID: 1E1A7A1D9F3B4C2D8E7F6A5B4C3D2E1F\nKernel UUID: 4B2E8F1A-6C3D-3E9B-A1F2-0D7C6B5A4E3F\nBoot session UUID: 0F3E2D1C-B4A5-4968-8776-5A4B3C2D1E0F\niBoot version: iBoot-12345.0.4\nsecure boot?: YES\nroots installed: 0\nPaniclog version: 14\nKernel slide: 0x0000000023f80000\nKernel text base: 0xfffffff02af84000\nPanicked task 0xfffffff1a2b3c4d0: 0 threads: pid 0: kernel_task\n\n** Stackshot Succeeded **\n",
+  "panicFlags" : "0x2",
+  "otherString" : "\n** Stackshot Succeeded ** Bytes Traced 182736 (Uncompressed 512304) **\n",
+  "macOSPanicFlags" : "0x0",
+  "memoryStatus" : {
+    "compressorSize" : 4120,
+    "pageSize" : 16384
+  },
+  "processByPid" : {
+    "0" : {
+      "procname" : "kernel_task",
+      "pid" : 0
+    }
+  }
+}

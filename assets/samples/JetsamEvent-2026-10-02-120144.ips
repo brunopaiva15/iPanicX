@@ -1,0 +1,12 @@
+{"bug_type":"298","timestamp":"2026-10-02 12:01:44.00 +0200","os_version":"iPhone OS 26.0.1 (23A355)","incident_id":"9A8B7C6D-5E4F-4A3B-2C1D-0E9F8A7B6C5D"}
+{
+  "crashReporterKey" : "c0ffee00deadbeef1234567890abcdef00112233",
+  "product" : "iPhone15,2",
+  "kernel" : "Darwin Kernel Version 25.0.0",
+  "largestProcess" : "MobileSafari",
+  "genCounter" : 3,
+  "memoryStatus" : {
+    "pageSize" : 16384
+  },
+  "processes" : []
+}

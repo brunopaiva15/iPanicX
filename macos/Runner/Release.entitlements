@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	Distributed outside the Mac App Store (Developer ID + notarization).
+	No sandbox: the app launches the embedded libimobiledevice tools and talks to
+	usbmuxd. No network entitlement is requested: iPaniX works fully offline.
+	-->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+</dict>
+</plist>

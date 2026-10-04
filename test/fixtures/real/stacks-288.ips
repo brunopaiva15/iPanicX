@@ -1,0 +1,9 @@
+{"bug_type":"288","timestamp":"2018-11-26 15:59:47.98 -0600","os_version":"iPhone OS 11.4.1 (15G77)","incident_id":"7DA5B9E6-BB47-4E4F-A93B-988B000706EB"}
+{
+  "build" : "iPhone OS 11.4.1 (15G77)",
+  "product" : "iPhone9,1",
+  "incident" : "7DA5B9E6-BB47-4E4F-A93B-988B000706EB",
+  "kernel" : "Darwin Kernel Version 17.7.0: Mon Jun 11 19:06:26 PDT 2018; root:xnu-4570.70.24~3/RELEASE_ARM64_T8010",
+  "date" : "2018-11-26 15:59:47.97 -0600",
+  "exception" : "0xfaded321"
+}

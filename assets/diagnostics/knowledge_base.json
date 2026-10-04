@@ -1,0 +1,325 @@
+{
+  "version": "0.3.0",
+  "description": "iPaniX V0 knowledge base. A small set of EXAMPLE signatures used to demonstrate the matching engine. It is NOT exhaustive and must be extended and validated against real repair data. Generic rule categories were informed by the open-source projects listed in README (ideas only, no code or data copied).",
+  "rules": [
+    {
+      "id": "smc_bsc_iphone15_2_140000",
+      "device": "iPhone15,2",
+      "panicContains": [
+        "SMC BSC failure"
+      ],
+      "sensorMask": "0x140000",
+      "title": "SMC Sensor Failure",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "high",
+      "summary": "The iPhone is restarting because one or more hardware sensors are not responding correctly.",
+      "technicalReason": "The SMC reported a BSC (sensor bus) failure with sensor mask 0x140000. On iPhone15,2 this mask points to sensors located on the charging port flex and the power button flex.",
+      "suspectedComponents": [
+        "Charging Port Flex",
+        "Power Button Flex"
+      ],
+      "possibleCauses": [
+        "Liquid damage",
+        "Corrosion",
+        "Damaged flex cable",
+        "Damaged FPC connector",
+        "Logic board communication issue"
+      ],
+      "recommendedActions": [
+        "Inspect the charging port flex and the power button flex, and their FPC connectors, before restoring the device.",
+        "Look for corrosion or liquid indicators around the bottom and side flexes.",
+        "Test with known-good flex cables to confirm the faulty part."
+      ],
+      "note": "This diagnosis is based on a known panic signature and should be confirmed by hardware inspection."
+    },
+    {
+      "id": "smc_bsc_generic",
+      "panicContains": [
+        "SMC BSC failure"
+      ],
+      "title": "SMC Sensor Failure",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "medium",
+      "summary": "The device detected a hardware sensor communication failure. The exact component depends on the device model and sensor mask, which are not yet mapped in the knowledge base.",
+      "suspectedComponents": [
+        "Flex cable carrying an SMC sensor (model-specific)"
+      ],
+      "possibleCauses": [
+        "Liquid damage",
+        "Corrosion",
+        "Damaged flex cable",
+        "Damaged FPC connector",
+        "Logic board communication issue"
+      ],
+      "recommendedActions": [
+        "Note the sensor mask and SMC keys shown in Technical details.",
+        "Inspect the flex cables and connectors associated with those sensors before restoring the device."
+      ],
+      "panicContainsAny": [
+        "SMC PANIC",
+        "TAOP",
+        "TAOJ",
+        "TAOC",
+        "OUTBOX1 not ready"
+      ],
+      "minAny": 1
+    },
+    {
+      "id": "thermalmonitord_missing_sensor",
+      "panicContains": [
+        "thermalmonitord"
+      ],
+      "panicContainsAny": [
+        "Missing sensor"
+      ],
+      "title": "Missing Thermal Sensor",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "medium",
+      "summary": "The thermal monitor could not read one or more sensors and the watchdog restarted the device.",
+      "suspectedComponents": [
+        "Component hosting the missing sensor (see Technical details)"
+      ],
+      "possibleCauses": [
+        "Disconnected or damaged flex cable",
+        "Non-genuine or faulty replacement part",
+        "Liquid damage"
+      ],
+      "recommendedActions": [
+        "Identify the part that carries the listed missing sensor(s) for this model.",
+        "Reseat or replace that part, then check whether the panic stops."
+      ]
+    },
+    {
+      "id": "userspace_watchdog_generic",
+      "panicContains": [
+        "userspace watchdog timeout"
+      ],
+      "title": "Userspace Watchdog Timeout",
+      "category": "unknown",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "A system process stopped responding and the watchdog restarted the device. This can be caused by software or by hardware that blocks a system service.",
+      "suspectedComponents": [],
+      "possibleCauses": [
+        "Unresponsive system daemon",
+        "Hardware peripheral not answering",
+        "Corrupted iOS installation"
+      ],
+      "recommendedActions": [
+        "Check which process is named in the panic string.",
+        "If the panic repeats with the same process, update or restore iOS before replacing hardware."
+      ]
+    },
+    {
+      "id": "aop_sensorhub_generic",
+      "panicContains": [
+        "AOP PANIC"
+      ],
+      "panicContainsAny": [
+        "AppleSensorHub",
+        "i2c",
+        "sensor",
+        "OUTBOX"
+      ],
+      "title": "AOP Sensor Panic",
+      "category": "hardware",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "The Always-On Processor (which drives motion and environment sensors) crashed while talking to a sensor.",
+      "suspectedComponents": [
+        "Sensor on a flex cable (model-specific)"
+      ],
+      "possibleCauses": [
+        "Damaged or disconnected sensor flex",
+        "Liquid damage",
+        "Non-genuine replacement part"
+      ],
+      "recommendedActions": [
+        "Check recently replaced parts (screen, back glass, flexes).",
+        "Repeat the scan after reseating the suspected flex to see whether the panic stops."
+      ]
+    },
+    {
+      "id": "nand_storage_generic",
+      "panicContainsAny": [
+        "NAND PANIC",
+        "ANS2 Recoverable Panic",
+        "ANS2 PANIC",
+        "AppleANS2Controller",
+        "nand timeout"
+      ],
+      "panicNotContains": [
+        "SMC BSC failure"
+      ],
+      "title": "Storage Controller Panic",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "The panic involves the storage (NAND/ANS) controller. This can come from the storage itself or from a corrupted iOS installation.",
+      "suspectedComponents": [
+        "NAND storage / storage controller"
+      ],
+      "possibleCauses": [
+        "Failing NAND",
+        "Logic board damage near the storage",
+        "Corrupted iOS installation"
+      ],
+      "recommendedActions": [
+        "Back up the device as soon as possible.",
+        "If the panic persists after an iOS update or restore, suspect the storage hardware."
+      ]
+    },
+    {
+      "id": "gpu_agx_generic",
+      "title": "GPU Panic",
+      "category": "unknown",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "The graphics processor reported a fault. Software (iOS or an app) and hardware can both cause this signature.",
+      "possibleCauses": [
+        "iOS or app GPU bug",
+        "Logic board / SoC issue"
+      ],
+      "recommendedActions": [
+        "Update iOS and check whether the panic is tied to a specific app.",
+        "If it repeats across apps after a restore, suspect the logic board."
+      ],
+      "headlineContainsAny": [
+        "AGX",
+        "GPU"
+      ]
+    },
+    {
+      "id": "baseband_generic",
+      "panicContainsAny": [
+        "baseband",
+        "BBPanic",
+        "AppleBaseband"
+      ],
+      "minAny": 1,
+      "title": "Baseband Panic",
+      "category": "hardware",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "The cellular modem (baseband) stopped responding or crashed.",
+      "suspectedComponents": [
+        "Baseband / modem area of the logic board"
+      ],
+      "possibleCauses": [
+        "Modem firmware issue",
+        "Logic board damage (impact, liquid)"
+      ],
+      "recommendedActions": [
+        "Check whether cellular service works after restart.",
+        "Update or restore iOS before considering board-level repair."
+      ]
+    },
+    {
+      "id": "memory_ecc_generic",
+      "panicContainsAny": [
+        "uncorrectable ECC",
+        "ECC error",
+        "DRAM ECC"
+      ],
+      "title": "Memory Error",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "The device reported an uncorrectable memory error.",
+      "suspectedComponents": [
+        "SoC / memory (logic board)"
+      ],
+      "possibleCauses": [
+        "Logic board damage",
+        "Liquid damage",
+        "Overheating"
+      ],
+      "recommendedActions": [
+        "Look for repeated memory errors across several panics before concluding on hardware."
+      ]
+    },
+    {
+      "id": "forced_restart_btn_rst",
+      "headlineContainsAny": [
+        "btn_rst"
+      ],
+      "title": "Forced Restart",
+      "category": "user",
+      "severity": "low",
+      "confidence": "high",
+      "summary": "The device was restarted by holding the buttons (forced restart). This is not a crash by itself, but frequent forced restarts usually mean the device froze.",
+      "technicalReason": "btn_rst: reset requested by the button combination.",
+      "recommendedActions": [
+        "Ask whether the user forced the restart because the screen froze.",
+        "Look for kernel panics or hangs around the same time."
+      ]
+    },
+    {
+      "id": "sep_panic_generic",
+      "headlineContainsAny": [
+        "SEP Panic"
+      ],
+      "title": "Secure Enclave Panic",
+      "category": "unknown",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "The Secure Enclave Processor (passcode, Face ID / Touch ID keys) panicked. Software bugs and hardware faults can both produce this signature.",
+      "possibleCauses": [
+        "iOS / SEP firmware issue",
+        "Biometric module fault (Face ID / Touch ID)",
+        "Logic board issue"
+      ],
+      "recommendedActions": [
+        "Update or restore iOS first.",
+        "If it persists, check Face ID / Touch ID behaviour and recent biometric repairs."
+      ]
+    },
+    {
+      "id": "dart_iommu_generic",
+      "headlineContainsAny": [
+        "DART error",
+        "DART("
+      ],
+      "title": "IOMMU (DART) Fault",
+      "category": "unknown",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "A device memory access was rejected by the I/O memory protection unit (DART). The component named in the panic (e.g. dart-scaler, dart-disp) was accessing invalid memory.",
+      "possibleCauses": [
+        "Driver or iOS bug",
+        "Fault in the hardware block named in the panic line"
+      ],
+      "recommendedActions": [
+        "Note which DART instance is named (display, camera, scaler…).",
+        "Update or restore iOS; suspect hardware only if the same block keeps failing."
+      ]
+    },
+    {
+      "id": "kernel_memory_fault_generic",
+      "headlineContainsAny": [
+        "Kernel data abort",
+        "Kernel instruction fetch abort",
+        "Kernel tag check fault",
+        "[SPTM] VIOLATION"
+      ],
+      "title": "Kernel Memory Fault",
+      "category": "software",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "The kernel accessed invalid or protected memory. This is usually a software issue (iOS, a driver, a tweak). Repeated faults at different locations can point to RAM / SoC problems.",
+      "possibleCauses": [
+        "iOS or driver bug",
+        "Jailbreak / tweaks / research tools",
+        "Memory or SoC fault (if frequent and varied)"
+      ],
+      "recommendedActions": [
+        "Update or restore iOS.",
+        "Compare several panics: the same caller each time suggests software; random locations suggest hardware."
+      ]
+    }
+  ],
+  "matching": "Text terms are matched case-insensitively against panicString + panicked process, whitespace collapsed. See lib/diagnostics/diagnostic_rule.dart."
+}
