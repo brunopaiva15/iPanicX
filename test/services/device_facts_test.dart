@@ -30,11 +30,57 @@ void main() {
     final b = parseBattery(ioreg: batteryXml)!;
     expect(b.cycleCount, 843);
     expect(b.designCapacity, 3274);
-    expect(b.fullChargeCapacity, 2491);
-    expect(b.healthPercent, 76);
+    // NominalChargeCapacity (iOS Settings' "Maximum Capacity") wins over
+    // AppleRawMaxCapacity.
+    expect(b.fullChargeCapacity, 2523);
+    expect(b.healthPercent, 77);
     expect(b.chargePercent, 72);
     expect(b.temperatureC, 29.5);
     expect(b.isCharging, isFalse);
+  });
+
+  test('GasGauge diagnostics fill what AppleSmartBattery lacks', () {
+    const gasGauge =
+        '<?xml version="1.0"?><plist version="1.0"><dict>'
+        '<key>GasGauge</key><dict>'
+        '<key>CycleCount</key><integer>512</integer>'
+        '<key>DesignCapacity</key><integer>3200</integer>'
+        '<key>FullChargeCapacity</key><integer>2880</integer>'
+        '<key>Status</key><string>Success</string>'
+        '</dict></dict></plist>';
+    const ioreg =
+        '<plist><dict><key>IORegistry</key><dict>'
+        '<key>CurrentCapacity</key><integer>55</integer>'
+        '<key>MaxCapacity</key><integer>100</integer>'
+        '<key>VirtualTemperature</key><integer>3120</integer>'
+        '</dict></dict></plist>';
+    final b = parseBattery(ioreg: ioreg, gasGauge: gasGauge)!;
+    expect(b.cycleCount, 512);
+    expect(b.designCapacity, 3200);
+    expect(b.fullChargeCapacity, 2880);
+    expect(b.healthPercent, 90);
+    expect(b.chargePercent, 55);
+    expect(b.temperatureC, 31.2);
+    // GasGauge alone is enough.
+    expect(parseBattery(gasGauge: gasGauge)!.healthPercent, 90);
+  });
+
+  test('older iPhones: AppleARMPMUCharger entry', () {
+    const charger =
+        '<plist><dict><key>IORegistry</key><dict>'
+        '<key>MaxCapacity</key><integer>1520</integer>'
+        '<key>DesignCapacity</key><integer>1810</integer>'
+        '<key>CycleCount</key><integer>301</integer>'
+        '<key>Temperature</key><integer>2875</integer>'
+        '</dict></dict></plist>';
+    final b = parseBattery(
+      ioreg: 'ERROR: Unable to retrieve IORegistry from device.',
+      charger: charger,
+    )!;
+    expect(b.fullChargeCapacity, 1520);
+    expect(b.healthPercent, 84);
+    expect(b.cycleCount, 301);
+    expect(b.temperatureC, 28.8);
   });
 
   test('older iOS: MaxCapacity in mAh, raw charge', () {

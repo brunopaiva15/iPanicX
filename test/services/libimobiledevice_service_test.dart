@@ -508,7 +508,7 @@ void main() {
       final s = service(runner);
       await s.start();
       final f = await s.getDeviceFacts();
-      expect(f.battery!.healthPercent, 76);
+      expect(f.battery!.healthPercent, 77);
       expect(f.battery!.cycleCount, 843);
       expect(f.storage!.usedPercent, 94);
       expect(f.developerMode, isFalse);
@@ -518,6 +518,46 @@ void main() {
         runner.calls,
         contains('idevicediagnostics -u $_udid ioregentry AppleSmartBattery'),
       );
+      expect(
+        runner.calls,
+        contains('idevicediagnostics -u $_udid diagnostics GasGauge'),
+      );
+      // AppleSmartBattery answered with capacities: no charger fallback.
+      expect(
+        runner.calls.where((c) => c.contains('AppleARMPMUCharger')),
+        isEmpty,
+      );
+      expect(f.raw, contains('GasGauge:'));
+      s.dispose();
+    });
+
+    test('older iPhone: falls back to AppleARMPMUCharger', () async {
+      const charger =
+          '<plist><dict><key>IORegistry</key><dict>'
+          '<key>MaxCapacity</key><integer>1520</integer>'
+          '<key>DesignCapacity</key><integer>1810</integer>'
+          '</dict></dict></plist>';
+      final runner = FakeRunner((tool, args, _) async {
+        if (tool == 'idevice_id') {
+          return const CommandResult(0, '$_udid\n', '');
+        }
+        if (tool == 'idevicediagnostics') {
+          return args.contains('AppleARMPMUCharger')
+              ? const CommandResult(0, charger, '')
+              : const CommandResult(
+                  1,
+                  'ERROR: Unable to retrieve IORegistry from device.',
+                  '',
+                );
+        }
+        return const CommandResult(0, _info, '');
+      });
+      final s = service(runner);
+      await s.start();
+      final f = await s.getDeviceFacts();
+      expect(f.battery!.healthPercent, 84);
+      expect(f.notes.join(), contains('AppleSmartBattery'));
+      expect(f.raw, contains('AppleARMPMUCharger:'));
       s.dispose();
     });
 

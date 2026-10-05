@@ -17,19 +17,44 @@ bool? _bool(Object? v) => switch (v) {
   _ => null,
 };
 
-/// `idevicediagnostics ioregentry AppleSmartBattery` (XML plist), merged
-/// with the lockdown battery domain ([lockdown], `ideviceinfo -q
-/// com.apple.mobile.battery`) for the charge level when IORegistry is not
-/// available.
-BatteryInfo? parseBattery({String? ioreg, Map<String, String>? lockdown}) {
-  final root = ioreg == null ? null : parsePlist(ioreg);
-  Object? find(String k) => root == null ? null : plistFind(root, k);
+/// Battery values merged from every source iOS may answer, first hit wins
+/// (same sources as iBatteryW):
+///  * [ioreg]: `idevicediagnostics ioregentry AppleSmartBattery`;
+///  * [gasGauge]: `idevicediagnostics diagnostics GasGauge` (cycle count,
+///    design and full-charge capacity);
+///  * [charger]: `idevicediagnostics ioregentry AppleARMPMUCharger` (older
+///    iPhones, which have no AppleSmartBattery entry);
+///  * [lockdown]: `ideviceinfo -q com.apple.mobile.battery` (charge level).
+BatteryInfo? parseBattery({
+  String? ioreg,
+  String? gasGauge,
+  String? charger,
+  Map<String, String>? lockdown,
+}) {
+  final roots = [
+    for (final xml in [ioreg, gasGauge, charger])
+      if (xml != null) parsePlist(xml),
+  ].whereType<Object>().toList();
+  Object? find(String k) {
+    for (final r in roots) {
+      final v = plistFind(r, k);
+      if (v != null) return v;
+    }
+    return null;
+  }
 
-  final design = _int(find('DesignCapacity'));
+  int? positive(Object? v) {
+    final n = _int(v);
+    return n != null && n > 0 ? n : null;
+  }
+
+  final design = positive(find('DesignCapacity'));
   final maxCap = _int(find('MaxCapacity'));
+  // NominalChargeCapacity is what iOS Settings' "Maximum Capacity" uses.
   final fullCharge =
-      _int(find('AppleRawMaxCapacity')) ??
-      _int(find('NominalChargeCapacity')) ??
+      positive(find('NominalChargeCapacity')) ??
+      positive(find('FullChargeCapacity')) ??
+      positive(find('AppleRawMaxCapacity')) ??
       // Older iOS: MaxCapacity in mAh (newer ones report 100, a percent).
       (maxCap != null && maxCap > 200 ? maxCap : null);
 
@@ -45,7 +70,10 @@ BatteryInfo? parseBattery({String? ioreg, Map<String, String>? lockdown}) {
   }
   charge ??= _int(lockdown?['BatteryCurrentCapacity']);
 
-  final temp = batteryTemperature(root);
+  double? temp;
+  for (final r in roots) {
+    temp ??= batteryTemperature(r);
+  }
 
   final info = BatteryInfo(
     chargePercent: charge,
@@ -114,10 +142,11 @@ String rawValues(
   return '$label:\n${keys.map((k) => '  $k: ${values[k]}').join('\n')}';
 }
 
-/// Battery keys and scalar values found in the IORegistry plist.
-String rawBatteryValues(String? ioreg) {
-  final root = ioreg == null ? null : parsePlist(ioreg);
-  if (root is! Map) return 'AppleSmartBattery: (none)';
+/// Keys and scalar values of an `idevicediagnostics` plist, for the
+/// technical section.
+String rawBatteryValues(String? xml, {String label = 'AppleSmartBattery'}) {
+  final root = xml == null ? null : parsePlist(xml);
+  if (root is! Map) return '$label: (none)';
   final out = <String, String>{};
   void walk(Map m, String prefix) {
     for (final e in m.entries) {
@@ -131,7 +160,7 @@ String rawBatteryValues(String? ioreg) {
   }
 
   walk(root, '');
-  return rawValues('AppleSmartBattery', out);
+  return rawValues(label, out);
 }
 
 /// `ideviceinfo -q com.apple.security.mac.amfi` → `DeveloperModeStatus`.

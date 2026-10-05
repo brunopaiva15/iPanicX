@@ -10,6 +10,7 @@ import '../models/iphone_device.dart';
 import 'command_runner.dart';
 import 'device_facts_parser.dart';
 import 'iphone_service.dart';
+import 'plist.dart';
 import 'tool_locator.dart';
 import 'usb_probe.dart';
 
@@ -48,6 +49,16 @@ class LibimobiledeviceService implements IPhoneService {
   /// before giving up, so the list call must be allowed longer than that.
   static const _listTimeout = Duration(seconds: 12);
   static const _infoTimeout = Duration(seconds: 12);
+  static const _diagTimeout = Duration(seconds: 30);
+
+  /// No capacity or cycle count in the AppleSmartBattery answer.
+  static bool _noBatteryData(String? xml) {
+    final root = xml == null ? null : parsePlist(xml);
+    return root == null ||
+        (plistFind(root, 'DesignCapacity') == null &&
+            plistFind(root, 'CycleCount') == null);
+  }
+
   static const _crashTimeout = Duration(minutes: 10);
 
   /// Upper bound for one whole detection pass, so the UI can never stay on
@@ -469,9 +480,14 @@ class LibimobiledeviceService implements IPhoneService {
     if (udid == null || info == null) return DeviceFacts.empty;
     final notes = <String>[];
 
-    Future<String?> out(String tool, List<String> args, String label) async {
+    Future<String?> out(
+      String tool,
+      List<String> args,
+      String label, {
+      Duration timeout = _infoTimeout,
+    }) async {
       try {
-        final r = await _runner.run(tool, args, timeout: _infoTimeout);
+        final r = await _runner.run(tool, args, timeout: timeout);
         if (r.ok && r.stdout.trim().isNotEmpty) return r.stdout;
         notes.add(
           '$label: ${r.combined.isEmpty ? 'exit ${r.exitCode}' : r.combined}',
@@ -505,20 +521,41 @@ class LibimobiledeviceService implements IPhoneService {
       ], 'amfi'),
     );
     final diag = _locator.find('idevicediagnostics');
-    String? ioreg;
+    String? ioreg, gasGauge, charger;
     if (diag == null) {
       notes.add('idevicediagnostics: not found');
     } else {
-      ioreg = await out(diag, [
-        '-u',
-        udid,
-        'ioregentry',
+      // The full IORegistry entry is large on recent iPhones: give it time.
+      ioreg = await out(
+        diag,
+        ['-u', udid, 'ioregentry', 'AppleSmartBattery'],
         'AppleSmartBattery',
-      ], 'AppleSmartBattery');
+        timeout: _diagTimeout,
+      );
+      gasGauge = await out(
+        diag,
+        ['-u', udid, 'diagnostics', 'GasGauge'],
+        'GasGauge',
+        timeout: _diagTimeout,
+      );
+      // Older iPhones keep battery values in the charger entry.
+      if (_noBatteryData(ioreg)) {
+        charger = await out(
+          diag,
+          ['-u', udid, 'ioregentry', 'AppleARMPMUCharger'],
+          'AppleARMPMUCharger',
+          timeout: _diagTimeout,
+        );
+      }
     }
 
     return DeviceFacts(
-      battery: parseBattery(ioreg: ioreg, lockdown: batteryDomain),
+      battery: parseBattery(
+        ioreg: ioreg,
+        gasGauge: gasGauge,
+        charger: charger,
+        lockdown: batteryDomain,
+      ),
       storage: parseStorage(disk),
       developerMode: parseDeveloperMode(amfi),
       basebandVersion: general['BasebandVersion'],
@@ -526,6 +563,9 @@ class LibimobiledeviceService implements IPhoneService {
       notes: notes,
       raw: [
         rawBatteryValues(ioreg),
+        rawBatteryValues(gasGauge, label: 'GasGauge'),
+        if (charger != null)
+          rawBatteryValues(charger, label: 'AppleARMPMUCharger'),
         rawValues('disk_usage', disk),
         rawValues('battery domain', batteryDomain),
       ].join('\n\n'),
