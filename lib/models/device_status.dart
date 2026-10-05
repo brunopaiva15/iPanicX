@@ -36,6 +36,13 @@ enum StatusReason {
   /// usbmuxd / Apple Mobile Device Service could not be reached.
   usbServiceUnavailable,
 
+  /// Windows: neither Apple Devices nor iTunes is installed.
+  appleDevicesMissing,
+
+  /// Windows: Apple Devices / iTunes is installed but its service is not
+  /// running (or not answering).
+  appleServiceStopped,
+
   /// Windows lists the iPhone with a device-manager error.
   driverProblem,
 }

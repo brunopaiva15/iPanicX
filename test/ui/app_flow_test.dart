@@ -201,6 +201,24 @@ void main() {
     expect(find.textContaining('27015'), findsNothing);
   });
 
+  testWidgets('warns when Apple Devices is not installed (French)', (
+    tester,
+  ) async {
+    final saved = HostPlatform.isWindows;
+    HostPlatform.isWindows = true;
+    addTearDown(() => HostPlatform.isWindows = saved);
+    addTearDown(() => L10n.lang = AppLang.en);
+
+    await pumpApp(
+      tester,
+      scenario: MockScenario.appleDevicesMissing,
+      locale: 'fr_FR',
+    );
+    expect(find.text('Apple Devices n’est pas installé'), findsOneWidget);
+    expect(find.text('Installer Apple Devices'), findsOneWidget);
+    expect(find.textContaining('Microsoft Store'), findsOneWidget);
+  });
+
   testWidgets('disconnect while reading a diagnosis returns to overview', (
     tester,
   ) async {

@@ -126,6 +126,60 @@ class OverviewPane extends StatelessWidget {
         ),
       ],
       DeviceConnectionState.communicationError
+          when s.reason == StatusReason.appleDevicesMissing =>
+        [
+          Group(
+            children: [
+              Item(
+                leading: Glyph(Icons.warning_amber_rounded, color: c.danger),
+                label: t.appleDevicesMissingTitle,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Btn(t.checkAgain, onPressed: app.retry),
+                    const SizedBox(width: 8),
+                    Btn(
+                      t.installAppleDevices,
+                      primary: true,
+                      onPressed: app.bridge.openAppleDevicesInStore,
+                    ),
+                  ],
+                ),
+              ),
+              CapItem(t.appleDevicesMissingHelp),
+              if (s.technicalDetails != null)
+                TechnicalDetails(details: s.technicalDetails!),
+            ],
+          ),
+        ],
+      DeviceConnectionState.communicationError
+          when s.reason == StatusReason.appleServiceStopped =>
+        [
+          Group(
+            children: [
+              Item(
+                leading: Glyph(Icons.usb_off, color: c.danger),
+                label: t.appleServiceStoppedTitle,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Btn(t.checkAgain, onPressed: app.retry),
+                    const SizedBox(width: 8),
+                    Btn(
+                      t.openServices,
+                      primary: true,
+                      onPressed: app.bridge.openServicesConsole,
+                    ),
+                  ],
+                ),
+              ),
+              CapItem(t.appleServiceStoppedHelp),
+              if (s.technicalDetails != null)
+                TechnicalDetails(details: s.technicalDetails!),
+            ],
+          ),
+        ],
+      DeviceConnectionState.communicationError
           when s.reason == StatusReason.usbServiceUnavailable =>
         [
           Group(

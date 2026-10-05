@@ -52,12 +52,16 @@ class FakeRunner implements CommandRunner {
 
 /// Host USB checks with fixed answers.
 class FakeProbe extends UsbProbe {
-  FakeProbe({this.mux = true, this.presence})
+  FakeProbe({this.mux = true, this.presence, this.support})
     : super(isWindows: true, isMacOS: false, environment: const {});
 
   final bool? mux;
   final UsbPresence? presence;
+  final AppleSupport? support;
   int presenceQueries = 0;
+
+  @override
+  Future<AppleSupport?> appleSupport() async => support;
 
   @override
   Future<bool?> usbmuxReachable() async => mux;
@@ -251,6 +255,32 @@ void main() {
       expect(s.currentStatus.reason, StatusReason.usbServiceUnavailable);
       expect(s.currentStatus.technicalDetails, contains('not reachable'));
       expect(runner.calls, isEmpty);
+      s.dispose();
+    });
+
+    test('Windows without Apple Devices / iTunes: install warning', () async {
+      final s = service(
+        FakeRunner((tool, args, _) async => const CommandResult(0, '', '')),
+        probe: FakeProbe(
+          mux: false,
+          support: const AppleSupport(installed: false, details: 'none'),
+        ),
+      );
+      await s.start();
+      expect(s.currentStatus.reason, StatusReason.appleDevicesMissing);
+      s.dispose();
+    });
+
+    test('Apple Devices installed but service down: stopped', () async {
+      final s = service(
+        FakeRunner((tool, args, _) async => const CommandResult(0, '', '')),
+        probe: FakeProbe(
+          mux: false,
+          support: const AppleSupport(installed: true),
+        ),
+      );
+      await s.start();
+      expect(s.currentStatus.reason, StatusReason.appleServiceStopped);
       s.dispose();
     });
 
@@ -551,6 +581,22 @@ void main() {
       expect(bad.present, isTrue);
       expect(bad.driverProblem, isTrue);
       expect(parseWindowsPnp('').present, isFalse);
+    });
+
+    test('Apple support query output', () {
+      final none = parseAppleSupport('service=|\r\npackages=\r\n')!;
+      expect(none.installed, isFalse);
+      final store = parseAppleSupport(
+        'service=Apple Mobile Device Service|Stopped\npackages=AppleInc.AppleDevices\n',
+      )!;
+      expect(store.installed, isTrue);
+      expect(store.serviceRunning, isFalse);
+      final itunes = parseAppleSupport(
+        'service=Apple Mobile Device Service|Running\npackages=\n',
+      )!;
+      expect(itunes.installed, isTrue);
+      expect(itunes.serviceRunning, isTrue);
+      expect(parseAppleSupport('garbage'), isNull);
     });
 
     test('macOS ioreg', () {

@@ -185,14 +185,7 @@ class LibimobiledeviceService implements IPhoneService {
     final mux = await _probe.usbmuxReachable();
     if (mux == false) {
       _deniedUdid = null;
-      return DeviceStatus(
-        state: DeviceConnectionState.communicationError,
-        reason: StatusReason.usbServiceUnavailable,
-        message: HostPlatform.usbServiceHint,
-        technicalDetails:
-            '${_toolSummary(ideviceId)}\n'
-            'usbmuxd (${_probe.usbmuxAddress}): not reachable',
-      );
+      return _serviceUnreachable(ideviceId, force: force);
     }
 
     final CommandResult list;
@@ -398,6 +391,39 @@ class LibimobiledeviceService implements IPhoneService {
     }
     return DeviceStatus.noDevice(technicalDetails: details);
   }
+
+  /// Tells "Apple Devices not installed" from "installed but stopped". The
+  /// PowerShell query is slow, so it runs at most every [_presenceTtl].
+  Future<DeviceStatus> _serviceUnreachable(
+    String tool, {
+    required bool force,
+  }) async {
+    final now = DateTime.now();
+    if (force ||
+        _supportAt == null ||
+        now.difference(_supportAt!) >= _presenceTtl) {
+      _support = await _probe.appleSupport();
+      _supportAt = DateTime.now();
+    }
+    final support = _support;
+    return DeviceStatus(
+      state: DeviceConnectionState.communicationError,
+      reason: support == null
+          ? StatusReason.usbServiceUnavailable
+          : support.installed
+          ? StatusReason.appleServiceStopped
+          : StatusReason.appleDevicesMissing,
+      message: HostPlatform.usbServiceHint,
+      technicalDetails: [
+        _toolSummary(tool),
+        'usbmuxd (${_probe.usbmuxAddress}): not reachable',
+        if (support != null) support.details,
+      ].join('\n'),
+    );
+  }
+
+  AppleSupport? _support;
+  DateTime? _supportAt;
 
   String _toolSummary([String? tool]) =>
       'Tools: ${tool == null ? backendDescription : File(tool).parent.path}';

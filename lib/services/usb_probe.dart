@@ -23,6 +23,23 @@ class UsbPresence {
   final String details;
 }
 
+/// Is Apple's Windows USB stack (Apple Devices or iTunes) installed?
+class AppleSupport {
+  const AppleSupport({
+    required this.installed,
+    this.serviceRunning = false,
+    this.details = '',
+  });
+
+  /// The Apple Mobile Device service, or an Apple Devices / iTunes package,
+  /// exists on this PC.
+  final bool installed;
+  final bool serviceRunning;
+
+  /// Raw query output, for the technical section.
+  final String details;
+}
+
 /// Host-side checks run when `idevice_id` lists nothing, so the app can tell
 /// "nothing plugged in" apart from "plugged in but invisible to usbmuxd".
 class UsbProbe {
@@ -106,15 +123,41 @@ class UsbProbe {
       r'" | ForEach-Object { "$($_.ConfigManagerErrorCode)|$($_.Name)|$($_.PNPDeviceID)" }';
 
   Future<UsbPresence?> _windowsPresence() async {
+    final r = await _powershell(windowsQuery);
+    if (r == null || !r.ok) return null;
+    return parseWindowsPnp(r.stdout);
+  }
+
+  /// Apple Mobile Device service (iTunes, or packaged with Apple Devices)
+  /// and Apple Devices / iTunes Store packages of the current user.
+  static const appleSupportQuery =
+      r"$s = Get-Service | Where-Object { $_.Name -like '*Apple Mobile Device*' -or $_.DisplayName -like '*Apple Mobile Device*' } | Select-Object -First 1; "
+      r'"service=$($s.Name)|$($s.Status)"; '
+      r"$p = Get-AppxPackage -Name 'AppleInc.*' -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'AppleDevices|iTunes' } | ForEach-Object { $_.Name }; "
+      r'"packages=$($p -join ",")"';
+
+  /// Windows only; `null` elsewhere or when the query fails.
+  Future<AppleSupport?> appleSupport() async {
+    if (!_windows) return null;
+    try {
+      final r = await _powershell(appleSupportQuery);
+      if (r == null || !r.ok) return null;
+      return parseAppleSupport(r.stdout);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<CommandResult?> _powershell(String script) {
     // -EncodedCommand avoids every quoting issue between Dart, CreateProcess
     // and PowerShell (UTF-16LE, base64).
     final utf16 = <int>[];
-    for (final unit in windowsQuery.codeUnits) {
+    for (final unit in script.codeUnits) {
       utf16
         ..add(unit & 0xFF)
         ..add(unit >> 8);
     }
-    final r = await _runner.run('powershell.exe', [
+    return _runner.run('powershell.exe', [
       '-NoProfile',
       '-NonInteractive',
       '-ExecutionPolicy',
@@ -122,8 +165,6 @@ class UsbProbe {
       '-EncodedCommand',
       base64.encode(utf16),
     ], timeout: _queryTimeout);
-    if (!r.ok) return null;
-    return parseWindowsPnp(r.stdout);
   }
 
   Future<UsbPresence?> _macPresence() async {
@@ -153,6 +194,33 @@ UsbPresence parseWindowsPnp(String stdout) {
     present: lines.isNotEmpty,
     driverProblem: problem,
     details: lines.join('\n'),
+  );
+}
+
+/// Parses the `service=<name>|<status>` / `packages=<a,b>` lines of
+/// [UsbProbe.appleSupportQuery]. `null` when the output is not recognised.
+AppleSupport? parseAppleSupport(String stdout) {
+  String? service, status, packages;
+  for (final raw in const LineSplitter().convert(stdout)) {
+    final line = raw.trim();
+    if (line.startsWith('service=')) {
+      final v = line.substring(8).split('|');
+      service = v.first.trim();
+      status = v.length > 1 ? v[1].trim() : '';
+    } else if (line.startsWith('packages=')) {
+      packages = line.substring(9).trim();
+    }
+  }
+  if (service == null && packages == null) return null;
+  final hasService = service != null && service.isNotEmpty;
+  final hasPackage = packages != null && packages.isNotEmpty;
+  return AppleSupport(
+    installed: hasService || hasPackage,
+    serviceRunning: hasService && status!.toLowerCase() == 'running',
+    details: [
+      'Apple Mobile Device service: ${hasService ? '$service ($status)' : 'not installed'}',
+      'Apple packages: ${hasPackage ? packages : 'none'}',
+    ].join('\n'),
   );
 }
 

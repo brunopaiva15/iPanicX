@@ -70,6 +70,18 @@ class WindowsBridge implements PlatformBridge {
   }
 
   @override
+  Future<bool> openServicesConsole() async {
+    try {
+      await Process.start('mmc.exe', [
+        'services.msc',
+      ], mode: ProcessStartMode.detached);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
   Future<bool> revealInFinder(String path) async {
     final native = path.replaceAll('/', r'\');
     final type = FileSystemEntity.typeSync(native);

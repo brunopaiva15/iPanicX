@@ -399,6 +399,23 @@ class Strings {
   );
   String get openStore =>
       _('Open Microsoft Store', 'Ouvrir le Microsoft Store');
+  String get appleDevicesMissingTitle =>
+      _('Apple Devices is not installed', 'Apple Devices n’est pas installé');
+  String get appleDevicesMissingHelp => _(
+    'iPaniX needs Apple’s “Apple Devices” app (or iTunes) to talk to an iPhone: it installs Apple’s USB driver and the Apple Mobile Device Service. Install it once from the Microsoft Store, open it with the iPhone plugged in, then come back: iPaniX detects the iPhone automatically.',
+    'iPaniX a besoin de l’app « Apple Devices » d’Apple (ou d’iTunes) pour communiquer avec un iPhone : elle installe le pilote USB d’Apple et le service Apple Mobile Device. Installez-la une fois depuis le Microsoft Store, ouvrez-la avec l’iPhone branché, puis revenez ici : iPaniX détecte l’iPhone automatiquement.',
+  );
+  String get installAppleDevices =>
+      _('Install Apple Devices', 'Installer Apple Devices');
+  String get appleServiceStoppedTitle => _(
+    'Apple Mobile Device Service is stopped',
+    'Le service Apple Mobile Device est arrêté',
+  );
+  String get appleServiceStoppedHelp => _(
+    'Apple Devices (or iTunes) is installed, but its service is not running. Open Apple Devices once with the iPhone plugged in, or start “Apple Mobile Device Service” in Windows Services. Restarting the PC also works.',
+    'Apple Devices (ou iTunes) est installé, mais son service ne tourne pas. Ouvrez Apple Devices une fois avec l’iPhone branché, ou démarrez « Apple Mobile Device Service » dans les Services Windows. Redémarrer le PC fonctionne aussi.',
+  );
+  String get openServices => _('Open Services', 'Ouvrir les Services');
   String get lookupTimeoutHelp => _(
     'idevice_id did not answer in time. Unplug and reconnect the iPhone, or restart “Apple Mobile Device Service”.',
     'idevice_id n’a pas répondu à temps. Débranchez et rebranchez l’iPhone, ou redémarrez « Apple Mobile Device Service ».',

@@ -10,6 +10,9 @@ class MacOSBridge implements PlatformBridge {
   @override
   Future<bool> openAppleDevicesInStore() async => false;
 
+  @override
+  Future<bool> openServicesConsole() async => false;
+
   const MacOSBridge();
 
   static const _methods = MethodChannel('ipanix/bridge');

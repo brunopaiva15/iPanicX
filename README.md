@@ -130,7 +130,9 @@ affiche le résultat dans **Détails techniques** :
 |---|---|---|
 | **Aucun iPhone connecté** | l'OS ne voit aucun iPhone | câble de données (pas un câble de charge seule), iPhone déverrouillé, autre port |
 | **iPhone non reconnu** | Windows voit l'iPhone mais le service Apple ne le liste pas, ou le pilote est en erreur (code ≠ 0 dans le Gestionnaire de périphériques) | installer/réparer **Apple Devices** ou iTunes, l'ouvrir une fois, rebrancher ; sinon redémarrer *Apple Mobile Device Service* (`services.msc`) |
-| **Service Apple Mobile Device absent** | rien n'écoute sur `127.0.0.1:27015` : Apple Devices / iTunes pas installé, ou service arrêté | bouton **Ouvrir le Microsoft Store** (Apple Devices), l'ouvrir une fois iPhone branché ; sinon démarrer *Apple Mobile Device Service* dans `services.msc` |
+| **Apple Devices n'est pas installé** | ni le service *Apple Mobile Device*, ni le paquet Store Apple Devices / iTunes (requête PowerShell `Get-Service` + `Get-AppxPackage`) | bouton **Installer Apple Devices** (ouvre sa fiche du Microsoft Store), l'ouvrir une fois iPhone branché |
+| **Le service Apple Mobile Device est arrêté** | Apple Devices / iTunes installé mais rien n'écoute sur `127.0.0.1:27015` | bouton **Ouvrir les Services** (`services.msc`) → démarrer *Apple Mobile Device Service*, ou ouvrir Apple Devices, ou redémarrer le PC |
+| **Service Apple Mobile Device absent** | service injoignable et installation indéterminée | idem ci-dessus |
 
 Vérification manuelle (PowerShell) :
 

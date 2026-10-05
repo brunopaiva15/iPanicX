@@ -36,4 +36,7 @@ abstract class PlatformBridge {
   /// Opens the Microsoft Store on “Apple Devices” (iPhone USB driver and
   /// Apple Mobile Device Service). Windows only; false elsewhere.
   Future<bool> openAppleDevicesInStore();
+
+  /// Opens the Windows Services console (services.msc). Windows only.
+  Future<bool> openServicesConsole();
 }

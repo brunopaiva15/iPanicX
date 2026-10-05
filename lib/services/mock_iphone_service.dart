@@ -20,6 +20,8 @@ enum MockScenario {
   locked('Device locked'),
   communicationError('Communication error'),
   usbServiceDown('Apple Mobile Device Service missing'),
+  appleDevicesMissing('Apple Devices not installed'),
+  appleServiceStopped('Apple service stopped'),
   toolsUnavailable('libimobiledevice unavailable'),
   crashReportError('Crash report copy fails');
 
@@ -174,6 +176,20 @@ class MockIPhoneService implements IPhoneService {
       reason: StatusReason.usbServiceUnavailable,
       message: 'Apple Mobile Device Service is not reachable.',
       technicalDetails: 'usbmuxd (127.0.0.1:27015): not reachable',
+    ),
+    MockScenario.appleDevicesMissing => const DeviceStatus(
+      state: DeviceConnectionState.communicationError,
+      reason: StatusReason.appleDevicesMissing,
+      technicalDetails:
+          'usbmuxd (127.0.0.1:27015): not reachable\n'
+          'Apple Mobile Device service: not installed\nApple packages: none',
+    ),
+    MockScenario.appleServiceStopped => const DeviceStatus(
+      state: DeviceConnectionState.communicationError,
+      reason: StatusReason.appleServiceStopped,
+      technicalDetails:
+          'usbmuxd (127.0.0.1:27015): not reachable\n'
+          'Apple Mobile Device service: Apple Mobile Device Service (Stopped)',
     ),
     MockScenario.communicationError => DeviceStatus(
       state: DeviceConnectionState.communicationError,
