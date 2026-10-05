@@ -182,6 +182,27 @@ abstract final class FullReport {
       }
     }
 
+    final crashes = scan?.crashSummary();
+    if (crashes != null && crashes.total > 0) {
+      final top = crashes.apps.first;
+      final pattern = crashes.pattern!;
+      b
+        ..writeln()
+        ..writeln(
+          '${t.appCrashesTitle} (${t.period7}) : ${crashes.total}'.colon(t),
+        )
+        ..writeln('  ${t.crashPatternTitle(pattern.name)}')
+        ..writeln(
+          '  ${t.crashPatternExplain(pattern.name, top.app, (top.count * 100 / crashes.total).round())}',
+        );
+      for (final g in crashes.apps.take(10)) {
+        b.writeln(
+          '  ${g.count.toString().padLeft(3)}×  ${g.app.padRight(24)}'
+          '${t.crashCauseLabel(g.mainCause.name)}',
+        );
+      }
+    }
+
     if (scan != null && scan.panics.isNotEmpty) {
       b
         ..writeln()

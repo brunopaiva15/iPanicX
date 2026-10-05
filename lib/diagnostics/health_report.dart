@@ -1,4 +1,5 @@
 import '../l10n/strings.dart';
+import 'app_crash.dart';
 import '../models/device_facts.dart';
 import '../models/scan_result.dart';
 import 'correlation.dart';
@@ -181,14 +182,24 @@ class HealthReport {
     }
     final top = byApp.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
+    // Parsed reports give the pattern (one app / many apps / heat).
+    final pattern = scan.crashSummary(now: now).pattern;
+    final apps = top.take(3).map((e) => '${e.key} (${e.value}×)').join(', ');
     return HealthCheck(
       id: 'apps',
       title: s.checkAppCrashes,
-      status: list.length > 5 ? CheckStatus.warning : CheckStatus.ok,
+      status:
+          pattern == CrashPattern.systemWide || pattern == CrashPattern.thermal
+          ? CheckStatus.problem
+          : list.length > 5
+          ? CheckStatus.warning
+          : CheckStatus.ok,
       value: s.inLastDays(list.length, 7),
       detail: top.isEmpty
           ? null
-          : top.take(3).map((e) => '${e.key} (${e.value}×)').join(', '),
+          : pattern == null
+          ? apps
+          : '${s.crashPatternTitle(pattern.name)} · $apps',
     );
   }
 

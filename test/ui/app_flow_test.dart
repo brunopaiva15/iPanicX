@@ -7,6 +7,7 @@ import 'package:ipanicx/app/app_controller.dart';
 import 'package:ipanicx/app/host_platform.dart';
 import 'package:ipanicx/l10n/strings.dart';
 import 'package:ipanicx/services/history_store.dart';
+import 'package:ipanicx/ui/panes/shared.dart';
 import 'package:ipanicx/services/mock_iphone_service.dart';
 
 import '../helpers.dart';
@@ -293,6 +294,47 @@ void main() {
 
     // Two summaries saved locally (file I/O: outside the fake clock).
     expect(await tester.runAsync(controller.history.count), 2);
+  });
+
+  testWidgets('app crashes: pattern, by app, crash details', (tester) async {
+    final (controller, _) = await pumpApp(tester, locale: 'fr_FR');
+    addTearDown(() => L10n.lang = AppLang.en);
+    await tester.runAsync(controller.scanDiagnostics);
+    await settle(tester);
+
+    await tester.tap(find.text('Panics'));
+    await settle(tester);
+    await tester.scrollUntilVisible(
+      find.text('9 sur 7 jours'),
+      300,
+      scrollable: find
+          .descendant(
+            of: find.byType(ListView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(find.text('9 sur 7 jours'));
+    await settle(tester);
+    expect(find.text('Crashs d’apps'), findsWidgets);
+    expect(find.text('Surtout une seule app'), findsOneWidget);
+    expect(find.textContaining('Instagram : un problème'), findsOneWidget);
+    expect(find.text('Par cause'), findsOneWidget);
+
+    await tester.tap(find.text('Instagram'));
+    await settle(tester);
+    expect(find.text('5 crash'), findsNothing);
+    expect(find.text('Erreur mémoire'), findsWidgets);
+    await tester.tap(find.text('Erreur mémoire').first);
+    await settle(tester);
+    expect(find.textContaining('KERN_INVALID_ADDRESS'), findsOneWidget);
+    expect(find.text('Instagram  IGFeedRenderer.layout()'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButtonSmall));
+    await settle(tester);
+    await tester.tap(find.text('30 jours'));
+    await settle(tester);
+    expect(find.text('Par jour'), findsOneWidget);
   });
 
   testWidgets('console: live log with explained events', (tester) async {

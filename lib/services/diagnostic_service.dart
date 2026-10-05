@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
+import '../diagnostics/app_crash.dart';
 import '../diagnostics/knowledge_base.dart';
 import '../diagnostics/panic_analyzer.dart';
 import '../diagnostics/panic_parser.dart';
@@ -83,8 +84,22 @@ class DiagnosticService {
         if (!f.isKernelReport) await readReportHeader(f),
     ];
 
+    // App crashes are parsed in full (exception, termination reason).
+    final crashContents = <(DiagnosticFile, String)>[];
+    for (final r in reports.where((r) => r.isAppCrash)) {
+      try {
+        crashContents.add((r.file, await iphone.readCrashReport(r.file)));
+      } on IPhoneServiceException {
+        // Unreadable: still counted through its header.
+      }
+    }
+    final appCrashes = useIsolate
+        ? await _parseCrashesInIsolate(crashContents)
+        : _parseCrashes(crashContents);
+
     return ScanResult(
       reports: reports,
+      appCrashList: appCrashes,
       directory: files.isEmpty ? '' : _commonRoot(files),
       files: files,
       panics: panics,
@@ -161,6 +176,7 @@ class DiagnosticService {
       unreadable: scan.unreadable,
       scannedAt: scan.scannedAt,
       reports: scan.reports,
+      appCrashList: scan.appCrashList,
     );
   }
 
@@ -171,6 +187,14 @@ class DiagnosticService {
     if (db == null) return -1;
     return db.compareTo(da);
   }
+
+  static Future<List<AppCrash>> _parseCrashesInIsolate(
+    List<(DiagnosticFile, String)> contents,
+  ) => Isolate.run(() => _parseCrashes(contents));
+
+  static List<AppCrash> _parseCrashes(
+    List<(DiagnosticFile, String)> contents,
+  ) => [for (final (f, c) in contents) AppCrashParser.parse(f, c)];
 
   // Kept static so the isolate closure only captures sendable data.
   static Future<List<AnalyzedPanic>> _analyzeInIsolate(

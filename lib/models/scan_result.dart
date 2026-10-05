@@ -1,3 +1,4 @@
+import '../diagnostics/app_crash.dart';
 import '../l10n/strings.dart';
 import 'diagnostic_file.dart';
 import 'diagnostic_result.dart';
@@ -127,6 +128,7 @@ class ScanResult {
     this.unreadable = const [],
     required this.scannedAt,
     this.reports = const [],
+    this.appCrashList = const [],
   });
 
   /// Local folder where crash reports were copied.
@@ -150,6 +152,19 @@ class ScanResult {
 
   /// Headers of the other reports (app crashes, Jetsam, reset counters…).
   final List<ReportHeader> reports;
+
+  /// Every app crash report, parsed (exception, termination reason…).
+  final List<AppCrash> appCrashList;
+
+  /// App crashes of the [days] before [now] (all of them when null).
+  AppCrashSummary crashSummary({int? days = 7, DateTime? now}) {
+    if (days == null) return AppCrashSummary(appCrashList);
+    final from = (now ?? scannedAt).subtract(Duration(days: days));
+    return AppCrashSummary([
+      for (final c in appCrashList)
+        if (c.date != null && c.date!.isAfter(from)) c,
+    ]);
+  }
 
   /// App crashes in the [days] before [now] (default: the scan date).
   List<ReportHeader> appCrashes({int days = 7, DateTime? now}) =>

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
+import '../../app/theme.dart';
 import '../kit.dart';
 import '../shell.dart';
 import 'shared.dart';
@@ -19,7 +20,25 @@ class PanicsPane extends StatelessWidget {
     return Pane(
       title: t.panicsSection,
       children: [
-        Sec(t.kernelPanicsSection, first: true),
+        if (scan.appCrashList.isNotEmpty) ...[
+          Sec(t.appCrashesTitle, first: true),
+          Group(
+            children: [
+              Item(
+                leading: const Glyph(Icons.apps),
+                label: t.inLastDays(scan.appCrashes().length, 7),
+                hint: t.crashesHint,
+                trailing: Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: AppColors.of(context).text3,
+                ),
+                onTap: ShellScope.of(context).openAppCrashes,
+              ),
+            ],
+          ),
+        ],
+        Sec(t.kernelPanicsSection, first: scan.appCrashList.isEmpty),
         Group(
           children: scan.panics.isEmpty
               ? [Item(label: t.noPanicReports)]

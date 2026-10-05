@@ -277,6 +277,10 @@ class _CheckItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
+    final scan = AppScope.of(context).scan;
+    // App crashes open their detail pane.
+    final opens =
+        check.id == 'apps' && (scan?.appCrashList.isNotEmpty ?? false);
     return Item(
       leading: Tooltip(
         message: _statusLabel(context.tr, check.status),
@@ -285,6 +289,10 @@ class _CheckItem extends StatelessWidget {
       label: check.title,
       hint: check.detail,
       value: check.value,
+      trailing: opens
+          ? Icon(Icons.chevron_right, size: 16, color: c.text3)
+          : null,
+      onTap: opens ? ShellScope.of(context).openAppCrashes : null,
       valueColor:
           check.status == CheckStatus.problem ||
               check.status == CheckStatus.warning

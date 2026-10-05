@@ -636,6 +636,131 @@ class Strings {
     'Santé, batterie, corrélation et chaque panic, en .txt',
   );
 
+  // --------------------------------------------------------- app crashes
+  String get appCrashesTitle => _('App crashes', 'Crashs d’apps');
+  String get period7 => _('7 days', '7 jours');
+  String get period30 => _('30 days', '30 jours');
+  String get periodAll => _('All', 'Tout');
+  String crashCount(int n) => plural(n, 'crash', 'crash', enMany: 'crashes');
+  String appCount(int n) => plural(n, 'app', 'app');
+  String get byApp => _('By app', 'Par app');
+  String get byCause => _('By cause', 'Par cause');
+  String get perDay => _('Per day', 'Par jour');
+  String get noCrashes =>
+      _('No app crash in this period', 'Aucun crash d’app sur cette période');
+  String get mainCauseLabel => _('Main cause', 'Cause principale');
+  String get appleApp => 'Apple';
+  String get crashesHint => _(
+    'Tap an app to see each of its crashes.',
+    'Touchez une app pour voir chacun de ses crashs.',
+  );
+  String get crashList => _('Crashes', 'Crashs');
+  String get bundleId => 'Bundle ID';
+  String get appVersion => _('Version', 'Version');
+  String get exceptionLabel => 'Exception';
+  String get terminationLabel => _('Termination', 'Arrêt');
+  String get reasonLabel => _('Reason', 'Raison');
+  String get crashedInLabel => _('Crashed in', 'Plantage dans');
+  String get fileLabel => _('File', 'Fichier');
+  String get viewRawReport => _('View Raw Report', 'Voir le rapport brut');
+  String crashCauseLabel(String key) => switch (key) {
+    'watchdog' => _('Froze (watchdog)', 'Figée (watchdog)'),
+    'thermal' => _('Too hot', 'Trop chaud'),
+    'fileLock' => _('File lock', 'Verrou de fichier'),
+    'memoryAccess' => _('Memory error', 'Erreur mémoire'),
+    'abort' => _('Aborted', 'Arrêt volontaire'),
+    'swiftError' => _('Runtime error', 'Erreur d’exécution'),
+    'cpuLimit' => _('Too much CPU', 'Trop de CPU'),
+    'memoryLimit' => _('Too much memory', 'Trop de mémoire'),
+    'guard' => _('Protected resource', 'Ressource protégée'),
+    'killed' => _('Killed by iOS', 'Arrêtée par iOS'),
+    _ => _('Other', 'Autre'),
+  };
+  String crashCauseExplain(String key) => switch (key) {
+    'watchdog' => _(
+      'iOS closed the app because it stopped responding (code 0x8badf00d). Usually an app bug; on many apps at once, an almost full or slow storage.',
+      'iOS a fermé l’app car elle ne répondait plus (code 0x8badf00d). En général un bug de l’app ; sur beaucoup d’apps à la fois, un stockage presque plein ou lent.',
+    ),
+    'thermal' => _(
+      'iOS closed the app because the iPhone was overheating (0xc00010ff). Check the battery, charging and thermal panics.',
+      'iOS a fermé l’app car l’iPhone surchauffait (0xc00010ff). Vérifiez la batterie, la charge et les panics thermiques.',
+    ),
+    'fileLock' => _(
+      'The app kept a file locked while in the background (0xdead10cc). An app bug.',
+      'L’app a gardé un fichier verrouillé en arrière-plan (0xdead10cc). Un bug de l’app.',
+    ),
+    'memoryAccess' => _(
+      'The app read or wrote invalid memory (EXC_BAD_ACCESS). An app bug when it is one app; on many apps, including Apple’s, it can point to iOS or the memory.',
+      'L’app a lu ou écrit une mémoire invalide (EXC_BAD_ACCESS). Un bug de l’app si c’est une seule app ; sur beaucoup d’apps, y compris celles d’Apple, cela peut venir d’iOS ou de la mémoire.',
+    ),
+    'abort' => _(
+      'The app stopped itself after an internal error (SIGABRT). An app bug.',
+      'L’app s’est arrêtée elle-même après une erreur interne (SIGABRT). Un bug de l’app.',
+    ),
+    'swiftError' => _(
+      'A safety check in the app’s code failed (EXC_BREAKPOINT). An app bug.',
+      'Un contrôle de sécurité du code de l’app a échoué (EXC_BREAKPOINT). Un bug de l’app.',
+    ),
+    'cpuLimit' => _(
+      'iOS stopped the app for using too much processor time (EXC_RESOURCE).',
+      'iOS a arrêté l’app car elle utilisait trop le processeur (EXC_RESOURCE).',
+    ),
+    'memoryLimit' => _(
+      'iOS stopped the app for using too much memory (EXC_RESOURCE).',
+      'iOS a arrêté l’app car elle utilisait trop de mémoire (EXC_RESOURCE).',
+    ),
+    'guard' => _(
+      'The app misused a protected system resource (EXC_GUARD). An app bug.',
+      'L’app a mal utilisé une ressource système protégée (EXC_GUARD). Un bug de l’app.',
+    ),
+    'killed' => _(
+      'iOS terminated the app (SIGKILL), often in the background or to free memory.',
+      'iOS a arrêté l’app (SIGKILL), souvent en arrière-plan ou pour libérer de la mémoire.',
+    ),
+    _ => _(
+      'Unusual exception: see the technical details.',
+      'Exception inhabituelle : voir les détails techniques.',
+    ),
+  };
+
+  /// `de Safari`, `d’Instagram`.
+  static String _frDe(String name) =>
+      RegExp(r'^[aeiouyhAEIOUYHÉÈÊÂÎÔÛéèêâîôû]').hasMatch(name)
+      ? 'd’$name'
+      : 'de $name';
+
+  String crashPatternTitle(String key) => switch (key) {
+    'oneApp' => _('Mostly one app', 'Surtout une seule app'),
+    'systemWide' => _(
+      'Many apps, memory errors',
+      'Beaucoup d’apps, erreurs mémoire',
+    ),
+    'thermal' => _('Overheating', 'Surchauffe'),
+    _ => _('No clear pattern', 'Pas de tendance nette'),
+  };
+  String crashPatternExplain(
+    String key,
+    String app,
+    int percent,
+  ) => switch (key) {
+    'oneApp' => _(
+      '$percent % of the crashes come from $app: a problem with this app (update or reinstall it), not with the iPhone.',
+      '$percent % des crashs viennent ${_frDe(app)} : un problème de cette app (mettez-la à jour ou réinstallez-la), pas de l’iPhone.',
+    ),
+    'systemWide' => _(
+      'Several apps, including Apple’s, crash on memory errors: possible iOS or hardware problem (memory, storage). Update or restore iOS, then check the hardware.',
+      'Plusieurs apps, y compris celles d’Apple, plantent sur des erreurs mémoire : problème possible d’iOS ou du matériel (mémoire, stockage). Mettez à jour ou restaurez iOS, puis vérifiez le matériel.',
+    ),
+    'thermal' => _(
+      'Some apps were closed because the iPhone was too hot.',
+      'Des apps ont été fermées car l’iPhone était trop chaud.',
+    ),
+    _ => _(
+      'The crashes are spread across several apps and causes.',
+      'Les crashs sont répartis entre plusieurs apps et causes.',
+    ),
+  };
+
   // ------------------------------------------------------------- analyzer
   String get knownSignatureDisclaimer => _(
     'This diagnosis is based on a known panic signature and should be confirmed by hardware inspection.',

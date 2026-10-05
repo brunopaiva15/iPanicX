@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 
@@ -272,15 +273,13 @@ class MockIPhoneService implements IPhoneService {
         ));
       }
     }
-    // App crashes over the last week (headers are enough for the counts).
+    // App crashes over the last week, with realistic bodies.
     const apps = ['Instagram', 'Instagram', 'Safari', 'Instagram', 'Maps'];
     for (var i = 0; i < 9; i++) {
       final app = apps[i % apps.length];
       entries.add((
         app,
-        '{"bug_type":"309","app_name":"$app","name":"$app",'
-            '"timestamp":"2026-10-04 17:42:33.00 +0200",'
-            '"os_version":"iPhone OS 26.0.1 (23A355)"}\n{}\n',
+        _appCrash(app),
         latest.subtract(Duration(hours: 17 * i + 3)),
       ));
     }
@@ -390,6 +389,62 @@ class MockIPhoneService implements IPhoneService {
 
   @override
   void dispose() => _controller.close();
+
+  /// IPS 309 report: header line + JSON body, per app scenario.
+  static String _appCrash(String app) {
+    final apple = app != 'Instagram';
+    final bundle = switch (app) {
+      'Instagram' => 'com.burbn.instagram',
+      'Safari' => 'com.apple.mobilesafari',
+      _ => 'com.apple.Maps',
+    };
+    final header = jsonEncode({
+      'app_name': app,
+      'name': app,
+      'app_version': apple ? '26.0' : '402.0',
+      'bundleID': bundle,
+      'is_first_party': apple ? 1 : 0,
+      'bug_type': '309',
+      'timestamp': '2026-10-04 17:42:33.00 +0200',
+      'os_version': 'iPhone OS 26.0.1 (23A355)',
+    });
+    final body = switch (app) {
+      'Instagram' => {
+        'exception': {
+          'type': 'EXC_BAD_ACCESS',
+          'signal': 'SIGSEGV',
+          'subtype': 'KERN_INVALID_ADDRESS at 0x0000000000000010',
+        },
+        'faultingThread': 0,
+        'threads': [
+          {
+            'triggered': true,
+            'frames': [
+              {'imageIndex': 0, 'symbol': 'IGFeedRenderer.layout()'},
+            ],
+          },
+        ],
+        'usedImages': [
+          {'name': 'Instagram'},
+        ],
+      },
+      'Safari' => {
+        'exception': {'type': 'EXC_CRASH', 'signal': 'SIGKILL'},
+        'termination': {
+          'namespace': 'FRONTBOARD',
+          'code': 2343432205, // 0x8badf00d
+          'indicator': 'scene-update watchdog transgression',
+        },
+      },
+      _ => {
+        'exception': {'type': 'EXC_CRASH', 'signal': 'SIGABRT'},
+        'asi': {
+          'libsystem_c.dylib': ['abort() called'],
+        },
+      },
+    };
+    return '$header\n${const JsonEncoder.withIndent('  ').convert(body)}\n';
+  }
 
   /// Gives every generated copy its own incident id (the scan de-duplicates
   /// reports by incident, like panic-full / panic-base pairs on a device).

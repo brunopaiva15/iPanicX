@@ -20,6 +20,7 @@ base de connaissances → corrélation → bilan de santé → export `.txt`.**
 | **Santé** | état général (OK / à surveiller / problème, **sans note sur 100**), problème principal, vérifications : batterie, stockage, kernel panics, crashs d'apps (7 j), Jetsam (7 j), température, NAND, baseband, Developer Mode, Wi-Fi |
 | **Santé › Batterie** | charge, cycles, capacité d'origine / actuelle, santé estimée, température (`AppleSmartBattery`) |
 | **Santé › Corrélation** | panics regroupés par indice matériel (capteur manquant comme `TG0B`, masque SMC, service du watchdog) avec occurrences, première / dernière apparition, pièce suspectée ; confiance relevée d'un cran à partir de 3 occurrences |
+| **Crashs d'apps** | chaque rapport `bug_type` 309/109 lu en entier : exception, raison de l'arrêt (`0x8badf00d` watchdog, `0xc00010ff` surchauffe…), cause expliquée, tendance (« surtout une app » / « beaucoup d'apps, erreurs mémoire » / surchauffe), barres par jour, par app, par cause, détail et rapport brut de chaque crash |
 | **Console** | journal en direct (`idevicesyslog`), lignes importantes colorées et expliquées, filtre « Événements seulement », pause, export |
 | **Historique** | résumé local de chaque scan, « depuis le dernier scan : +N kernel panics, batterie 78 → 76 % » |
 | **Rapport complet** | santé + batterie + corrélation + liste des panics en `.txt` |

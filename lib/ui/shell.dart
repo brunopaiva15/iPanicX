@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../app/app_controller.dart';
 import '../app/theme.dart';
 import '../models/device_status.dart';
+import '../models/diagnostic_file.dart';
 import '../models/scan_result.dart';
 import 'kit.dart';
+import 'panes/app_crashes_pane.dart';
 import 'panes/console_pane.dart';
 import 'panes/files_pane.dart';
 import 'panes/health_pane.dart';
@@ -42,13 +44,34 @@ class AppShellState extends State<AppShell> {
   Section _section = Section.overview;
   AnalyzedPanic? _panic;
   bool _raw = false;
+
+  // App crashes: list → one app → raw report.
+  bool _crashes = false;
+  String? _crashApp;
+  DiagnosticFile? _rawFile;
+  int? _crashDays = 7;
   DeviceConnectionState? _lastState;
 
   void select(Section s) => setState(() {
     _section = s;
     _panic = null;
     _raw = false;
+    _crashes = false;
+    _crashApp = null;
+    _rawFile = null;
   });
+
+  void openAppCrashes() => setState(() {
+    _crashes = true;
+    _crashApp = null;
+    _rawFile = null;
+  });
+
+  void openCrashApp(String app) => setState(() => _crashApp = app);
+
+  void openRawFile(DiagnosticFile file) => setState(() => _rawFile = file);
+
+  void setCrashDays(int? days) => setState(() => _crashDays = days);
 
   void openPanic(AnalyzedPanic p) => setState(() {
     _panic = p;
@@ -58,10 +81,16 @@ class AppShellState extends State<AppShell> {
   void openRaw() => setState(() => _raw = true);
 
   void back() => setState(() {
-    if (_raw) {
+    if (_rawFile != null) {
+      _rawFile = null;
+    } else if (_raw) {
       _raw = false;
-    } else {
+    } else if (_panic != null) {
       _panic = null;
+    } else if (_crashApp != null) {
+      _crashApp = null;
+    } else {
+      _crashes = false;
     }
   });
 
@@ -82,8 +111,14 @@ class AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    final Widget pane = _panic != null
+    final Widget pane = _rawFile != null
+        ? RawFilePane(file: _rawFile!)
+        : _panic != null
         ? (_raw ? RawPane(panic: _panic!) : PanicPane(panic: _panic!))
+        : _crashApp != null
+        ? AppCrashListPane(app: _crashApp!, days: _crashDays)
+        : _crashes
+        ? AppCrashesPane(days: _crashDays)
         : switch (_section) {
             Section.overview => const OverviewPane(),
             Section.health => const HealthPane(),
@@ -104,7 +139,10 @@ class AppShellState extends State<AppShell> {
               _Sidebar(section: _section, onSelect: select),
               Expanded(
                 child: KeyedSubtree(
-                  key: ValueKey('$_section/${_panic?.file.path}/$_raw'),
+                  key: ValueKey(
+                    '$_section/${_panic?.file.path}/$_raw/$_crashes/'
+                    '$_crashApp/${_rawFile?.path}',
+                  ),
                   child: pane,
                 ),
               ),

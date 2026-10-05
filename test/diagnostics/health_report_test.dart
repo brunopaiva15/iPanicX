@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ipanicx/diagnostics/app_crash.dart';
 import 'package:ipanicx/diagnostics/correlation.dart';
 import 'package:ipanicx/diagnostics/health_report.dart';
 import 'package:ipanicx/l10n/strings.dart';
@@ -38,6 +39,18 @@ void main() {
     expect(kb.sensor('tg0b')!.componentIn(AppLang.fr), contains('Batterie'));
     expect(kb.sensor('mic1')!.component, contains('Charging Port Flex'));
     expect(kb.sensor('XYZ9'), isNull);
+  });
+
+  test('scan parses app crash reports', () {
+    expect(scan.appCrashList, hasLength(9));
+    final sum = scan.crashSummary();
+    expect(sum.total, 9);
+    expect(sum.apps.first.app, 'Instagram');
+    expect(sum.apps.first.mainCause, CrashCause.memoryAccess);
+    final safari = sum.apps.firstWhere((g) => g.app == 'Safari');
+    expect(safari.mainCause, CrashCause.watchdog);
+    expect(safari.firstParty, isTrue);
+    expect(sum.pattern, CrashPattern.oneApp);
   });
 
   test('scan reads report headers: app crashes and Jetsam', () {
