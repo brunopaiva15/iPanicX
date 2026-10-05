@@ -567,6 +567,7 @@ class Strings {
   String get storageSection => _('Storage', 'Stockage');
   String get capacity => _('Capacity', 'Capacité');
   String get available => _('Available', 'Disponible');
+  String get used => _('Used', 'Utilisé');
   String get basebandVersion => _('Baseband version', 'Version baseband');
   String get wifiAddress => _('Wi-Fi address', 'Adresse Wi-Fi');
   // Console

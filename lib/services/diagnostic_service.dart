@@ -32,8 +32,12 @@ class DiagnosticService {
   Future<ScanResult> scan({
     CrashReportProgress? onProgress,
     void Function()? onAnalyzing,
+    Future<void>? cancel,
   }) async {
-    final files = await iphone.getCrashReports(onProgress: onProgress);
+    final files = await iphone.getCrashReports(
+      onProgress: onProgress,
+      cancel: cancel,
+    );
     onAnalyzing?.call();
     // panic-full first so they win the incident de-duplication below.
     final kernelFiles = files.where((f) => f.isKernelReport).toList()

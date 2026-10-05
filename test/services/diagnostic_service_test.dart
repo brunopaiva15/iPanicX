@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ipanicx/models/diagnostic_file.dart';
 import 'package:ipanicx/models/scan_result.dart';
 import 'package:ipanicx/services/diagnostic_service.dart';
+import 'package:ipanicx/services/iphone_service.dart';
 import 'package:ipanicx/services/mock_iphone_service.dart';
 
 import '../helpers.dart';
@@ -58,6 +60,34 @@ void main() {
     expect(h.mostCommonCount, 12);
     expect(h.verdict, HealthVerdict.hardwareIssueLikely);
     expect(h.latest, latest.date);
+    iphone.dispose();
+  });
+
+  test('a scan can be cancelled while copying', () async {
+    final iphone = MockIPhoneService(
+      sampleLoader: sampleLoader,
+      workRoot: tmp,
+      latency: const Duration(milliseconds: 40),
+    );
+    await iphone.start();
+    final cancel = Completer<void>();
+    final scan = DiagnosticService(
+      iphone: iphone,
+      knowledgeBase: loadKnowledgeBase(),
+      useIsolate: false,
+    ).scan(cancel: cancel.future);
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+    cancel.complete();
+    await expectLater(
+      scan,
+      throwsA(
+        isA<IPhoneServiceException>().having(
+          (e) => e.kind,
+          'kind',
+          IPhoneErrorKind.cancelled,
+        ),
+      ),
+    );
     iphone.dispose();
   });
 

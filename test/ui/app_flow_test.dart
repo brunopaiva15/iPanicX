@@ -232,6 +232,56 @@ void main() {
     expect(find.textContaining('Microsoft Store'), findsOneWidget);
   });
 
+  testWidgets('health pane: device facts, checklist, main issue', (
+    tester,
+  ) async {
+    final (controller, _) = await pumpApp(tester);
+    // Facts are read as soon as the device is connected.
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    await settle(tester);
+    expect(controller.facts?.battery?.healthPercent, 78);
+
+    await tester.tap(find.text('Health'));
+    await settle(tester);
+    expect(find.text('Needs attention'), findsOneWidget);
+    expect(find.text('Health 78 % · 843 cycles'), findsOneWidget);
+    expect(find.text('Scan the iPhone first'), findsWidgets);
+
+    await tester.runAsync(controller.scanDiagnostics);
+    await settle(tester);
+    expect(find.text('Problem detected'), findsOneWidget);
+    expect(find.text('Main issue'), findsOneWidget);
+    expect(
+      find.text(
+        '12 kernel panics with the same sensor mask 0x140000 (iPhone15,2)',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('9 in 7 days'), findsOneWidget);
+  });
+
+  testWidgets('console: live log with explained events', (tester) async {
+    final (controller, _) = await pumpApp(tester, locale: 'fr_FR');
+    addTearDown(() => L10n.lang = AppLang.en);
+    await tester.tap(find.text('Console'));
+    await settle(tester);
+    await tester.tap(find.text('Démarrer'));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(controller.console.lineCount, greaterThan(2));
+    expect(find.text('Un capteur matériel est manquant'), findsOneWidget);
+
+    await tester.tap(find.text('Événements seulement'));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.textContaining('SpringBoard'), findsNothing);
+
+    await tester.tap(find.text('Arrêter'));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(controller.console.running, isFalse);
+  });
+
   testWidgets('disconnect while reading a diagnosis returns to overview', (
     tester,
   ) async {

@@ -86,7 +86,13 @@ class Correlator {
         hasHardwareClue = true;
       }
       if (r.sensorMask != null) {
-        add(ClueKind.sensorMask, '${r.product ?? '?'} ${r.sensorMaskHex}', p);
+        add(
+          ClueKind.sensorMask,
+          r.product == null
+              ? r.sensorMaskHex!
+              : '${r.sensorMaskHex} (${r.product})',
+          p,
+        );
         hasHardwareClue = true;
       }
       final service = _checkins.firstMatch(r.panicString ?? '')?.group(1);

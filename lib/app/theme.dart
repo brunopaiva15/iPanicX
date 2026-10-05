@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../diagnostics/health_report.dart';
 import '../models/diagnostic_result.dart';
 
 /// Tokens taken from Codenotch (MIT, github.com/vinzdg/codenotch):
@@ -193,4 +194,19 @@ ThemeData buildTheme(Brightness brightness) {
       },
     ),
   );
+}
+
+/// Check status colours, readable on the light and dark panes (Apple's
+/// system green / orange, and the pane's danger red).
+abstract final class StatusColors {
+  static const ok = Color(0xFF30D158);
+  static const warning = Color(0xFFFF9F0A);
+
+  static Color of(CheckStatus s, AppColors c) => switch (s) {
+    CheckStatus.ok => ok,
+    CheckStatus.warning => warning,
+    CheckStatus.problem => c.danger,
+    CheckStatus.info => c.accent,
+    CheckStatus.unavailable => c.text3,
+  };
 }

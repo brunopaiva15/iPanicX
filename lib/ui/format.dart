@@ -20,6 +20,14 @@ String formatRelativeDate(DateTime? date, {DateTime? now}) {
 String formatDate(DateTime d) =>
     '${d.day} ${tr.months[d.month - 1]} ${d.year}, ${formatTime(d)}';
 
+/// Device storage, in decimal units like iOS Settings (128 GB = 128·10⁹).
+String formatCapacity(int bytes) {
+  final fr = tr.lang == AppLang.fr;
+  final gb = bytes / 1e9;
+  final v = gb >= 100 ? gb.toStringAsFixed(0) : gb.toStringAsFixed(1);
+  return '${fr ? v.replaceAll('.', ',') : v} ${fr ? 'Go' : 'GB'}';
+}
+
 String formatBytes(int bytes) {
   if (bytes < 1024) return '$bytes B';
   if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';

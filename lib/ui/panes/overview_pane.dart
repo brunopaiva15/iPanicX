@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app/app_controller.dart';
 import '../../app/host_platform.dart';
 import '../../app/theme.dart';
+import '../../diagnostics/health_report.dart';
 import '../../l10n/lang_scope.dart';
 import '../../models/device_status.dart';
 import '../../models/scan_result.dart';
@@ -10,6 +11,7 @@ import '../format.dart';
 import '../kit.dart';
 import '../ring.dart';
 import '../shell.dart';
+import 'health_pane.dart' show StatusDot;
 import 'shared.dart';
 
 class OverviewPane extends StatelessWidget {
@@ -278,6 +280,7 @@ class OverviewPane extends StatelessWidget {
           Item(label: 'iOS', value: d.productVersion),
           Item(label: t.build, value: d.buildVersion, mono: true),
           Item(label: 'UDID', value: d.maskedUdid, mono: true),
+          _healthLink(context, app),
         ],
       ),
       Sec(t.diagnostics),
@@ -306,6 +309,10 @@ class OverviewPane extends StatelessWidget {
                             : t.copyingFiles(app.copiedFiles),
                         style: TextStyle(fontSize: kBodySize, color: c.text2),
                       ),
+                      if (app.phase == ScanPhase.copying) ...[
+                        const SizedBox(width: 10),
+                        Btn(t.cancel, onPressed: app.cancelScan),
+                      ],
                     ],
                   )
                 : Btn(
@@ -327,6 +334,29 @@ class OverviewPane extends StatelessWidget {
       ),
       if (scan != null && !app.isScanning) ..._results(context, scan),
     ];
+  }
+
+  /// "Overall state" row leading to the Health pane.
+  Widget _healthLink(BuildContext context, AppController app) {
+    final t = context.tr;
+    final c = AppColors.of(context);
+    final overall = app.health.overall;
+    return Item(
+      leading: StatusDot(overall),
+      label: t.overallState,
+      value: app.loadingFacts && app.facts == null
+          ? t.readingDevice
+          : switch (overall) {
+              CheckStatus.problem => t.overallProblem,
+              CheckStatus.warning => t.overallWarning,
+              _ => t.overallOk,
+            },
+      valueColor: overall == CheckStatus.ok
+          ? null
+          : StatusColors.of(overall, c),
+      trailing: Icon(Icons.chevron_right, size: 16, color: c.text3),
+      onTap: () => ShellScope.of(context).select(Section.health),
+    );
   }
 
   List<Widget> _results(BuildContext context, ScanResult scan) {

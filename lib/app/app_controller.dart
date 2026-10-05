@@ -4,13 +4,16 @@ import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter/widgets.dart';
 
+import '../diagnostics/health_report.dart';
 import '../diagnostics/knowledge_base.dart';
 import '../l10n/strings.dart';
+import '../models/device_facts.dart';
 import '../models/device_status.dart';
 import '../models/scan_result.dart';
 import '../services/diagnostic_service.dart';
 import '../services/iphone_service.dart';
 import '../services/platform_bridge.dart';
+import 'console_controller.dart';
 
 enum ScanPhase { idle, copying, analyzing, done, failed }
 
@@ -38,6 +41,9 @@ class AppController extends ChangeNotifier {
   final KnowledgeBase knowledgeBase;
   final DiagnosticService diagnostics;
   final PlatformBridge bridge;
+
+  /// Live log of the connected device.
+  late final ConsoleController console = ConsoleController(iphone);
 
   /// Follows the system by default; General › Appearance overrides it.
   ThemeMode _themeMode = ThemeMode.system;
@@ -88,6 +94,51 @@ class AppController extends ChangeNotifier {
 
   String? _scannedUdid;
   StreamSubscription<DeviceStatus>? _sub;
+  Completer<void>? _cancelScan;
+
+  // Device facts (battery, storage…), read when a device connects and
+  // after each scan.
+  DeviceFacts? _facts;
+  DeviceFacts? get facts => _facts;
+  bool _loadingFacts = false;
+  bool get loadingFacts => _loadingFacts;
+  String? _factsUdid;
+
+  Future<void> loadFacts() async {
+    if (_loadingFacts || !_status.isConnected) return;
+    // The lockdown connection is busy while reports are copied.
+    if (isScanning) return;
+    final udid = _status.udid;
+    _loadingFacts = true;
+    notifyListeners();
+    try {
+      final f = await iphone.getDeviceFacts();
+      if (_status.udid == udid) _facts = f;
+    } catch (_) {
+      // Facts are optional; the health checks show "not available".
+    } finally {
+      _loadingFacts = false;
+      notifyListeners();
+    }
+  }
+
+  HealthReport? _health;
+  Object? _healthKey;
+
+  /// Checklist from the last scan and the device facts, in the UI language.
+  HealthReport get health {
+    final key = (_scan, _facts, language);
+    if (_health == null || _healthKey != key) {
+      _healthKey = key;
+      _health = HealthReport.build(
+        s: Strings(language),
+        knowledgeBase: knowledgeBase,
+        scan: _scan,
+        facts: _facts,
+      );
+    }
+    return _health!;
+  }
 
   Future<void> start() async {
     _sub = iphone.status.listen(_onStatus);
@@ -96,6 +147,16 @@ class AppController extends ChangeNotifier {
 
   void _onStatus(DeviceStatus s) {
     _status = s;
+    if (!s.isConnected) {
+      _facts = null;
+      _factsUdid = null;
+      if (console.running) console.stop();
+    } else if (s.udid != _factsUdid) {
+      _factsUdid = s.udid;
+      _facts = null;
+      if (console.running) console.stop();
+      scheduleMicrotask(loadFacts);
+    }
     // A different (or no) device invalidates the previous scan.
     if (_scannedUdid != null && s.udid != _scannedUdid && !isScanning) {
       if (s.state == DeviceConnectionState.noDevice || s.udid != null) {
@@ -117,9 +178,11 @@ class AppController extends ChangeNotifier {
     _phase = ScanPhase.copying;
     _copiedFiles = 0;
     _scanError = null;
+    _cancelScan = Completer<void>();
     notifyListeners();
     try {
       final result = await diagnostics.scan(
+        cancel: _cancelScan!.future,
         onProgress: (count, _) {
           _copiedFiles = count;
           if (_phase == ScanPhase.copying) notifyListeners();
@@ -143,7 +206,15 @@ class AppController extends ChangeNotifier {
       );
       _phase = ScanPhase.failed;
     }
+    _cancelScan = null;
     notifyListeners();
+    if (_phase == ScanPhase.done) unawaited(loadFacts());
+  }
+
+  /// Stops the copy in progress (nothing is changed on the iPhone).
+  void cancelScan() {
+    final c = _cancelScan;
+    if (c != null && !c.isCompleted) c.complete();
   }
 
   Future<void> retry() => iphone.refresh();
@@ -153,6 +224,7 @@ class AppController extends ChangeNotifier {
   @override
   void dispose() {
     _sub?.cancel();
+    console.dispose();
     iphone.dispose();
     super.dispose();
   }

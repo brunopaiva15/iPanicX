@@ -53,7 +53,7 @@ void main() {
     final groups = Correlator(kb).correlate(scan.panics);
     final mask = groups.first;
     expect(mask.kind, ClueKind.sensorMask);
-    expect(mask.value, 'iPhone15,2 0x140000');
+    expect(mask.value, '0x140000 (iPhone15,2)');
     expect(mask.count, 12);
     expect(mask.component, 'Charging Port Flex / Power Button Flex');
     expect(mask.confidence, Confidence.high);

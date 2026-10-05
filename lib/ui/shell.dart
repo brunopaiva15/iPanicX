@@ -5,14 +5,16 @@ import '../app/theme.dart';
 import '../models/device_status.dart';
 import '../models/scan_result.dart';
 import 'kit.dart';
+import 'panes/console_pane.dart';
 import 'panes/files_pane.dart';
+import 'panes/health_pane.dart';
 import 'panes/general_pane.dart';
 import 'panes/overview_pane.dart';
 import 'panes/panic_pane.dart';
 import 'panes/panics_pane.dart';
 import '../l10n/lang_scope.dart';
 
-enum Section { overview, panics, files, general }
+enum Section { overview, health, panics, files, console, general }
 
 /// Navigation for the panes: a section from the sidebar, optionally a panic
 /// opened on top of it (and its raw report).
@@ -84,6 +86,8 @@ class AppShellState extends State<AppShell> {
         ? (_raw ? RawPane(panic: _panic!) : PanicPane(panic: _panic!))
         : switch (_section) {
             Section.overview => const OverviewPane(),
+            Section.health => const HealthPane(),
+            Section.console => const ConsolePane(),
             Section.panics => const PanicsPane(),
             Section.files => const FilesPane(),
             Section.general => const GeneralPane(),
@@ -143,6 +147,12 @@ class _Sidebar extends StatelessWidget {
             onTap: () => onSelect(Section.overview),
           ),
           _Row(
+            badge: const SideBadge(Icons.favorite, SideBadge.green),
+            label: t.healthSection,
+            selected: section == Section.health,
+            onTap: () => onSelect(Section.health),
+          ),
+          _Row(
             badge: const SideBadge(Icons.bolt, SideBadge.red),
             label: t.panicsSection,
             selected: section == Section.panics,
@@ -153,6 +163,12 @@ class _Sidebar extends StatelessWidget {
             label: t.filesSection,
             selected: section == Section.files,
             onTap: () => onSelect(Section.files),
+          ),
+          _Row(
+            badge: const SideBadge(Icons.terminal, SideBadge.dark),
+            label: t.consoleSection,
+            selected: section == Section.console,
+            onTap: () => onSelect(Section.console),
           ),
           _Row(
             badge: const SideBadge(Icons.settings, SideBadge.indigo),

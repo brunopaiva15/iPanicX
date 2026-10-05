@@ -381,6 +381,8 @@ class SideBadge extends StatelessWidget {
   static const indigo = [Color(0xFF8784FF), Color(0xFF5856D6)];
   static const gray = [Color(0xFFA6A6AB), Color(0xFF727277)];
   static const red = [Color(0xFFFF6D62), Color(0xFFDD3328)];
+  static const green = [Color(0xFF5EE07A), Color(0xFF28B44A)];
+  static const dark = [Color(0xFF55555A), Color(0xFF26262A)];
 
   @override
   Widget build(BuildContext context) => Container(
