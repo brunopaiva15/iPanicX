@@ -107,14 +107,15 @@ install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
 
-# libimobiledevice tools prepared by scripts/bundle_libimobiledevice_windows.sh
-# (idevice_id.exe, ideviceinfo.exe, idevicecrashreport.exe, idevicepair.exe
-# and their DLLs). Installed next to iPaniX.exe in "libimobiledevice\", where
-# lib/services/tool_locator.dart looks first. Without the folder, iPaniX falls
-# back to MSYS2 / PATH at runtime.
-set(IPANIX_LIBIMOBILEDEVICE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libimobiledevice")
-if(EXISTS "${IPANIX_LIBIMOBILEDEVICE_DIR}")
+# libimobiledevice tools, installed next to iPaniX.exe in "libimobiledevice\"
+# (see libimobiledevice.cmake: local bundle, else pinned MSYS2 packages
+# downloaded once at configure time).
+include("${CMAKE_CURRENT_SOURCE_DIR}/libimobiledevice.cmake")
+ipanix_prepare_libimobiledevice("${CMAKE_CURRENT_SOURCE_DIR}"
+  "${CMAKE_BINARY_DIR}" IPANIX_LIBIMOBILEDEVICE_DIR)
+if(IPANIX_LIBIMOBILEDEVICE_DIR)
   install(DIRECTORY "${IPANIX_LIBIMOBILEDEVICE_DIR}/"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/libimobiledevice"
-    COMPONENT Runtime)
+    COMPONENT Runtime
+    PATTERN ".stamp-*" EXCLUDE)
 endif()

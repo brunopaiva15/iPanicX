@@ -78,27 +78,41 @@ Sans ce dossier, la phase ne fait rien et l'app retombe sur Homebrew.
    le pilote USB et le service *Apple Mobile Device Service* auquel
    libimobiledevice se connecte. Brancher l'iPhone et accepter « Faire
    confiance ».
-2. Installer [MSYS2](https://www.msys2.org/), puis dans le shell **UCRT64** :
+2. **Rien d'autre à installer** : `flutter run -d windows` / `flutter build
+   windows` télécharge **une seule fois** (au configure CMake, ~9 Mo) les
+   paquets officiels MSYS2 UCRT64 de libimobiledevice, vérifie leur SHA-256,
+   et installe `idevice_id.exe`, `ideviceinfo.exe`, `idevicecrashreport.exe`,
+   `idevicepair.exe` et leurs 6 DLL dans `libimobiledevice\` à côté de
+   `iPaniX.exe` (`windows/libimobiledevice.cmake`). Le cache est dans
+   `build\windows\x64\libimobiledevice\`. L'app elle-même reste hors ligne.
 
-   ```bash
-   pacman -S --needed mingw-w64-ucrt-x86_64-libimobiledevice
-   idevice_id.exe -l
-   ```
+   Versions figées : libimobiledevice 1.3.0-17, libimobiledevice-glue 1.3.2,
+   libplist 2.7.0, libusbmuxd 2.1.1, OpenSSL 3.6.5. Pour les mettre à jour,
+   changer noms et SHA-256 dans `windows/libimobiledevice.cmake`. Pour
+   désactiver le téléchargement : `-DIPANIX_FETCH_LIBIMOBILEDEVICE=OFF`.
+
+Si le build ne voit pas les outils (build hors ligne, ancienne copie du dossier
+`build`), lancer `flutter clean` puis `flutter run -d windows`, ou les
+installer avec [MSYS2](https://www.msys2.org/) dans le shell **UCRT64** :
+
+```bash
+pacman -S --needed mingw-w64-ucrt-x86_64-libimobiledevice
+```
 
 iPaniX cherche les outils (`*.exe`) dans cet ordre : `%IPANIX_TOOLS_DIR%`,
 `<dossier de iPaniX.exe>\libimobiledevice[\bin]`, `C:\msys64\{ucrt64,mingw64,clang64}\bin`,
 `%ProgramFiles%\libimobiledevice`, `%LOCALAPPDATA%\Programs\libimobiledevice`, puis le `Path`.
 
-**Outils embarqués (distribution)** — depuis le shell MSYS2 UCRT64 :
+**Outils d'une installation MSYS2 locale** (prioritaires sur le
+téléchargement) — depuis le shell MSYS2 UCRT64 :
 
 ```bash
 ./scripts/bundle_libimobiledevice_windows.sh
 ```
 
 Le script copie les 4 `.exe` et leurs DLL MSYS2 (via `ldd`) dans
-`windows/libimobiledevice/` (ignoré par git). `flutter build windows` les
-installe ensuite à côté de `iPaniX.exe` (fin de `windows/CMakeLists.txt`) ;
-Windows charge les DLL depuis le dossier de l'exécutable.
+`windows/libimobiledevice/` (ignoré par git), que le build installe à la place
+des paquets téléchargés.
 
 ### iPhone branché mais non détecté
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import '../app/host_platform.dart';
+import '../l10n/strings.dart';
 import '../models/device_status.dart';
 import '../models/diagnostic_file.dart';
 import '../models/iphone_device.dart';
@@ -71,7 +72,7 @@ class LibimobiledeviceService implements IPhoneService {
   String get backendDescription {
     final path = _locator.find('idevice_id');
     return path == null
-        ? 'libimobiledevice (not found)'
+        ? 'libimobiledevice (${tr.notFound})'
         : 'libimobiledevice (${File(path).parent.path})';
   }
 

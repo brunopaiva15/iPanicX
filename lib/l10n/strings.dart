@@ -258,6 +258,7 @@ class Strings {
     'Les signatures sont des exemples et ne couvrent pas tous les panics. Un diagnostic doit être confirmé par une inspection matérielle.',
   );
   String get deviceBackend => _('Device backend', 'Accès à l’appareil');
+  String get notFound => _('not found', 'introuvable');
 
   // ------------------------------------------------------- model labels
   String severityLabel(String key) => switch (key) {
@@ -375,8 +376,8 @@ class Strings {
     'Windows voit l’iPhone, mais son pilote USB Apple est absent ou ne fonctionne pas. Installez ou réparez « Appareils Apple » (Microsoft Store) ou iTunes, puis débranchez et rebranchez l’iPhone. Dans le Gestionnaire de périphériques, il apparaît avec un avertissement sous « Appareils mobiles » ou « Contrôleurs de bus USB ».',
   );
   String get installHintWindows => _(
-    'Install “Apple Devices” (Microsoft Store) or iTunes for the iPhone USB driver, then libimobiledevice with MSYS2, or use a build of iPaniX that bundles the tools (see README).',
-    'Installez « Appareils Apple » (Microsoft Store) ou iTunes pour le pilote USB de l’iPhone, puis libimobiledevice avec MSYS2, ou utilisez une version d’iPaniX qui embarque les outils (voir README).',
+    'This build of iPaniX does not include the libimobiledevice tools. Rebuild it with “flutter build windows” (or “flutter run -d windows”) while online: the build downloads them once and puts them next to iPaniX.exe. Alternatively, install them with MSYS2:',
+    'Cette version d’iPaniX n’inclut pas les outils libimobiledevice. Recompilez-la avec « flutter build windows » (ou « flutter run -d windows ») avec une connexion Internet : le build les télécharge une fois et les place à côté d’iPaniX.exe. Sinon, installez-les avec MSYS2 :',
   );
   String get installHintMac => _(
     'Install it with Homebrew, or build iPaniX with the bundled tools (see README).',

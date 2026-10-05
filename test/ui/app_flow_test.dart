@@ -175,7 +175,7 @@ void main() {
     addTearDown(() => HostPlatform.isWindows = saved);
 
     await pumpApp(tester, scenario: MockScenario.toolsUnavailable);
-    expect(find.textContaining('Apple Devices'), findsOneWidget);
+    expect(find.textContaining('flutter build windows'), findsOneWidget);
     expect(find.textContaining('pacman -S'), findsOneWidget);
 
     await tester.tap(find.text('General'));
