@@ -101,6 +101,8 @@ class GeneralPane extends StatelessWidget {
             CapItem(t.privacyDetail(HostPlatform.computer)),
           ],
         ),
+        Sec(t.history),
+        Group(children: [const _HistoryRow(), CapItem(t.historyHint)]),
         Sec(t.about),
         Group(
           children: [
@@ -119,6 +121,49 @@ class GeneralPane extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Saved scan count with a Clear button (re-counts after clearing).
+class _HistoryRow extends StatefulWidget {
+  const _HistoryRow();
+
+  @override
+  State<_HistoryRow> createState() => _HistoryRowState();
+}
+
+class _HistoryRowState extends State<_HistoryRow> {
+  Future<int>? _count;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-count whenever the app state changes (e.g. after a scan).
+    _count = AppScope.of(context).history.count();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.read(context);
+    final t = context.tr;
+    return FutureBuilder<int>(
+      future: _count,
+      builder: (context, snap) => Item(
+        leading: const Glyph(Icons.history),
+        label: snap.hasData ? t.historyCount(snap.data!) : t.history,
+        trailing: Btn(
+          t.clearHistory,
+          onPressed: (snap.data ?? 0) == 0
+              ? null
+              : () async {
+                  await app.history.clear();
+                  if (!mounted) return;
+                  showToast(this.context, t.historyCleared);
+                  setState(() => _count = app.history.count());
+                },
+        ),
+      ),
     );
   }
 }

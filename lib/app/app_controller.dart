@@ -11,6 +11,7 @@ import '../models/device_facts.dart';
 import '../models/device_status.dart';
 import '../models/scan_result.dart';
 import '../services/diagnostic_service.dart';
+import '../services/history_store.dart';
 import '../services/iphone_service.dart';
 import '../services/platform_bridge.dart';
 import 'console_controller.dart';
@@ -25,7 +26,9 @@ class AppController extends ChangeNotifier {
     PlatformBridge? bridge,
     bool useIsolate = true,
     String? systemLocale,
-  }) : _systemLang = AppLang.fromLocale(
+    HistoryStore? history,
+  }) : history = history ?? HistoryStore(),
+       _systemLang = AppLang.fromLocale(
          systemLocale ?? PlatformDispatcher.instance.locale.toLanguageTag(),
        ),
        bridge = bridge ?? PlatformBridge.forHost(),
@@ -41,6 +44,48 @@ class AppController extends ChangeNotifier {
   final KnowledgeBase knowledgeBase;
   final DiagnosticService diagnostics;
   final PlatformBridge bridge;
+
+  /// Local summaries of past scans (per device, hashed UDID).
+  final HistoryStore history;
+
+  /// The scan before the current one, for "since the last scan".
+  HistoryEntry? _previous;
+  HistoryEntry? get previousScan => _previous;
+
+  /// Kernel panics dated after the previous scan.
+  int get newPanicsSincePrevious {
+    final prev = _previous, scan = _scan;
+    if (prev == null || scan == null) return 0;
+    return scan.panics
+        .where((p) => p.date != null && p.date!.isAfter(prev.date))
+        .length;
+  }
+
+  Future<void> _recordScan() async {
+    final udid = _scannedUdid, scan = _scan;
+    if (udid == null || scan == null) return;
+    final past = await history.load(udid);
+    _previous = past.isEmpty ? null : past.last;
+    final h = health;
+    final device = _status.device;
+    await history.add(
+      udid,
+      HistoryEntry(
+        date: scan.scannedAt,
+        panics: scan.panics.length,
+        productType: device?.productType,
+        iosVersion: device?.productVersion,
+        hardwareLikely: scan.health.verdict.name == 'hardwareIssueLikely',
+        mainIssue: h.mainIssue?.value,
+        batteryHealth: _facts?.battery?.healthPercent,
+        cycleCount: _facts?.battery?.cycleCount,
+        storageUsedPercent: _facts?.storage?.usedPercent,
+        appCrashes7d: scan.appCrashes().length,
+        jetsam7d: scan.jetsamEvents().length,
+      ),
+    );
+    notifyListeners();
+  }
 
   /// Live log of the connected device.
   late final ConsoleController console = ConsoleController(iphone);
@@ -168,6 +213,7 @@ class AppController extends ChangeNotifier {
 
   void _clearScan() {
     _scan = null;
+    _previous = null;
     _scanError = null;
     _scannedUdid = null;
     _phase = ScanPhase.idle;
@@ -208,7 +254,10 @@ class AppController extends ChangeNotifier {
     }
     _cancelScan = null;
     notifyListeners();
-    if (_phase == ScanPhase.done) unawaited(loadFacts());
+    if (_phase == ScanPhase.done) {
+      await _recordScan();
+      unawaited(loadFacts());
+    }
   }
 
   /// Stops the copy in progress (nothing is changed on the iPhone).

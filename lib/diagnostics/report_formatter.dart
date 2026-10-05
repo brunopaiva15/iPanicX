@@ -1,6 +1,8 @@
 import '../l10n/strings.dart';
+import '../models/device_facts.dart';
 import '../models/iphone_device.dart';
 import '../models/scan_result.dart';
+import 'health_report.dart';
 
 /// Plain-text rendering of a diagnosis (clipboard + `.txt` export).
 class ReportFormatter {
@@ -83,6 +85,130 @@ class ReportFormatter {
       ..writeln()
       ..writeln(t.reportLocal);
     return b.toString();
+  }
+}
+
+/// Whole-device report: health checklist, main issue, battery, storage,
+/// correlation, then every kernel panic in one line.
+abstract final class FullReport {
+  static String render({
+    required HealthReport health,
+    ScanResult? scan,
+    DeviceFacts? facts,
+    IPhoneDevice? device,
+    DateTime? now,
+  }) {
+    final t = tr;
+    final b = StringBuffer()
+      ..writeln('${t.reportTitle} — ${t.fullReport}')
+      ..writeln('=' * 48)
+      ..writeln();
+    if (device != null) {
+      b.writeln(
+        [
+          device.displayName,
+          if (device.modelName != device.displayName) device.modelName,
+          if (device.productType != null) device.productType,
+          if (device.productVersion != null) 'iOS ${device.productVersion}',
+          if (device.buildVersion != null) '(${device.buildVersion})',
+        ].join('  '),
+      );
+    }
+    b
+      ..writeln(formatStamp(now ?? DateTime.now()))
+      ..writeln()
+      ..writeln('${t.overallState} : ${_overall(t, health.overall)}'.colon(t))
+      ..writeln();
+
+    for (final c in health.checks) {
+      final mark = switch (c.status) {
+        CheckStatus.ok => '[OK]  ',
+        CheckStatus.warning => '[!]   ',
+        CheckStatus.problem => '[X]   ',
+        CheckStatus.info => '[i]   ',
+        CheckStatus.unavailable => '[-]   ',
+      };
+      b.writeln('  $mark${c.title.padRight(26)}${c.value}');
+    }
+
+    final g = health.mainIssue;
+    if (g != null) {
+      b
+        ..writeln()
+        ..writeln('${t.mainIssue} :'.colon(t))
+        ..writeln('  ${g.value}  (${g.count}×)')
+        ..writeln(
+          '  ${'${t.probableCause} : '.colon(t)}${g.component ?? t.componentUnknown}',
+        )
+        ..writeln('  ${'${t.confidence} : '.colon(t)}${g.confidence.label}');
+      if (g.first != null) {
+        b.writeln('  ${'${t.firstSeen} : '.colon(t)}${formatStamp(g.first!)}');
+      }
+      if (g.last != null) {
+        b.writeln('  ${'${t.lastSeen} : '.colon(t)}${formatStamp(g.last!)}');
+      }
+      if (g.isHardware) b.writeln('  ${t.knownSignatureDisclaimer}');
+    }
+
+    final bat = facts?.battery;
+    if (bat != null) {
+      String v(Object? x, [String unit = '']) =>
+          x == null ? t.unavailable : '$x$unit';
+      b
+        ..writeln()
+        ..writeln('${t.battery} :'.colon(t))
+        ..writeln('  ${t.charge.padRight(24)}${v(bat.chargePercent, ' %')}')
+        ..writeln('  ${t.cycleCount.padRight(24)}${v(bat.cycleCount)}')
+        ..writeln(
+          '  ${t.designCapacity.padRight(24)}${v(bat.designCapacity, ' mAh')}',
+        )
+        ..writeln(
+          '  ${t.currentCapacity.padRight(24)}${v(bat.fullChargeCapacity, ' mAh')}',
+        )
+        ..writeln(
+          '  ${t.estimatedHealth.padRight(24)}${v(bat.healthPercent, ' %')}',
+        );
+    }
+
+    if (health.groups.isNotEmpty) {
+      b
+        ..writeln()
+        ..writeln('${t.correlation} :'.colon(t));
+      for (final g in health.groups) {
+        b.writeln(
+          '  ${g.count.toString().padLeft(3)}×  ${g.value}'
+          '${g.component == null ? '' : '  →  ${g.component}'}',
+        );
+      }
+    }
+
+    if (scan != null && scan.panics.isNotEmpty) {
+      b
+        ..writeln()
+        ..writeln('${t.kernelPanicsSection} :'.colon(t));
+      for (final p in scan.panics) {
+        b.writeln(
+          '  ${p.date == null ? '?' : formatStamp(p.date!)}  '
+          '${p.result.title}  (${p.file.name})',
+        );
+      }
+    }
+    b
+      ..writeln()
+      ..writeln(t.reportLocal);
+    return b.toString();
+  }
+
+  static String _overall(Strings t, CheckStatus s) => switch (s) {
+    CheckStatus.problem => t.overallProblem,
+    CheckStatus.warning => t.overallWarning,
+    _ => t.overallOk,
+  };
+
+  static String formatStamp(DateTime d) {
+    String two(int v) => v.toString().padLeft(2, '0');
+    final l = d.toLocal();
+    return '${l.year}-${two(l.month)}-${two(l.day)} ${two(l.hour)}:${two(l.minute)}';
   }
 }
 

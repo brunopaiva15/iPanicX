@@ -6,6 +6,7 @@ import 'package:ipanicx/app/app.dart';
 import 'package:ipanicx/app/app_controller.dart';
 import 'package:ipanicx/app/host_platform.dart';
 import 'package:ipanicx/l10n/strings.dart';
+import 'package:ipanicx/services/history_store.dart';
 import 'package:ipanicx/services/mock_iphone_service.dart';
 
 import '../helpers.dart';
@@ -43,6 +44,7 @@ void main() {
       knowledgeBase: loadKnowledgeBase(),
       useIsolate: false,
       systemLocale: locale,
+      history: HistoryStore(root: Directory('${tmp.path}/history')),
     );
     await tester.pumpWidget(IPanicXApp(controller: controller));
     await tester.runAsync(controller.start);
@@ -260,6 +262,37 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('9 in 7 days'), findsOneWidget);
+  });
+
+  testWidgets('second scan: compared with the previous one, full report', (
+    tester,
+  ) async {
+    final (controller, _) = await pumpApp(tester);
+    await tester.runAsync(controller.scanDiagnostics);
+    expect(controller.previousScan, isNull);
+    await tester.runAsync(controller.scanDiagnostics);
+    await settle(tester);
+    expect(controller.previousScan, isNotNull);
+    expect(controller.newPanicsSincePrevious, 0);
+
+    await tester.tap(find.text('Health'));
+    await settle(tester);
+    expect(find.textContaining('Since the last scan'), findsOneWidget);
+    expect(find.text('no new kernel panic'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Full report'),
+      300,
+      scrollable: find
+          .descendant(
+            of: find.byType(ListView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.text('Full report'), findsOneWidget);
+
+    // Two summaries saved locally (file I/O: outside the fake clock).
+    expect(await tester.runAsync(controller.history.count), 2);
   });
 
   testWidgets('console: live log with explained events', (tester) async {

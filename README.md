@@ -10,8 +10,22 @@ macOS) qui lit les rapports de diagnostic d'un iPhone branché en USB, analyse a
 > aucun serveur. Les rapports sont copiés dans un dossier temporaire de
 > l'ordinateur et analysés sur place.
 
-Chaîne V0 : **iPhone USB → copie des crash reports → parsing → analyse par la
-base de connaissances → diagnostic → export `.txt`.**
+Chaîne : **iPhone USB → copie des crash reports → parsing → analyse par la
+base de connaissances → corrélation → bilan de santé → export `.txt`.**
+
+## V1 en bref
+
+| Écran | Ce qu'il apporte |
+|---|---|
+| **Santé** | état général (OK / à surveiller / problème, **sans note sur 100**), problème principal, vérifications : batterie, stockage, kernel panics, crashs d'apps (7 j), Jetsam (7 j), température, NAND, baseband, Developer Mode, Wi-Fi |
+| **Santé › Batterie** | charge, cycles, capacité d'origine / actuelle, santé estimée, température (`AppleSmartBattery`) |
+| **Santé › Corrélation** | panics regroupés par indice matériel (capteur manquant comme `TG0B`, masque SMC, service du watchdog) avec occurrences, première / dernière apparition, pièce suspectée ; confiance relevée d'un cran à partir de 3 occurrences |
+| **Console** | journal en direct (`idevicesyslog`), lignes importantes colorées et expliquées, filtre « Événements seulement », pause, export |
+| **Historique** | résumé local de chaque scan, « depuis le dernier scan : +N kernel panics, batterie 78 → 76 % » |
+| **Rapport complet** | santé + batterie + corrélation + liste des panics en `.txt` |
+
+Une valeur qu'iOS n'expose pas s'affiche **« Non disponible »**, jamais
+inventée. Les commandes utilisées sont toutes en lecture seule.
 
 ---
 
@@ -25,7 +39,17 @@ base de connaissances → diagnostic → export `.txt`.**
 | Pilote iPhone | intégré à macOS (usbmuxd) | app **Apple Devices** (Microsoft Store) ou **iTunes** : pilote USB + *Apple Mobile Device Service* |
 | libimobiledevice | Homebrew ou embarqué | MSYS2 ou embarqué |
 
-Outils utilisés : `idevice_id`, `ideviceinfo`, `idevicecrashreport`, `idevicepair` (libimobiledevice 1.3+).
+Outils utilisés : `idevice_id`, `ideviceinfo`, `idevicecrashreport`,
+`idevicepair`, `idevicediagnostics`, `idevicesyslog` (libimobiledevice 1.3+).
+
+| Donnée | Commande (lecture seule) |
+|---|---|
+| Batterie | `idevicediagnostics ioregentry AppleSmartBattery` (+ `ideviceinfo -q com.apple.mobile.battery`) |
+| Stockage | `ideviceinfo -q com.apple.disk_usage` |
+| Developer Mode | `ideviceinfo -q com.apple.security.mac.amfi` (`DeveloperModeStatus`) |
+| Baseband, Wi-Fi | `ideviceinfo` (`BasebandVersion`, `WiFiAddress`) |
+| Console | `idevicesyslog -u <udid>` |
+| Crashs d'apps, Jetsam, ResetCounter | en-tête JSON des rapports copiés (`bug_type` 309/109, 298, 115) |
 
 ### Installer Flutter (macOS)
 
@@ -193,9 +217,11 @@ pas) ou l'emballer dans un installeur (MSIX, Inno Setup…).
 
 Activé par `--dart-define=USE_MOCK_DEVICE=true` (ou la variable d'environnement
 `USE_MOCK_DEVICE=true`). `MockIPhoneService` simule un iPhone 14 Pro et génère
-au scan : 12 panics SMC connus (masque `0x140000`), 2 panics inconnus,
-2 redémarrages forcés, des JetsamEvent et un ResetCounter (dont certains dans
-`Retired/`). **Général › Appareil simulé** permet de basculer entre les
+au scan : 12 panics SMC connus (masque `0x140000`), 3 panics « capteur
+manquant `TG0B` », 2 panics inconnus, 2 redémarrages forcés, 9 crashs d'apps
+sur la semaine, des JetsamEvent et un ResetCounter (dont certains dans
+`Retired/`). Il fournit aussi une batterie usée (78 %, 843 cycles), un
+stockage plein à 94 % et un journal en direct simulé pour la Console. **Général › Appareil simulé** permet de basculer entre les
 états : connecté, deux iPhones, aucun panic, aucun iPhone, iPhone non reconnu
 (pilote), Trust requis, verrouillé, erreur de communication, libimobiledevice
 absent, échec de la copie.
@@ -262,7 +288,8 @@ panicFlags, sensor mask (`sensor array 1310720` → `0x140000`, hexa ou JSON),
 lib/
   main.dart                      choix mock / réel, chargement de la base
   app/        app.dart, theme.dart (tokens Codenotch), app_controller.dart (état,
-              langue), host_platform.dart (textes et chemins selon l'OS)
+              langue, infos appareil, historique), console_controller.dart,
+              host_platform.dart (textes et chemins selon l'OS)
   l10n/       strings.dart (tous les textes EN/FR, Dart pur), lang_scope.dart
   models/     iphone_device, device_status, diagnostic_file, panic_report,
               diagnostic_result, scan_result
@@ -270,13 +297,17 @@ lib/
               libimobiledevice_service.dart (réel, via CommandRunner)
               mock_iphone_service.dart, command_runner.dart, tool_locator.dart
               usb_probe.dart (service USB Apple joignable ? iPhone vu par l'OS ?)
+              device_facts_parser.dart + plist.dart (batterie, stockage, amfi)
+              history_store.dart (résumés de scans, par UDID haché)
               diagnostic_service.dart (scan → parse → analyse → synthèse)
               platform_bridge.dart (interface), macos_bridge.dart (canaux Swift),
               windows_bridge.dart (file_selector + explorer.exe)
   diagnostics/ panic_parser, panic_analyzer, diagnostic_rule, knowledge_base,
-              knowledge_base_loader, report_formatter
+              knowledge_base_loader, report_formatter (diagnostic + rapport
+              complet), correlation, health_report, log_rules (console)
   ui/         shell.dart (barre latérale), kit.dart, ring.dart, format.dart,
-              panes/ (overview, panics, files, general, panic + rapport brut)
+              panes/ (overview, health, panics, files, console, general,
+              panic + rapport brut)
 assets/diagnostics/knowledge_base.json   règles de diagnostic
 assets/samples/                          rapports utilisés par le mock
 macos/Runner/IPhoneBridge.swift          NSSavePanel, NSOpenPanel, Finder
@@ -440,6 +471,12 @@ flutter test
 - `test/services/` : service libimobiledevice avec un faux `CommandRunner`
   (parsing, erreurs lockdown, timeouts, outils absents, copie `-k`, iPhone vu
   par l'OS mais pas par usbmuxd, service USB injoignable), scan complet en mock ;
+- `test/diagnostics/health_report_test.dart` : corrélation (masque SMC ×12,
+  `TG0B` ×3 → confiance relevée), table capteurs, vérifications, valeurs
+  « Non disponible » ;
+- `test/services/device_facts_test.dart`, `command_runner_test.dart`,
+  `history_store_test.dart` : plist `AppleSmartBattery`, stockage, Developer
+  Mode, annulation et flux de processus réels, historique ;
 - `test/l10n_test.dart` : langue système, traductions de toutes les règles,
   diagnostic, preuves, dates et export en français ;
 - `test/ui/` : parcours complet en mock (scan → analyse → diagnostic → brut),
@@ -456,36 +493,39 @@ Tu peux aussi déposer tes propres rapports dans `test/fixtures/real_full/`.
 
 ---
 
-## Limitations actuelles (V0)
+## Limitations actuelles
 
-- **Windows : non compilé ni testé dans l'environnement de développement de la
-  V0** (conteneur Linux) ; le code Dart et les textes Windows sont couverts par
-  les tests, mais le runner C++ et le parcours réel avec un iPhone sont à
-  valider sur un PC. Pas de notification USB native sous Windows : la
-  détection repose sur le polling (2 s).
-- Un seul appareil analysé à la fois (le premier si
-  plusieurs, avec avertissement).
+- **Windows : non compilé ni testé dans l'environnement de développement**
+  (conteneur Linux) ; le code Dart et les textes Windows sont couverts par
+  les tests, le runner C++ et le parcours réel sont à valider sur un PC. Pas
+  de notification USB native sous Windows : détection par polling (2 s).
+- **Données V1 à valider sur iPhone réel** : les formats d'`AppleSmartBattery`,
+  `disk_usage` et `amfi` sont testés sur des sorties représentatives, pas
+  encore sur ton appareil ; ce qu'iOS refuse s'affiche « Non disponible »
+  (Détails techniques dans Santé).
+- Un seul appareil analysé à la fois (le premier si plusieurs).
 - Dépend des exécutables libimobiledevice (pas encore de FFI).
-- `idevicecrashreport` copie **tous** les rapports (peut prendre du temps sur un
-  appareil qui en a beaucoup) ; pas d'annulation en cours de copie.
-- Base de connaissances minimale ; un seul mapping précis capteur → composant.
-- Seuls les kernel panics et redémarrages forcés sont analysés ; Jetsam,
-  ResetCounter, stackshots sont listés mais pas interprétés.
-- L'app n'a pas encore été compilée/signée pour la distribution : le Hardened
-  Runtime et la notarisation restent à configurer avec votre identité.
-- Interface en anglais uniquement.
+- Table capteur → pièce limitée (`TG0B`, `TG0V`, `mic1`, `prs0`) et un seul
+  masque SMC précis (iPhone15,2 `0x140000`).
+- Wi-Fi : iOS ne donne que l'adresse, pas l'état de la puce.
+- App non signée : Developer ID / notarisation (macOS) et Authenticode / MSIX
+  (Windows) restent à configurer avec ton identité.
 - Linux, iOS et Android ne sont pas supportés.
 
-## Pistes V1
+## Feuille de route
 
-- Remplacer les exécutables par Dart FFI (libimobiledevice) ou un framework
-  Swift dédié ; annulation et progression précises de la copie.
-- Enrichir la base : mappings sensor mask / missing sensors par modèle,
-  signatures validées en atelier, versionnage et mise à jour signée de la base.
-- Interpréter ResetCounter, JetsamEvent, panic-base/socd, watchdogs.
-- Historique local des appareils et comparaison entre scans.
-- Export PDF, localisation FR/EN, fenêtre plus native (NSVisualEffectView,
-  barre de titre unifiée).
-- Signature Developer ID, Hardened Runtime, notarisation automatisée en CI ;
-  signature Authenticode et installeur MSIX sous Windows.
+**Fait en V1** : bilan de santé, batterie, stockage, corrélation et table
+capteur → pièce, console en direct, crashs d'apps / Jetsam / ResetCounter,
+annulation de la copie, historique local et comparaison, rapport complet,
+interface FR/EN.
+
+**V2** :
+- Export PDF du rapport complet.
 - Watcher USB natif sous Windows (`RegisterDeviceNotification`, VID 0x05AC).
+- Dart FFI (libimobiledevice) ou framework Swift à la place des exécutables ;
+  progression exacte de la copie.
+- Base de connaissances : masques SMC et capteurs par modèle validés en
+  atelier, versionnage et mise à jour signée.
+- Interprétation détaillée de ResetCounter et des stackshots.
+- Signature et notarisation automatisées en CI, installeur MSIX qui propose
+  Apple Devices.

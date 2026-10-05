@@ -1,10 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ipanicx/diagnostics/panic_analyzer.dart';
 import 'package:ipanicx/diagnostics/panic_parser.dart';
+import 'package:ipanicx/diagnostics/health_report.dart';
 import 'package:ipanicx/diagnostics/report_formatter.dart';
 import 'package:ipanicx/l10n/strings.dart';
 import 'package:ipanicx/models/diagnostic_file.dart';
 import 'package:ipanicx/models/scan_result.dart';
+import 'package:ipanicx/services/mock_iphone_service.dart';
 import 'package:ipanicx/ui/format.dart';
 
 import 'helpers.dart';
@@ -89,5 +91,44 @@ void main() {
       formatRelativeDate(DateTime(2026, 8, 3, 9, 7), now: now),
       '3 août 2026, 09:07',
     );
+  });
+
+  test('full report in French', () async {
+    L10n.lang = AppLang.fr;
+    final report = parser.parse(loadSample(smcSample));
+    final panic = AnalyzedPanic(
+      file: DiagnosticFile.fromPath(
+        path: '/tmp/$smcSample',
+        rootDirectory: '/tmp',
+        sizeBytes: 1,
+      ),
+      report: report,
+      result: PanicAnalyzer(kb, lang: AppLang.fr).analyze(report),
+    );
+    final scan = ScanResult(
+      directory: '/tmp',
+      files: [panic.file],
+      panics: [panic],
+      health: DeviceHealthSummary.fromPanics([panic]),
+      scannedAt: DateTime(2026, 10, 5),
+    );
+    final health = HealthReport.build(
+      s: const Strings(AppLang.fr),
+      knowledgeBase: kb,
+      scan: scan,
+      facts: MockIPhoneService.facts,
+    );
+    final text = FullReport.render(
+      health: health,
+      scan: scan,
+      facts: MockIPhoneService.facts,
+      now: DateTime(2026, 10, 5, 12),
+    );
+    expect(text, contains('Rapport complet'));
+    expect(text, contains('État général : Problème détecté'));
+    expect(text, contains('[!]   Batterie'));
+    expect(text, contains('Santé estimée'));
+    expect(text, contains('Corrélation :'));
+    expect(text, contains('Panne de capteur SMC'));
   });
 }

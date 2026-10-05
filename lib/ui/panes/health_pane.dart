@@ -4,6 +4,7 @@ import '../../app/app_controller.dart';
 import '../../app/theme.dart';
 import '../../diagnostics/correlation.dart';
 import '../../diagnostics/health_report.dart';
+import '../../diagnostics/report_formatter.dart';
 import '../../l10n/lang_scope.dart';
 import '../../l10n/strings.dart';
 import '../../models/device_facts.dart';
@@ -51,6 +52,10 @@ class HealthPane extends StatelessWidget {
           )
         else ...[
           _Summary(report: report),
+          if (app.previousScan != null) ...[
+            const SizedBox(height: 10),
+            _SinceLast(app: app),
+          ],
           if (app.scan == null) ...[
             const SizedBox(height: 10),
             Group(
@@ -109,6 +114,19 @@ class HealthPane extends StatelessWidget {
               ],
             ),
           ],
+          Sec(t.report),
+          Group(
+            children: [
+              Item(
+                label: t.fullReport,
+                hint: t.fullReportHint,
+                trailing: Btn(
+                  t.exportButton,
+                  onPressed: () => _exportFull(context, app),
+                ),
+              ),
+            ],
+          ),
           if (facts != null && facts.notes.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -117,6 +135,54 @@ class HealthPane extends StatelessWidget {
               ),
             ),
         ],
+      ],
+    );
+  }
+}
+
+Future<void> _exportFull(BuildContext context, AppController app) async {
+  final text = FullReport.render(
+    health: app.health,
+    scan: app.scan,
+    facts: app.facts,
+    device: app.status.device,
+  );
+  final d = DateTime.now();
+  String two(int v) => v.toString().padLeft(2, '0');
+  final saved = await app.bridge.saveTextFile(
+    suggestedName:
+        'iPanicX-report-${d.year}-${two(d.month)}-${two(d.day)}-${two(d.hour)}${two(d.minute)}.txt',
+    contents: text,
+  );
+  if (saved != null && context.mounted) {
+    showToast(context, context.tr.savedTo(saved));
+    await app.bridge.revealInFinder(saved);
+  }
+}
+
+class _SinceLast extends StatelessWidget {
+  const _SinceLast({required this.app});
+  final AppController app;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tr;
+    final prev = app.previousScan!;
+    final now = app.facts?.battery?.healthPercent;
+    final parts = [
+      t.panicsDelta(app.newPanicsSincePrevious),
+      if (prev.batteryHealth != null &&
+          now != null &&
+          prev.batteryHealth != now)
+        t.batteryDelta(prev.batteryHealth!, now),
+    ];
+    return Group(
+      children: [
+        Item(
+          leading: const Glyph(Icons.history),
+          label: t.sinceLastScan(formatRelativeDate(prev.date)),
+          value: parts.join(' · '),
+        ),
       ],
     );
   }
