@@ -1,7 +1,10 @@
 # Builds iPanicX for Windows and macOS and publishes a GitHub Release.
 #
 #   git tag v0.1.0 && git push origin v0.1.0      -> build + release
-#   Actions > Release > Run workflow               -> build only (artifacts)
+#   Actions > Release > Run workflow, tag: v0.1.0  -> build + release (the
+#                                                     tag is created on the
+#                                                     selected branch)
+#   Actions > Release > Run workflow, no tag       -> build only (artifacts)
 #
 # Release notes: docs/releases/<tag>.md
 name: Release
@@ -10,6 +13,11 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to create and publish (e.g. v0.1.0). Empty: build only.'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -103,9 +111,11 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
     needs: [windows, macos]
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -114,9 +124,13 @@ jobs:
           merge-multiple: true
       - name: Checksums
         run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Release notes exist
+        run: test -f "docs/releases/${TAG}.md"
       - uses: softprops/action-gh-release@v2
         with:
-          name: iPanicX ${{ github.ref_name }}
-          body_path: docs/releases/${{ github.ref_name }}.md
+          tag_name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
+          name: iPanicX ${{ env.TAG }}
+          body_path: docs/releases/${{ env.TAG }}.md
           files: dist/*
           fail_on_unmatched_files: true
