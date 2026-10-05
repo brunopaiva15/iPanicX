@@ -73,4 +73,43 @@ void main() {
     expect(parseDeveloperMode({}), isNull);
     expect(const StorageInfo(totalBytes: 0, availableBytes: 0).usedPercent, 0);
   });
+
+  test('free space: the smallest counter iOS reports', () {
+    // Reported on a real iPhone: TotalDataAvailable counted space that is
+    // not actually free; Settings showed ~13 GB.
+    final s = parseStorage({
+      'TotalDiskCapacity': '256000000000',
+      'TotalDataCapacity': '235000000000',
+      'TotalDataAvailable': '129000000000',
+      'AmountDataAvailable': '13000000000',
+    })!;
+    expect(s.availableBytes, 13000000000);
+    expect(s.usedPercent, 94);
+  });
+
+  test('battery temperature: key and unit variants', () {
+    double? t(String key, String value) => batteryTemperature(
+      parsePlist(
+        '<plist><dict><key>$key</key><integer>$value</integer></dict></plist>',
+      ),
+    );
+    expect(t('Temperature', '2950'), 29.5);
+    expect(t('VirtualTemperature', '3105'), 31.1);
+    expect(t('BatteryTemperature', '30'), 30);
+    expect(t('Temperature', '303'), 29.9); // Kelvin
+    expect(t('Temperature', '99999'), isNull);
+    expect(t('Voltage', '3900'), isNull);
+  });
+
+  test('raw values for the technical section', () {
+    expect(
+      rawValues('disk_usage', {'B': '2', 'A': '1'}),
+      'disk_usage:\n  A: 1\n  B: 2',
+    );
+    expect(
+      rawBatteryValues(batteryXml),
+      contains('IORegistry.BatteryData.CycleCount: 843'),
+    );
+    expect(rawBatteryValues(null), 'AppleSmartBattery: (none)');
+  });
 }

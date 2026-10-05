@@ -127,11 +127,18 @@ class HealthPane extends StatelessWidget {
               ),
             ],
           ),
-          if (facts != null && facts.notes.isNotEmpty)
+          if (facts != null && (facts.notes.isNotEmpty || facts.raw != null))
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Group(
-                children: [TechnicalDetails(details: facts.notes.join('\n'))],
+                children: [
+                  TechnicalDetails(
+                    details: [
+                      ...facts.notes,
+                      if (facts.raw != null) facts.raw!,
+                    ].join('\n\n'),
+                  ),
+                ],
               ),
             ),
         ],

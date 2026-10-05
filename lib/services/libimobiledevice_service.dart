@@ -524,6 +524,11 @@ class LibimobiledeviceService implements IPhoneService {
       basebandVersion: general['BasebandVersion'],
       wifiAddress: general['WiFiAddress'],
       notes: notes,
+      raw: [
+        rawBatteryValues(ioreg),
+        rawValues('disk_usage', disk),
+        rawValues('battery domain', batteryDomain),
+      ].join('\n\n'),
       readAt: DateTime.now(),
     );
   }

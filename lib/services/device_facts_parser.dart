@@ -45,11 +45,7 @@ BatteryInfo? parseBattery({String? ioreg, Map<String, String>? lockdown}) {
   }
   charge ??= _int(lockdown?['BatteryCurrentCapacity']);
 
-  final rawTemp = _int(find('Temperature'));
-  // Centi-degrees Celsius (2950 = 29.5 °C).
-  final temp = rawTemp == null
-      ? null
-      : (rawTemp > 1000 ? rawTemp / 100 : rawTemp.toDouble());
+  final temp = batteryTemperature(root);
 
   final info = BatteryInfo(
     chargePercent: charge,
@@ -63,14 +59,79 @@ BatteryInfo? parseBattery({String? ioreg, Map<String, String>? lockdown}) {
   return info.isEmpty ? null : info;
 }
 
+/// Battery temperature in °C. The key varies across iOS versions; values
+/// are centi-degrees (2950 = 29.5 °C), Kelvin or plain degrees. Returns
+/// null outside a plausible -20…90 °C range.
+double? batteryTemperature(Object? root) {
+  if (root == null) return null;
+  for (final key in const [
+    'Temperature',
+    'VirtualTemperature',
+    'BatteryTemperature',
+    'CellTemperature',
+  ]) {
+    final raw = plistFind(root, key);
+    final v = raw is double ? raw : _int(raw)?.toDouble();
+    if (v == null) continue;
+    // AppleSmartBattery uses centi-degrees Celsius (2950 = 29.5 °C).
+    final c = v >= 1000
+        ? v / 100
+        : v > 200 && v < 380
+        ? v -
+              273.15 // Kelvin
+        : v;
+    if (c > -20 && c < 90) return double.parse(c.toStringAsFixed(1));
+  }
+  return null;
+}
+
 /// `ideviceinfo -q com.apple.disk_usage`.
+///
+/// iOS reports several "available" counters (`AmountDataAvailable`,
+/// `TotalDataAvailable`…) that do not always agree: one can include
+/// purgeable or reserved space. The smallest one is what the user can
+/// actually use, as in iOS Settings.
 StorageInfo? parseStorage(Map<String, String> values) {
   final total =
       _int(values['TotalDataCapacity']) ?? _int(values['TotalDiskCapacity']);
-  final free =
-      _int(values['TotalDataAvailable']) ?? _int(values['AmountDataAvailable']);
-  if (total == null || free == null || total <= 0) return null;
+  final candidates = [
+    _int(values['AmountDataAvailable']),
+    _int(values['TotalDataAvailable']),
+  ].whereType<int>().where((v) => v >= 0).toList();
+  if (total == null || total <= 0 || candidates.isEmpty) return null;
+  final free = candidates.reduce((a, b) => a < b ? a : b);
   return StorageInfo(totalBytes: total, availableBytes: free.clamp(0, total));
+}
+
+/// One line per key, for the technical section (`Key: value`).
+String rawValues(
+  String label,
+  Map<String, String> values, {
+  Iterable<String>? only,
+}) {
+  final keys = (only ?? values.keys).where(values.containsKey).toList()..sort();
+  if (keys.isEmpty) return '$label: (none)';
+  return '$label:\n${keys.map((k) => '  $k: ${values[k]}').join('\n')}';
+}
+
+/// Battery keys and scalar values found in the IORegistry plist.
+String rawBatteryValues(String? ioreg) {
+  final root = ioreg == null ? null : parsePlist(ioreg);
+  if (root is! Map) return 'AppleSmartBattery: (none)';
+  final out = <String, String>{};
+  void walk(Map m, String prefix) {
+    for (final e in m.entries) {
+      final v = e.value;
+      if (v is Map) {
+        walk(v, '$prefix${e.key}.');
+      } else if (v is! List) {
+        out['$prefix${e.key}'] = '$v';
+      }
+    }
+  }
+
+  walk(root, '');
+  return rawValues('AppleSmartBattery', out);
 }
 
 /// `ideviceinfo -q com.apple.security.mac.amfi` → `DeveloperModeStatus`.

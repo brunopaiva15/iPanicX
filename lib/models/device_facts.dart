@@ -67,6 +67,7 @@ class DeviceFacts {
     this.basebandVersion,
     this.wifiAddress,
     this.notes = const [],
+    this.raw,
     this.readAt,
   });
 
@@ -78,6 +79,9 @@ class DeviceFacts {
 
   /// Raw errors / missing domains, for the technical section.
   final List<String> notes;
+
+  /// Raw values iOS returned (battery, storage), for the technical section.
+  final String? raw;
   final DateTime? readAt;
 
   static const empty = DeviceFacts();

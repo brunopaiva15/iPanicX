@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app/theme.dart';
 import '../l10n/lang_scope.dart';
+import 'ring.dart';
 
 /// Building blocks of Codenotch's settings window
 /// (windows/codenotch/ui/settings.html): pane head, section captions,
@@ -267,8 +270,13 @@ class Btn extends StatefulWidget {
   const Btn(this.label, {super.key, this.onPressed, this.primary = false});
 
   final String label;
-  final VoidCallback? onPressed;
+
+  /// When it returns a Future, the button shows a spinner and ignores taps
+  /// until it completes (at least [minBusy], so the click is visible).
+  final FutureOr<void> Function()? onPressed;
   final bool primary;
+
+  static const minBusy = Duration(milliseconds: 450);
 
   @override
   State<Btn> createState() => _BtnState();
@@ -276,6 +284,24 @@ class Btn extends StatefulWidget {
 
 class _BtnState extends State<Btn> {
   bool _hover = false;
+  bool _busy = false;
+
+  Future<void> _tap() async {
+    final f = widget.onPressed;
+    if (f == null || _busy) return;
+    final result = f();
+    if (result is! Future) return;
+    setState(() => _busy = true);
+    final started = DateTime.now();
+    try {
+      await result;
+    } catch (_) {
+      // The action reports its own errors.
+    }
+    final rest = Btn.minBusy - DateTime.now().difference(started);
+    if (rest > Duration.zero) await Future<void>.delayed(rest);
+    if (mounted) setState(() => _busy = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -284,12 +310,15 @@ class _BtnState extends State<Btn> {
     final bg = widget.primary
         ? c.accent
         : (_hover && enabled ? c.btnHover : c.btn);
+    final fg = widget.primary ? Colors.white : c.text;
     return MouseRegion(
-      cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      cursor: enabled && !_busy
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
       child: GestureDetector(
-        onTap: widget.onPressed,
+        onTap: enabled ? _tap : null,
         child: Opacity(
           opacity: enabled ? 1 : 0.45,
           child: Container(
@@ -298,12 +327,21 @@ class _BtnState extends State<Btn> {
               color: bg,
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Text(
-              widget.label,
-              style: TextStyle(
-                fontSize: 13,
-                color: widget.primary ? Colors.white : c.text,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_busy) ...[
+                  UsageRing(
+                    size: 12,
+                    fraction: 0,
+                    color: fg,
+                    track: fg.withValues(alpha: 0.25),
+                    spinning: true,
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                Text(widget.label, style: TextStyle(fontSize: 13, color: fg)),
+              ],
             ),
           ),
         ),
