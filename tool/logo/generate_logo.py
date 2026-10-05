@@ -5,7 +5,8 @@
 
 Writes icon_1024.png (transparent) and smaller sizes to out_dir; --install
 also replaces the macOS AppIcon set, windows/runner/resources/app_icon.ico and
-assets/logo/iPanicX.png. The output is deterministic (fixed seed).
+assets/logo/iPanicX.png (README) and assets/branding/logo_256.png (sidebar).
+The output is deterministic (fixed seed).
 Everything is generated: fluid paint texture (line-integral convolution of
 noise along a burst flow field), squircle tile with thickness, bevel and gloss,
 a recessed notch on the right (as in Codenotch) holding a raised gauge ring
@@ -302,6 +303,10 @@ def install(big, root):
              sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
     os.makedirs(os.path.join(root, 'assets/logo'), exist_ok=True)
     big.save(os.path.join(root, 'assets/logo/iPanicX.png'))
+    # In-app copy (sidebar header), small enough to bundle.
+    os.makedirs(os.path.join(root, 'assets/branding'), exist_ok=True)
+    big.resize((256, 256), Image.LANCZOS).save(
+        os.path.join(root, 'assets/branding/logo_256.png'))
     print('installed into', root)
 
 

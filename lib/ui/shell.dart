@@ -135,7 +135,7 @@ class _Sidebar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 48),
+          const _Brand(),
           _Row(
             badge: const SideBadge(Icons.phone_iphone, SideBadge.blue),
             label: t.overview,
@@ -167,6 +167,43 @@ class _Sidebar extends StatelessWidget {
             onTap: () => openLocalIps(context),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Header of the sidebar: app logo and name, in the 48px top band.
+class _Brand extends StatelessWidget {
+  const _Brand();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return SizedBox(
+      height: 56,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 6, bottom: 6),
+        child: Row(
+          children: [
+            Image.asset(
+              'assets/branding/logo_256.png',
+              width: 30,
+              height: 30,
+              filterQuality: FilterQuality.medium,
+              semanticLabel: 'iPanicX',
+            ),
+            const SizedBox(width: 9),
+            Text(
+              'iPanicX',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.2,
+                color: c.text,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
