@@ -1,211 +1,168 @@
 import 'package:flutter/material.dart';
 
 import '../app/app_controller.dart';
-import '../app/host_platform.dart';
-import '../app/router.dart';
 import '../app/theme.dart';
 import '../models/device_status.dart';
-import '../services/mock_iphone_service.dart';
-import 'actions.dart';
-import 'widgets/ring.dart';
-import 'widgets/status_badge.dart';
-import 'widgets/wordmark.dart';
+import '../models/scan_result.dart';
+import 'kit.dart';
+import 'panes/files_pane.dart';
+import 'panes/general_pane.dart';
+import 'panes/overview_pane.dart';
+import 'panes/panic_pane.dart';
+import 'panes/panics_pane.dart';
 
-/// Window layout: sidebar (device, navigation) + content pane hosting a
-/// nested navigator, in the spirit of Codenotch's settings window.
+enum Section { overview, panics, files, general }
+
+/// Navigation for the panes: a section from the sidebar, optionally a panic
+/// opened on top of it (and its raw report).
+class ShellScope extends InheritedWidget {
+  const ShellScope({super.key, required this.state, required super.child});
+
+  final AppShellState state;
+
+  static AppShellState of(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<ShellScope>()!.state;
+
+  @override
+  bool updateShouldNotify(ShellScope old) => false;
+}
+
+/// Codenotch's settings window layout: an inset sidebar card and a pane.
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
   @override
-  State<AppShell> createState() => _AppShellState();
+  State<AppShell> createState() => AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
-  final _navigatorKey = GlobalKey<NavigatorState>();
-  late final _tracker = _RouteTracker(_onRouteChanged);
-  String _route = AppRouter.home;
-
-  void _onRouteChanged(String? name) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && name != null && name != _route) {
-        setState(() => _route = name);
-      }
-    });
-  }
-
+class AppShellState extends State<AppShell> {
+  Section _section = Section.overview;
+  AnalyzedPanic? _panic;
+  bool _raw = false;
   DeviceConnectionState? _lastState;
+
+  void select(Section s) => setState(() {
+    _section = s;
+    _panic = null;
+    _raw = false;
+  });
+
+  void openPanic(AnalyzedPanic p) => setState(() {
+    _panic = p;
+    _raw = false;
+  });
+
+  void openRaw() => setState(() => _raw = true);
+
+  void back() => setState(() {
+    if (_raw) {
+      _raw = false;
+    } else {
+      _panic = null;
+    }
+  });
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // When the device goes away (or changes state) while a scan screen is
-    // open, return to the overview: its data no longer belongs to a
-    // connected device.
+    // A panic from a scan belongs to the device that was connected.
     final state = AppScope.of(context).status.state;
     if (_lastState == DeviceConnectionState.connected &&
         state != DeviceConnectionState.connected) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _goHome());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) select(Section.overview);
+      });
     }
     _lastState = state;
   }
 
-  void _goHome() =>
-      _navigatorKey.currentState?.popUntil((route) => route.isFirst);
-
-  void _goFiles() {
-    final nav = _navigatorKey.currentState;
-    if (nav == null) return;
-    nav.popUntil((route) => route.isFirst);
-    nav.pushNamed(AppRouter.device);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Scaffold(
-      backgroundColor: colors.window,
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _Sidebar(
-            route: _route,
-            onOverview: _goHome,
-            onFiles: _goFiles,
-            navigatorKey: _navigatorKey,
-          ),
-          Expanded(
-            child: ClipRect(
-              child: Navigator(
-                key: _navigatorKey,
-                observers: [_tracker],
-                initialRoute: AppRouter.home,
-                onGenerateRoute: AppRouter.onGenerateRoute,
+    final c = AppColors.of(context);
+    final Widget pane = _panic != null
+        ? (_raw ? RawPane(panic: _panic!) : PanicPane(panic: _panic!))
+        : switch (_section) {
+            Section.overview => const OverviewPane(),
+            Section.panics => const PanicsPane(),
+            Section.files => const FilesPane(),
+            Section.general => const GeneralPane(),
+          };
+    return ShellScope(
+      state: this,
+      child: Scaffold(
+        backgroundColor: c.background,
+        body: ColoredBox(
+          color: c.pane,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _Sidebar(section: _section, onSelect: select),
+              Expanded(
+                child: KeyedSubtree(
+                  key: ValueKey('$_section/${_panic?.file.path}/$_raw'),
+                  child: pane,
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _RouteTracker extends NavigatorObserver {
-  _RouteTracker(this.onChange);
-  final void Function(String?) onChange;
-
-  @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      onChange(route.settings.name);
-
-  @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      onChange(previousRoute?.settings.name);
-
-  @override
-  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
-      onChange(newRoute?.settings.name);
-}
-
+/// `#side`: 196px card inset 4px, radius 14, 48px band, rows of 32px.
 class _Sidebar extends StatelessWidget {
-  const _Sidebar({
-    required this.route,
-    required this.onOverview,
-    required this.onFiles,
-    required this.navigatorKey,
-  });
+  const _Sidebar({required this.section, required this.onSelect});
 
-  final String route;
-  final VoidCallback onOverview;
-  final VoidCallback onFiles;
-  final GlobalKey<NavigatorState> navigatorKey;
+  final Section section;
+  final ValueChanged<Section> onSelect;
 
   @override
   Widget build(BuildContext context) {
-    final app = AppScope.of(context);
-    final colors = AppColors.of(context);
-    final scan = app.scan;
-    // Actions that push screens must use the content navigator's context.
-    BuildContext navContext() => navigatorKey.currentContext ?? context;
+    final c = AppColors.of(context);
     return Container(
-      width: 252,
+      width: 196,
+      margin: const EdgeInsets.all(4),
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
       decoration: BoxDecoration(
-        color: colors.sidebar,
-        border: Border(right: BorderSide(color: colors.hairline)),
+        color: c.side,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: c.line),
       ),
-      padding: const EdgeInsets.fromLTRB(16, 26, 16, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Wordmark(size: 21),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(9, 7, 8, 0),
-            child: Text(
-              'iPhone panic diagnostics',
-              style: TextStyle(color: colors.secondaryText, fontSize: 11.5),
-            ),
-          ),
-          const SizedBox(height: 22),
-          _DeviceChip(status: app.status),
-          const SizedBox(height: 22),
-          _NavItem(
-            icon: Icons.space_dashboard_rounded,
+          const SizedBox(height: 48),
+          _Row(
+            badge: const SideBadge(Icons.phone_iphone, SideBadge.blue),
             label: 'Overview',
-            selected: route == AppRouter.home,
-            onTap: onOverview,
+            selected: section == Section.overview,
+            onTap: () => onSelect(Section.overview),
           ),
-          _NavItem(
-            icon: Icons.folder_rounded,
-            label: 'Diagnostic Files',
-            selected: route == AppRouter.device,
-            enabled: scan != null,
-            badge: scan == null ? null : '${scan.files.length}',
-            onTap: onFiles,
+          _Row(
+            badge: const SideBadge(Icons.bolt, SideBadge.red),
+            label: 'Panics',
+            selected: section == Section.panics,
+            onTap: () => onSelect(Section.panics),
           ),
-          _NavItem(
-            icon: Icons.file_open_rounded,
-            label: 'Open .ips…',
-            onTap: () => openLocalIps(navContext()),
+          _Row(
+            badge: const SideBadge(Icons.folder, SideBadge.gray),
+            label: 'Files',
+            selected: section == Section.files,
+            onTap: () => onSelect(Section.files),
           ),
-          Tooltip(
-            message: 'About iPaniX',
-            child: _NavItem(
-              icon: Icons.info_outline_rounded,
-              label: 'About',
-              onTap: () => showIPaniXAbout(context),
-            ),
+          _Row(
+            badge: const SideBadge(Icons.settings, SideBadge.indigo),
+            label: 'General',
+            selected: section == Section.general,
+            onTap: () => onSelect(Section.general),
           ),
           const Spacer(),
-          _AppearancePicker(mode: app.themeMode, onChanged: app.setThemeMode),
-          const SizedBox(height: 12),
-          if (app.iphone is MockIPhoneService) ...[
-            _MockMenu(service: app.iphone as MockIPhoneService),
-            const SizedBox(height: 12),
-          ],
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colors.card,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colors.border),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.lock_rounded, size: 15, color: colors.ample),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Text(
-                    'Processed locally on this ${HostPlatform.computer}',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: colors.secondaryText,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          _Row(
+            badge: const SideBadge(Icons.description, SideBadge.gray),
+            label: 'Open .ips…',
+            onTap: () => openLocalIps(context),
           ),
         ],
       ),
@@ -213,202 +170,78 @@ class _Sidebar extends StatelessWidget {
   }
 }
 
-/// Device summary at the top of the sidebar: ring coloured by state.
-class _DeviceChip extends StatelessWidget {
-  const _DeviceChip({required this.status});
-
-  final DeviceStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final d = status.device;
-    final (
-      Color color,
-      double fill,
-      String title,
-      String subtitle,
-    ) = switch (status.state) {
-      DeviceConnectionState.searching => (
-        colors.grey,
-        0.0,
-        'Looking for devices',
-        'USB',
-      ),
-      DeviceConnectionState.noDevice => (
-        colors.grey,
-        0.0,
-        'No iPhone',
-        'Connect via USB',
-      ),
-      DeviceConnectionState.connected => (
-        colors.ample,
-        1.0,
-        d?.displayName ?? 'iPhone',
-        [
-          'USB',
-          if (d?.productVersion != null) 'iOS ${d!.productVersion}',
-        ].join(' · '),
-      ),
-      DeviceConnectionState.trustRequired => (
-        colors.watch,
-        0.5,
-        d?.modelName ?? 'iPhone',
-        'Awaiting trust',
-      ),
-      DeviceConnectionState.locked => (
-        colors.watch,
-        0.5,
-        d?.modelName ?? 'iPhone',
-        'Locked',
-      ),
-      DeviceConnectionState.communicationError => (
-        colors.critical,
-        1.0,
-        d?.modelName ?? 'iPhone',
-        'Not responding',
-      ),
-      DeviceConnectionState.toolsUnavailable => (
-        colors.critical,
-        1.0,
-        'Tools missing',
-        'libimobiledevice',
-      ),
-    };
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          UsageRing(
-            fraction: fill,
-            color: color,
-            size: 42,
-            stroke: 3.5,
-            spinning:
-                status.state == DeviceConnectionState.searching ||
-                status.state == DeviceConnectionState.noDevice,
-            child: Icon(
-              Icons.phone_iphone_rounded,
-              size: 18,
-              color: colors.ink,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: colors.secondaryText, fontSize: 11.5),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatefulWidget {
-  const _NavItem({
-    required this.icon,
+/// `.row`: 32px, radius 8, gap 9; selected: soft fill + 3px accent bar.
+class _Row extends StatefulWidget {
+  const _Row({
+    required this.badge,
     required this.label,
     required this.onTap,
     this.selected = false,
-    this.enabled = true,
-    this.badge,
   });
 
-  final IconData icon;
+  final Widget badge;
   final String label;
   final VoidCallback onTap;
   final bool selected;
-  final bool enabled;
-  final String? badge;
 
   @override
-  State<_NavItem> createState() => _NavItemState();
+  State<_Row> createState() => _RowState();
 }
 
-class _NavItemState extends State<_NavItem> {
+class _RowState extends State<_Row> {
   bool _hover = false;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final fg = !widget.enabled
-        ? colors.tertiaryText
-        : widget.selected
-        ? colors.ink
-        : colors.secondaryText;
+    final c = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: MouseRegion(
-        cursor: widget.enabled
-            ? SystemMouseCursors.click
-            : SystemMouseCursors.basic,
+        cursor: SystemMouseCursors.click,
         onEnter: (_) => setState(() => _hover = true),
         onExit: (_) => setState(() => _hover = false),
         child: GestureDetector(
-          onTap: widget.enabled ? widget.onTap : null,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+          onTap: widget.onTap,
+          child: Container(
+            height: 32,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
               color: widget.selected
-                  ? colors.raised
-                  : _hover && widget.enabled
-                  ? colors.raised.withValues(alpha: 0.55)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(11),
-              border: Border.all(
-                color: widget.selected ? colors.border : Colors.transparent,
-              ),
+                  ? c.selSoft
+                  : (_hover ? c.hover : Colors.transparent),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.centerLeft,
               children: [
-                Icon(widget.icon, size: 17, color: fg),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: Text(
-                    widget.label,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: fg,
-                      fontWeight: widget.selected
-                          ? FontWeight.w600
-                          : FontWeight.w500,
+                if (widget.selected)
+                  Positioned(
+                    left: -8,
+                    top: 9,
+                    bottom: 9,
+                    child: Container(
+                      width: 3,
+                      decoration: BoxDecoration(
+                        color: c.accent,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
+                Row(
+                  children: [
+                    widget.badge,
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: kBodySize, color: c.text),
+                      ),
+                    ),
+                  ],
                 ),
-                if (widget.badge != null)
-                  Text(
-                    widget.badge!,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: colors.secondaryText,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
               ],
             ),
           ),
@@ -418,84 +251,15 @@ class _NavItemState extends State<_NavItem> {
   }
 }
 
-class _MockMenu extends StatelessWidget {
-  const _MockMenu({required this.service});
-  final MockIPhoneService service;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return PopupMenuButton<MockScenario>(
-      tooltip: 'Simulate a device state',
-      initialValue: service.scenario,
-      onSelected: service.setScenario,
-      itemBuilder: (_) => [
-        for (final s in MockScenario.values)
-          PopupMenuItem(value: s, child: Text(s.label)),
-      ],
-      child: StatusBadge(
-        label: 'Mock device · ${service.scenario.label}',
-        color: colors.watch,
-      ),
-    );
-  }
-}
-
-/// Dark / System / Light segmented control.
-class _AppearancePicker extends StatelessWidget {
-  const _AppearancePicker({required this.mode, required this.onChanged});
-
-  final ThemeMode mode;
-  final ValueChanged<ThemeMode> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    Widget seg(ThemeMode m, IconData icon, String tip) {
-      final selected = m == mode;
-      return Expanded(
-        child: Tooltip(
-          message: tip,
-          child: GestureDetector(
-            onTap: () => onChanged(m),
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                height: 28,
-                decoration: BoxDecoration(
-                  color: selected ? colors.raised : Colors.transparent,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: selected ? colors.border : Colors.transparent,
-                  ),
-                ),
-                child: Icon(
-                  icon,
-                  size: 15,
-                  color: selected ? colors.ink : colors.secondaryText,
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          seg(ThemeMode.dark, Icons.dark_mode_rounded, 'Dark'),
-          seg(ThemeMode.system, Icons.contrast_rounded, 'Match system'),
-          seg(ThemeMode.light, Icons.light_mode_rounded, 'Light'),
-        ],
-      ),
-    );
+/// File dialog → parse → panic pane.
+Future<void> openLocalIps(BuildContext context) async {
+  final app = AppScope.read(context);
+  final shell = ShellScope.of(context);
+  final path = await app.bridge.pickIpsFile();
+  if (path == null || !context.mounted) return;
+  try {
+    shell.openPanic(await app.diagnostics.analyzeLocalFile(path));
+  } catch (_) {
+    if (context.mounted) showToast(context, 'This file could not be read.');
   }
 }

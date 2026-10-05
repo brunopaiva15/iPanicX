@@ -208,7 +208,7 @@ panicFlags, sensor mask (`sensor array 1310720` → `0x140000`, hexa ou JSON),
 ```
 lib/
   main.dart                      choix mock / réel, chargement de la base
-  app/        app.dart, router.dart, theme.dart (clair/sombre), app_controller.dart (état),
+  app/        app.dart, theme.dart (tokens Codenotch), app_controller.dart (état),
               host_platform.dart (textes et chemins selon l'OS)
   models/     iphone_device, device_status, diagnostic_file, panic_report,
               diagnostic_result, scan_result
@@ -220,7 +220,8 @@ lib/
               windows_bridge.dart (file_selector + explorer.exe)
   diagnostics/ panic_parser, panic_analyzer, diagnostic_rule, knowledge_base,
               knowledge_base_loader, report_formatter
-  ui/         screens/ (home, device, panic_detail, raw_panic) · widgets/ · format.dart
+  ui/         shell.dart (barre latérale), kit.dart, notch.dart, format.dart,
+              panes/ (overview, panics, files, general, panic + rapport brut)
 assets/diagnostics/knowledge_base.json   règles de diagnostic
 assets/samples/                          rapports utilisés par le mock
 macos/Runner/IPhoneBridge.swift          NSSavePanel, NSOpenPanel, Finder
@@ -252,23 +253,30 @@ Runner, puis `xcrun notarytool submit` / `xcrun stapler staple`.
 
 ## Design
 
-L'interface s'inspire fortement de [Codenotch](https://github.com/vinzdg/codenotch)
-(licence MIT) : surfaces noir pur, encre blanche et gris `#808080`, **jauges
-circulaires** (piste translucide, arc depuis midi dans le sens horaire,
-pourcentage en semi-gras dessous), barres fines de type « infobulle »,
-couleurs de signal `#00FF88` / `#F2FF00` / `#FF3F00`, et une barre latérale
-inspirée de sa fenêtre de réglages. Thème sombre par défaut, avec un sélecteur
-Sombre / Système / Clair dans la barre latérale.
+L'interface reprend celle de [Codenotch](https://github.com/vinzdg/codenotch)
+(licence MIT), avec ses valeurs exactes :
 
-- Tokens : `lib/app/theme.dart` (`AppColors`) ;
-- composants : `lib/ui/widgets/ring.dart` (`UsageRing`, `RingStat`, `BarRow`),
-  `common.dart` (`SectionCard`, `Group`, `InfoRow`…), `lib/ui/shell.dart`
-  (barre latérale + navigateur imbriqué) ;
-- les jauges de la vue d'ensemble sont des **proportions factuelles** des
-  panics trouvés (signature connue, liée au matériel, même signature), pas un
-  score de santé ;
-- logo : police [Orbitron](https://fonts.google.com/specimen/Orbitron)
-  (SIL Open Font License, `assets/fonts/Orbitron-OFL.txt`).
+- **Fenêtre** : sa fenêtre de réglages (`windows/codenotch/ui/settings.html`,
+  palette « solid ») :
+  - barre latérale en carte (196 px, inset 4 px, rayon 14) ;
+  - lignes de 32 px avec icône carrée en dégradé de 20 px, trait d'accent de
+    3 px `#0a7aff` sur la sélection ;
+  - titre de volet 22 px, légendes de section en 13,5 px semi-gras ;
+  - groupes arrondis à 10 px, lignes de 40 px séparées par des filets ;
+  - valeurs en gris à droite, boutons `.btn`, contrôle segmenté ;
+  - texte en 13,5 px.
+- **Encoche** : la colonne d'anneaux et la carte infobulle avec sa pointe,
+  aux proportions de `Sources/Notch/NotchLayout.swift` (×1,25), couleurs
+  `#00FF88` / `#F2FF00` / `#FF3F00` et seuils 50 % / 70 %. Un anneau par
+  signature de panic (part des panics) ; survoler un anneau affiche sa carte,
+  cliquer ouvre le dernier panic de cette signature.
+- **Apparence** : suit le système par défaut, réglable dans General
+  (Système / Clair / Sombre).
+
+Code : `lib/app/theme.dart` (tokens), `lib/ui/kit.dart` (volet, groupes,
+lignes, boutons), `lib/ui/notch.dart` (anneau, encoche, carte infobulle),
+`lib/ui/shell.dart` (barre latérale), `lib/ui/panes/` (Overview, Panics,
+Files, General, diagnostic, rapport brut).
 
 ## Ajouter une règle de diagnostic
 

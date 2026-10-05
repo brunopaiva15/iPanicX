@@ -31,9 +31,8 @@ class AppController extends ChangeNotifier {
   final DiagnosticService diagnostics;
   final PlatformBridge bridge;
 
-  /// Dark by default (the black Codenotch-style surfaces); switchable from
-  /// the sidebar.
-  ThemeMode _themeMode = ThemeMode.dark;
+  /// Follows the system by default; General › Appearance overrides it.
+  ThemeMode _themeMode = ThemeMode.system;
   ThemeMode get themeMode => _themeMode;
 
   void setThemeMode(ThemeMode mode) {

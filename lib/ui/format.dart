@@ -31,3 +31,18 @@ String formatBytes(int bytes) {
 
 String plural(int n, String one, [String? many]) =>
     '$n ${n == 1 ? one : (many ?? '${one}s')}';
+
+/// Short form for tight spots: `today 17:42`, `yesterday`, `28 Sep`.
+String formatShortDate(DateTime? date, {DateTime? now}) {
+  if (date == null) return '—';
+  final d = date.toLocal();
+  final n = now ?? DateTime.now();
+  final diff = DateTime(
+    n.year,
+    n.month,
+    n.day,
+  ).difference(DateTime(d.year, d.month, d.day)).inDays;
+  if (diff == 0) return 'today ${formatTime(d)}';
+  if (diff == 1) return 'yesterday';
+  return '${d.day} ${_months[d.month - 1]}';
+}

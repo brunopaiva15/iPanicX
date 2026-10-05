@@ -52,7 +52,7 @@ void main() {
 
     expect(find.text('iPhone 14 Pro'), findsWidgets);
     expect(find.text('Connected via USB'), findsOneWidget);
-    expect(find.text('iOS 26.0.1'), findsOneWidget);
+    expect(find.text('26.0.1'), findsOneWidget);
     expect(find.text('iPhone15,2'), findsOneWidget);
     // UDID is masked.
     expect(find.text('00008120-001A2B3C4D5E6F7A'), findsNothing);
@@ -63,9 +63,9 @@ void main() {
     await settle(tester);
 
     expect(controller.scanError, isNull);
-    expect(find.text('14 Kernel Panics'), findsOneWidget);
+    expect(find.text('Kernel Panics'), findsOneWidget);
+    expect(find.text('14'), findsOneWidget);
     expect(find.text('Device Health'), findsOneWidget);
-    expect(find.text('14 kernel panics detected'), findsOneWidget);
     expect(find.text('Hardware issue likely'), findsOneWidget);
     expect(find.textContaining('SMC Sensor Failure  (12×)'), findsOneWidget);
 
@@ -73,7 +73,7 @@ void main() {
     await settle(tester);
 
     expect(find.text('SMC Sensor Failure'), findsOneWidget);
-    expect(find.text('HIGH SEVERITY'), findsOneWidget);
+    expect(find.text('High'), findsOneWidget);
     expect(find.text('High confidence'), findsOneWidget);
     expect(find.text('Charging Port Flex'), findsOneWidget);
     expect(find.text('Power Button Flex'), findsOneWidget);
@@ -83,6 +83,17 @@ void main() {
     );
     expect(find.textContaining('0x140000'), findsWidgets);
 
+    await tester.scrollUntilVisible(
+      find.text('View Raw Panic'),
+      300,
+      // The pane's list (SelectableTexts have scrollables of their own).
+      scrollable: find
+          .descendant(
+            of: find.byType(ListView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.tap(find.text('View Raw Panic'));
     await settle(tester);
     expect(find.text('Copy All'), findsOneWidget);
@@ -136,9 +147,9 @@ void main() {
     expect(find.text('Technical details'), findsOneWidget);
   });
 
-  testWidgets('about shows the privacy statement', (tester) async {
+  testWidgets('General shows the privacy statement', (tester) async {
     await pumpApp(tester);
-    await tester.tap(find.byTooltip('About iPaniX'));
+    await tester.tap(find.text('General'));
     await settle(tester);
     expect(
       find.text('All diagnostic processing is performed locally on your Mac.'),
@@ -155,7 +166,7 @@ void main() {
     expect(find.textContaining('Apple Devices'), findsOneWidget);
     expect(find.textContaining('pacman -S'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('About iPaniX'));
+    await tester.tap(find.text('General'));
     await settle(tester);
     expect(
       find.text('All diagnostic processing is performed locally on your PC.'),
@@ -181,8 +192,10 @@ void main() {
 
   testWidgets('appearance picker switches theme mode', (tester) async {
     final (controller, _) = await pumpApp(tester);
-    expect(controller.themeMode, ThemeMode.dark);
-    await tester.tap(find.byTooltip('Light'));
+    expect(controller.themeMode, ThemeMode.system);
+    await tester.tap(find.text('General'));
+    await settle(tester);
+    await tester.tap(find.text('Light'));
     await settle(tester);
     expect(controller.themeMode, ThemeMode.light);
   });
