@@ -1,7 +1,7 @@
 name: ipanicx
 description: "iPanicX - local iPhone panic diagnostics for macOS and Windows"
 publish_to: 'none'
-version: 0.1.3+6
+version: 0.1.4+7
 
 environment:
   sdk: ^3.8.0
