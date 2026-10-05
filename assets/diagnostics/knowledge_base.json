@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "iPaniX V0 knowledge base. A small set of EXAMPLE signatures used to demonstrate the matching engine. It is NOT exhaustive and must be extended and validated against real repair data. Generic rule categories were informed by the open-source projects listed in README (ideas only, no code or data copied).",
   "rules": [
     {
@@ -31,7 +31,29 @@
         "Look for corrosion or liquid indicators around the bottom and side flexes.",
         "Test with known-good flex cables to confirm the faulty part."
       ],
-      "note": "This diagnosis is based on a known panic signature and should be confirmed by hardware inspection."
+      "note": "This diagnosis is based on a known panic signature and should be confirmed by hardware inspection.",
+      "fr": {
+        "title": "Panne de capteur SMC",
+        "summary": "L’iPhone redémarre parce qu’un ou plusieurs capteurs matériels ne répondent pas correctement.",
+        "technicalReason": "Le SMC a signalé une panne BSC (bus des capteurs) avec le masque 0x140000. Sur l’iPhone15,2, ce masque désigne des capteurs situés sur la nappe du connecteur de charge et sur la nappe du bouton d’alimentation.",
+        "suspectedComponents": [
+          "Nappe du connecteur de charge",
+          "Nappe du bouton d’alimentation"
+        ],
+        "possibleCauses": [
+          "Oxydation suite à un contact avec un liquide",
+          "Corrosion",
+          "Nappe endommagée",
+          "Connecteur FPC endommagé",
+          "Problème de communication de la carte mère"
+        ],
+        "recommendedActions": [
+          "Inspectez la nappe du connecteur de charge, la nappe du bouton d’alimentation et leurs connecteurs FPC avant de restaurer l’appareil.",
+          "Recherchez de la corrosion ou des témoins d’humidité autour des nappes du bas et du côté.",
+          "Testez avec des nappes en bon état pour confirmer la pièce défectueuse."
+        ],
+        "note": "Ce diagnostic repose sur une signature de panic connue et doit être confirmé par une inspection matérielle."
+      }
     },
     {
       "id": "smc_bsc_generic",
@@ -64,7 +86,25 @@
         "TAOC",
         "OUTBOX1 not ready"
       ],
-      "minAny": 1
+      "minAny": 1,
+      "fr": {
+        "title": "Panne de capteur SMC",
+        "summary": "L’appareil a détecté un défaut de communication avec un capteur matériel. Le composant exact dépend du modèle et du masque capteur, qui ne sont pas encore référencés dans la base.",
+        "suspectedComponents": [
+          "Nappe portant un capteur SMC (selon le modèle)"
+        ],
+        "possibleCauses": [
+          "Oxydation suite à un contact avec un liquide",
+          "Corrosion",
+          "Nappe endommagée",
+          "Connecteur FPC endommagé",
+          "Problème de communication de la carte mère"
+        ],
+        "recommendedActions": [
+          "Relevez le masque capteur et les clés SMC indiqués dans les détails techniques.",
+          "Inspectez les nappes et connecteurs associés à ces capteurs avant de restaurer l’appareil."
+        ]
+      }
     },
     {
       "id": "thermalmonitord_missing_sensor",
@@ -90,7 +130,23 @@
       "recommendedActions": [
         "Identify the part that carries the listed missing sensor(s) for this model.",
         "Reseat or replace that part, then check whether the panic stops."
-      ]
+      ],
+      "fr": {
+        "title": "Capteur thermique manquant",
+        "summary": "Le moniteur thermique n’a pas pu lire un ou plusieurs capteurs et le watchdog a redémarré l’appareil.",
+        "suspectedComponents": [
+          "Composant qui porte le capteur manquant (voir détails techniques)"
+        ],
+        "possibleCauses": [
+          "Nappe débranchée ou endommagée",
+          "Pièce de remplacement non d’origine ou défectueuse",
+          "Contact avec un liquide"
+        ],
+        "recommendedActions": [
+          "Identifiez la pièce qui porte le ou les capteurs manquants pour ce modèle.",
+          "Rebranchez ou remplacez cette pièce, puis vérifiez si le panic disparaît."
+        ]
+      }
     },
     {
       "id": "userspace_watchdog_generic",
@@ -111,7 +167,20 @@
       "recommendedActions": [
         "Check which process is named in the panic string.",
         "If the panic repeats with the same process, update or restore iOS before replacing hardware."
-      ]
+      ],
+      "fr": {
+        "title": "Watchdog userspace dépassé",
+        "summary": "Un processus système a cessé de répondre et le watchdog a redémarré l’appareil. La cause peut être logicielle ou matérielle (un périphérique qui bloque un service système).",
+        "possibleCauses": [
+          "Daemon système bloqué",
+          "Périphérique matériel qui ne répond pas",
+          "Installation d’iOS corrompue"
+        ],
+        "recommendedActions": [
+          "Regardez quel processus est cité dans le message de panic.",
+          "Si le panic se répète avec le même processus, mettez à jour ou restaurez iOS avant de remplacer du matériel."
+        ]
+      }
     },
     {
       "id": "aop_sensorhub_generic",
@@ -140,7 +209,23 @@
       "recommendedActions": [
         "Check recently replaced parts (screen, back glass, flexes).",
         "Repeat the scan after reseating the suspected flex to see whether the panic stops."
-      ]
+      ],
+      "fr": {
+        "title": "Panic capteur AOP",
+        "summary": "L’Always-On Processor (qui gère les capteurs de mouvement et d’environnement) a planté en communiquant avec un capteur.",
+        "suspectedComponents": [
+          "Capteur sur une nappe (selon le modèle)"
+        ],
+        "possibleCauses": [
+          "Nappe de capteur endommagée ou débranchée",
+          "Contact avec un liquide",
+          "Pièce de remplacement non d’origine"
+        ],
+        "recommendedActions": [
+          "Vérifiez les pièces remplacées récemment (écran, vitre arrière, nappes).",
+          "Relancez une analyse après avoir rebranché la nappe suspectée pour voir si le panic disparaît."
+        ]
+      }
     },
     {
       "id": "nand_storage_generic",
@@ -170,7 +255,23 @@
       "recommendedActions": [
         "Back up the device as soon as possible.",
         "If the panic persists after an iOS update or restore, suspect the storage hardware."
-      ]
+      ],
+      "fr": {
+        "title": "Panic du contrôleur de stockage",
+        "summary": "Le panic concerne le contrôleur de stockage (NAND/ANS). Il peut venir du stockage lui-même ou d’une installation d’iOS corrompue.",
+        "suspectedComponents": [
+          "Stockage NAND / contrôleur de stockage"
+        ],
+        "possibleCauses": [
+          "NAND défaillante",
+          "Carte mère endommagée près du stockage",
+          "Installation d’iOS corrompue"
+        ],
+        "recommendedActions": [
+          "Sauvegardez l’appareil dès que possible.",
+          "Si le panic persiste après une mise à jour ou une restauration d’iOS, suspectez le stockage."
+        ]
+      }
     },
     {
       "id": "gpu_agx_generic",
@@ -190,7 +291,19 @@
       "headlineContainsAny": [
         "AGX",
         "GPU"
-      ]
+      ],
+      "fr": {
+        "title": "Panic GPU",
+        "summary": "Le processeur graphique a signalé une erreur. Le logiciel (iOS ou une app) comme le matériel peuvent produire cette signature.",
+        "possibleCauses": [
+          "Bug GPU d’iOS ou d’une app",
+          "Problème de carte mère / SoC"
+        ],
+        "recommendedActions": [
+          "Mettez iOS à jour et vérifiez si le panic est lié à une app précise.",
+          "S’il se répète avec différentes apps après une restauration, suspectez la carte mère."
+        ]
+      }
     },
     {
       "id": "baseband_generic",
@@ -215,7 +328,22 @@
       "recommendedActions": [
         "Check whether cellular service works after restart.",
         "Update or restore iOS before considering board-level repair."
-      ]
+      ],
+      "fr": {
+        "title": "Panic baseband",
+        "summary": "Le modem cellulaire (baseband) a cessé de répondre ou a planté.",
+        "suspectedComponents": [
+          "Zone baseband / modem de la carte mère"
+        ],
+        "possibleCauses": [
+          "Problème de firmware du modem",
+          "Carte mère endommagée (choc, liquide)"
+        ],
+        "recommendedActions": [
+          "Vérifiez que le réseau cellulaire fonctionne après le redémarrage.",
+          "Mettez à jour ou restaurez iOS avant d’envisager une réparation de la carte mère."
+        ]
+      }
     },
     {
       "id": "memory_ecc_generic",
@@ -239,7 +367,22 @@
       ],
       "recommendedActions": [
         "Look for repeated memory errors across several panics before concluding on hardware."
-      ]
+      ],
+      "fr": {
+        "title": "Erreur mémoire",
+        "summary": "L’appareil a signalé une erreur mémoire non corrigeable.",
+        "suspectedComponents": [
+          "SoC / mémoire (carte mère)"
+        ],
+        "possibleCauses": [
+          "Carte mère endommagée",
+          "Contact avec un liquide",
+          "Surchauffe"
+        ],
+        "recommendedActions": [
+          "Recherchez des erreurs mémoire répétées sur plusieurs panics avant de conclure à une panne matérielle."
+        ]
+      }
     },
     {
       "id": "forced_restart_btn_rst",
@@ -255,7 +398,16 @@
       "recommendedActions": [
         "Ask whether the user forced the restart because the screen froze.",
         "Look for kernel panics or hangs around the same time."
-      ]
+      ],
+      "fr": {
+        "title": "Redémarrage forcé",
+        "summary": "L’appareil a été redémarré en maintenant les boutons (redémarrage forcé). Ce n’est pas un plantage en soi, mais des redémarrages forcés fréquents indiquent souvent que l’appareil s’est figé.",
+        "technicalReason": "btn_rst : redémarrage demandé par la combinaison de boutons.",
+        "recommendedActions": [
+          "Demandez si l’utilisateur a forcé le redémarrage parce que l’écran était figé.",
+          "Recherchez des kernel panics ou des blocages à la même période."
+        ]
+      }
     },
     {
       "id": "sep_panic_generic",
@@ -275,7 +427,20 @@
       "recommendedActions": [
         "Update or restore iOS first.",
         "If it persists, check Face ID / Touch ID behaviour and recent biometric repairs."
-      ]
+      ],
+      "fr": {
+        "title": "Panic Secure Enclave",
+        "summary": "Le Secure Enclave Processor (code, clés Face ID / Touch ID) a fait un panic. Des bugs logiciels comme des pannes matérielles peuvent produire cette signature.",
+        "possibleCauses": [
+          "Problème d’iOS / du firmware SEP",
+          "Module biométrique défectueux (Face ID / Touch ID)",
+          "Problème de carte mère"
+        ],
+        "recommendedActions": [
+          "Mettez à jour ou restaurez iOS en premier.",
+          "Si cela persiste, vérifiez Face ID / Touch ID et les réparations biométriques récentes."
+        ]
+      }
     },
     {
       "id": "dart_iommu_generic",
@@ -295,7 +460,19 @@
       "recommendedActions": [
         "Note which DART instance is named (display, camera, scaler…).",
         "Update or restore iOS; suspect hardware only if the same block keeps failing."
-      ]
+      ],
+      "fr": {
+        "title": "Erreur IOMMU (DART)",
+        "summary": "Un accès mémoire d’un périphérique a été refusé par l’unité de protection mémoire d’E/S (DART). Le bloc cité dans le panic (ex. dart-scaler, dart-disp) accédait à une mémoire invalide.",
+        "possibleCauses": [
+          "Bug d’un pilote ou d’iOS",
+          "Défaut du bloc matériel cité dans la ligne de panic"
+        ],
+        "recommendedActions": [
+          "Relevez l’instance DART citée (affichage, caméra, scaler…).",
+          "Mettez à jour ou restaurez iOS ; ne suspectez le matériel que si le même bloc échoue à chaque fois."
+        ]
+      }
     },
     {
       "id": "kernel_memory_fault_generic",
@@ -318,8 +495,22 @@
       "recommendedActions": [
         "Update or restore iOS.",
         "Compare several panics: the same caller each time suggests software; random locations suggest hardware."
-      ]
+      ],
+      "fr": {
+        "title": "Erreur mémoire du noyau",
+        "summary": "Le noyau a accédé à une mémoire invalide ou protégée. C’est généralement logiciel (iOS, un pilote, un tweak). Des erreurs répétées à des adresses différentes peuvent indiquer un problème de RAM / SoC.",
+        "possibleCauses": [
+          "Bug d’iOS ou d’un pilote",
+          "Jailbreak / tweaks / outils de recherche",
+          "Défaut mémoire ou SoC (si fréquent et varié)"
+        ],
+        "recommendedActions": [
+          "Mettez à jour ou restaurez iOS.",
+          "Comparez plusieurs panics : le même appelant à chaque fois suggère un problème logiciel ; des adresses aléatoires suggèrent le matériel."
+        ]
+      }
     }
   ],
-  "matching": "Text terms are matched case-insensitively against panicString + panicked process, whitespace collapsed. See lib/diagnostics/diagnostic_rule.dart."
+  "matching": "Text terms are matched case-insensitively against panicString + panicked process, whitespace collapsed. See lib/diagnostics/diagnostic_rule.dart.",
+  "localization": "Each rule may carry an \"fr\" object overriding title, summary, technicalReason, suspectedComponents, possibleCauses, recommendedActions and note. Missing fields fall back to English."
 }

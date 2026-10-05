@@ -100,6 +100,35 @@ Le script copie les 4 `.exe` et leurs DLL MSYS2 (via `ldd`) dans
 installe ensuite à côté de `iPaniX.exe` (fin de `windows/CMakeLists.txt`) ;
 Windows charge les DLL depuis le dossier de l'exécutable.
 
+### iPhone branché mais non détecté
+
+Quand `idevice_id -l` ne liste rien, iPaniX vérifie aussi côté ordinateur et
+affiche le résultat dans **Détails techniques** :
+
+- **le service USB d'Apple répond-il ?** `127.0.0.1:27015` (Apple Mobile
+  Device Service) sous Windows, `/var/run/usbmuxd` sous macOS
+  (`USBMUXD_SOCKET_ADDRESS` est respecté) ;
+- **l'OS voit-il un iPhone ?** `Win32_PnPEntity` avec l'ID vendeur Apple
+  (`USB\VID_05AC&PID_12xx`) via PowerShell sous Windows, `ioreg -p IOUSB` sous
+  macOS.
+
+| Écran | Cause probable | Que faire |
+|---|---|---|
+| **Aucun iPhone connecté** | l'OS ne voit aucun iPhone | câble de données (pas un câble de charge seule), iPhone déverrouillé, autre port |
+| **iPhone non reconnu** | Windows voit l'iPhone mais le service Apple ne le liste pas, ou le pilote est en erreur (code ≠ 0 dans le Gestionnaire de périphériques) | installer/réparer **Apple Devices** ou iTunes, l'ouvrir une fois, rebrancher ; sinon redémarrer *Apple Mobile Device Service* (`services.msc`) |
+| **Impossible de communiquer** (service USB) | Apple Mobile Device Service / usbmuxd injoignable | installer Apple Devices ou iTunes, vérifier que le service est démarré |
+
+Vérification manuelle (PowerShell) :
+
+```powershell
+& "C:\msys64\ucrt64\bin\idevice_id.exe" -l
+Get-CimInstance Win32_PnPEntity -Filter "PNPDeviceID LIKE 'USB\\VID_05AC%'" | Select Name, ConfigManagerErrorCode
+Get-Service "Apple Mobile Device Service"
+```
+
+Une passe de détection est bornée à 45 s : l'écran « Recherche d'appareils… »
+ne peut plus rester affiché indéfiniment.
+
 ### Build depuis les sources (macOS)
 
 **Option C — build depuis les sources** (si besoin d'une version précise) :
@@ -142,10 +171,10 @@ Activé par `--dart-define=USE_MOCK_DEVICE=true` (ou la variable d'environnement
 `USE_MOCK_DEVICE=true`). `MockIPhoneService` simule un iPhone 14 Pro et génère
 au scan : 12 panics SMC connus (masque `0x140000`), 2 panics inconnus,
 2 redémarrages forcés, des JetsamEvent et un ResetCounter (dont certains dans
-`Retired/`). Un badge **Mock device** dans la barre d'outils permet de basculer
-entre les états : connecté, deux iPhones, aucun panic, aucun iPhone, Trust
-requis, verrouillé, erreur de communication, libimobiledevice absent, échec de
-la copie.
+`Retired/`). **Général › Appareil simulé** permet de basculer entre les
+états : connecté, deux iPhones, aucun panic, aucun iPhone, iPhone non reconnu
+(pilote), Trust requis, verrouillé, erreur de communication, libimobiledevice
+absent, échec de la copie.
 
 ---
 
@@ -208,13 +237,15 @@ panicFlags, sensor mask (`sensor array 1310720` → `0x140000`, hexa ou JSON),
 ```
 lib/
   main.dart                      choix mock / réel, chargement de la base
-  app/        app.dart, theme.dart (tokens Codenotch), app_controller.dart (état),
-              host_platform.dart (textes et chemins selon l'OS)
+  app/        app.dart, theme.dart (tokens Codenotch), app_controller.dart (état,
+              langue), host_platform.dart (textes et chemins selon l'OS)
+  l10n/       strings.dart (tous les textes EN/FR, Dart pur), lang_scope.dart
   models/     iphone_device, device_status, diagnostic_file, panic_report,
               diagnostic_result, scan_result
   services/   iphone_service.dart (interface + erreurs)
               libimobiledevice_service.dart (réel, via CommandRunner)
               mock_iphone_service.dart, command_runner.dart, tool_locator.dart
+              usb_probe.dart (service USB Apple joignable ? iPhone vu par l'OS ?)
               diagnostic_service.dart (scan → parse → analyse → synthèse)
               platform_bridge.dart (interface), macos_bridge.dart (canaux Swift),
               windows_bridge.dart (file_selector + explorer.exe)
@@ -275,6 +306,26 @@ lignes, boutons), `lib/ui/ring.dart` (anneau),
 `lib/ui/shell.dart` (barre latérale), `lib/ui/panes/` (Overview, Panics,
 Files, General, diagnostic, rapport brut).
 
+## Langues
+
+L'app est en **français** et en **anglais**. Par défaut elle suit la langue du
+système (`fr_*` → français, sinon anglais) ; **Général › Langue** permet de
+forcer *English* ou *Français*. Le changement est immédiat : l'interface, les
+dates, les diagnostics d'un scan déjà fait (régénérés sans recopier les
+rapports) et l'export `.txt` suivent.
+
+- Textes de l'interface, des écrans d'erreur et des diagnostics génériques :
+  `lib/l10n/strings.dart` (une méthode par texte, `_('English', 'Français')`).
+- Textes des règles : bloc `"fr"` dans chaque règle de la base (voir
+  ci-dessous). Un champ absent retombe sur l'anglais.
+- L'analyse tourne dans un isolate : la langue lui est passée explicitement
+  (`PanicAnalyzer(kb, lang: …)`).
+- Les widgets Material (menus, sélection de texte) utilisent
+  `flutter_localizations`.
+
+Ajouter une langue : une valeur dans `AppLang`, un argument de plus dans
+`Strings._`, et un bloc `"<code>"` par règle.
+
 ## Ajouter une règle de diagnostic
 
 Éditer `assets/diagnostics/knowledge_base.json` :
@@ -292,9 +343,20 @@ Files, General, diagnostic, rapport brut).
   "summary": "…",
   "suspectedComponents": ["Charging Port Flex", "Power Button Flex"],
   "possibleCauses": ["Liquid damage", "…"],
-  "recommendedActions": ["…"]
+  "recommendedActions": ["…"],
+  "fr": {
+    "title": "Panne de capteur SMC",
+    "summary": "…",
+    "suspectedComponents": ["Nappe du connecteur de charge", "Nappe du bouton d’alimentation"],
+    "possibleCauses": ["…"],
+    "recommendedActions": ["…"]
+  }
 }
 ```
+
+Le bloc `"fr"` traduit les champs affichés (`title`, `summary`,
+`technicalReason`, `suspectedComponents`, `possibleCauses`,
+`recommendedActions`, `note`) ; les critères ne se traduisent pas.
 
 Critères (tous ceux présents doivent être vrais ; texte insensible à la casse
 et aux espaces, la liste `loaded kexts:` est ignorée pour éviter les faux
@@ -312,8 +374,8 @@ positifs) :
 | `missingSensorsAny` | un capteur listé dans `Missing sensor(s)` |
 
 Si plusieurs règles correspondent, la plus spécifique gagne (appareil, masque,
-nombre de termes…). L'écran de diagnostic affiche les preuves (*Matched on*).
-Sans correspondance : **Unknown Hardware Panic**, avec panic string, codes,
+nombre de termes…). L'écran de diagnostic affiche les preuves (*Reconnu sur* / *Matched on*).
+Sans correspondance : **Panic matériel inconnu** (*Unknown Hardware Panic*), avec panic string, codes,
 masque, modèle et iOS.
 
 Pour valider une règle sur des rapports réels :
@@ -344,10 +406,12 @@ flutter test
   Power Button Flex, panic inconnu, moteur de règles), extraits de rapports
   réels (`test/fixtures/real/`, sources dans `SOURCES.md`) ;
 - `test/services/` : service libimobiledevice avec un faux `CommandRunner`
-  (parsing, erreurs lockdown, timeouts, outils absents, copie `-k`), scan complet
-  en mock ;
-- `test/ui/` : parcours complet en mock (scan → analyse → diagnostic → brut) et
-  états d'erreur.
+  (parsing, erreurs lockdown, timeouts, outils absents, copie `-k`, iPhone vu
+  par l'OS mais pas par usbmuxd, service USB injoignable), scan complet en mock ;
+- `test/l10n_test.dart` : langue système, traductions de toutes les règles,
+  diagnostic, preuves, dates et export en français ;
+- `test/ui/` : parcours complet en mock (scan → analyse → diagnostic → brut),
+  états d'erreur, interface en français et changement de langue à chaud.
 
 Corpus réel complet (optionnel, ~45 Mo, ignoré par git) :
 

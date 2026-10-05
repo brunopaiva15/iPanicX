@@ -1,3 +1,5 @@
+import '../l10n/strings.dart';
+
 enum Severity {
   low,
   medium,
@@ -11,12 +13,7 @@ enum Severity {
     _ => unknown,
   };
 
-  String get label => switch (this) {
-    low => 'Low',
-    medium => 'Medium',
-    high => 'High',
-    unknown => 'Unknown',
-  };
+  String get label => tr.severityLabel(name);
 }
 
 enum Confidence {
@@ -32,12 +29,7 @@ enum Confidence {
     _ => none,
   };
 
-  String get label => switch (this) {
-    low => 'Low confidence',
-    medium => 'Medium confidence',
-    high => 'High confidence',
-    none => 'No known signature',
-  };
+  String get label => tr.confidenceLabel(name);
 
   int get rank => switch (this) {
     none => 0,

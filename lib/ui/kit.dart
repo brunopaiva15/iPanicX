@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app/theme.dart';
+import '../l10n/lang_scope.dart';
 
 /// Building blocks of Codenotch's settings window
 /// (windows/codenotch/ui/settings.html): pane head, section captions,
@@ -411,14 +412,12 @@ class Glyph extends StatelessWidget {
 
 /// Disclosure row revealing raw technical output (never open by default).
 class TechnicalDetails extends StatefulWidget {
-  const TechnicalDetails({
-    super.key,
-    required this.details,
-    this.label = 'Technical details',
-  });
+  const TechnicalDetails({super.key, required this.details, this.label});
 
   final String details;
-  final String label;
+
+  /// Defaults to "Technical details" in the active language.
+  final String? label;
 
   @override
   State<TechnicalDetails> createState() => _TechnicalDetailsState();
@@ -434,7 +433,7 @@ class _TechnicalDetailsState extends State<TechnicalDetails> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Item(
-          label: widget.label,
+          label: widget.label ?? context.tr.technicalDetails,
           onTap: () => setState(() => _open = !_open),
           trailing: Icon(
             _open ? Icons.expand_less : Icons.expand_more,
@@ -450,8 +449,9 @@ class _TechnicalDetailsState extends State<TechnicalDetails> {
             child: Align(
               alignment: Alignment.centerRight,
               child: Btn(
-                'Copy',
-                onPressed: () => copyText(context, widget.details, 'Copied'),
+                context.tr.copy,
+                onPressed: () =>
+                    copyText(context, widget.details, context.tr.copied),
               ),
             ),
           ),

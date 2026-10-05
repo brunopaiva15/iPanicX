@@ -4,6 +4,7 @@ import '../../app/app_controller.dart';
 import '../kit.dart';
 import '../shell.dart';
 import 'shared.dart';
+import '../../l10n/lang_scope.dart';
 
 class PanicsPane extends StatelessWidget {
   const PanicsPane({super.key});
@@ -11,20 +12,21 @@ class PanicsPane extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scan = AppScope.of(context).scan;
+    final t = context.tr;
     if (scan == null) {
-      return Pane(title: 'Panics', children: [const _NoScan()]);
+      return Pane(title: t.panicsSection, children: [const _NoScan()]);
     }
     return Pane(
-      title: 'Panics',
+      title: t.panicsSection,
       children: [
-        Sec('Kernel Panics', first: true),
+        Sec(t.kernelPanicsSection, first: true),
         Group(
           children: scan.panics.isEmpty
-              ? [const Item(label: 'No panic reports found')]
+              ? [Item(label: t.noPanicReports)]
               : [for (final p in scan.panics) PanicItem(panic: p)],
         ),
         if (scan.forcedResets.isNotEmpty) ...[
-          const Sec('Forced Restarts'),
+          Sec(t.forcedRestartsSection),
           Group(
             children: [for (final p in scan.forcedResets) PanicItem(panic: p)],
           ),
@@ -41,10 +43,10 @@ class _NoScan extends StatelessWidget {
   Widget build(BuildContext context) => Group(
     children: [
       Item(
-        label: 'No scan yet',
-        hint: 'Scan the connected iPhone from Overview.',
+        label: context.tr.noScanYet,
+        hint: context.tr.noScanHint,
         trailing: Btn(
-          'Overview',
+          context.tr.overview,
           onPressed: () => ShellScope.of(context).select(Section.overview),
         ),
       ),

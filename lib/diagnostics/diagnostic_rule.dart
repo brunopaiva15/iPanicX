@@ -1,5 +1,27 @@
+import '../l10n/strings.dart';
 import '../models/diagnostic_result.dart';
 import '../models/panic_report.dart';
+
+/// User-facing texts of a rule in one language.
+class RuleText {
+  const RuleText({
+    required this.title,
+    this.summary,
+    this.technicalReason,
+    this.suspectedComponents = const [],
+    this.possibleCauses = const [],
+    this.recommendedActions = const [],
+    this.note,
+  });
+
+  final String title;
+  final String? summary;
+  final String? technicalReason;
+  final List<String> suspectedComponents;
+  final List<String> possibleCauses;
+  final List<String> recommendedActions;
+  final String? note;
+}
 
 /// A single knowledge-base entry (see `assets/diagnostics/knowledge_base.json`).
 ///
@@ -36,6 +58,7 @@ class DiagnosticRule {
     this.possibleCauses = const [],
     this.recommendedActions = const [],
     this.note,
+    this.translations = const {},
   });
 
   factory DiagnosticRule.fromJson(Map<String, dynamic> json) {
@@ -53,6 +76,11 @@ class DiagnosticRule {
       throw const FormatException('Rule requires "id" and "title".');
     }
     final minAny = json['minAny'];
+    final translations = <String, Map<String, dynamic>>{};
+    for (final lang in AppLang.values) {
+      final t = json[lang.name];
+      if (t is Map<String, dynamic>) translations[lang.name] = t;
+    }
     return DiagnosticRule(
       id: id,
       title: title,
@@ -74,6 +102,46 @@ class DiagnosticRule {
       possibleCauses: list('possibleCauses'),
       recommendedActions: list('recommendedActions'),
       note: json['note']?.toString(),
+      translations: {
+        for (final e in translations.entries) e.key: _translation(e.value),
+      },
+    );
+  }
+
+  /// Partial override: missing fields keep the English value (null / empty
+  /// here, resolved in [textFor]).
+  static RuleText _translation(Map<String, dynamic> t) {
+    List<String> list(String key) {
+      final v = t[key];
+      if (v is String) return [v];
+      if (v is List) return v.map((e) => e.toString()).toList();
+      return const [];
+    }
+
+    return RuleText(
+      title: t['title']?.toString() ?? '',
+      summary: t['summary']?.toString(),
+      technicalReason: t['technicalReason']?.toString(),
+      suspectedComponents: list('suspectedComponents'),
+      possibleCauses: list('possibleCauses'),
+      recommendedActions: list('recommendedActions'),
+      note: t['note']?.toString(),
+    );
+  }
+
+  /// Texts in [lang], falling back field by field to English.
+  RuleText textFor(AppLang lang) {
+    final t = translations[lang.name];
+    List<String> pick(List<String>? tr, List<String> en) =>
+        tr != null && tr.isNotEmpty ? tr : en;
+    return RuleText(
+      title: (t?.title.isNotEmpty ?? false) ? t!.title : title,
+      summary: t?.summary ?? summary,
+      technicalReason: t?.technicalReason ?? technicalReason,
+      suspectedComponents: pick(t?.suspectedComponents, suspectedComponents),
+      possibleCauses: pick(t?.possibleCauses, possibleCauses),
+      recommendedActions: pick(t?.recommendedActions, recommendedActions),
+      note: t?.note ?? note,
     );
   }
 
@@ -101,6 +169,9 @@ class DiagnosticRule {
   final List<String> possibleCauses;
   final List<String> recommendedActions;
   final String? note;
+
+  /// Per-language overrides keyed by [AppLang.name] (`"fr"` in the JSON).
+  final Map<String, RuleText> translations;
 
   bool get isHardware => category == 'hardware';
 
@@ -159,12 +230,14 @@ class DiagnosticRule {
 
   bool matches(PanicReport report) => evaluate(report) != null;
 
-  /// Returns the evidence (human readable) when the rule matches, else null.
-  List<String>? evaluate(PanicReport report) {
+  /// Returns the evidence (human readable, in [lang]) when the rule matches,
+  /// else null.
+  List<String>? evaluate(PanicReport report, {AppLang lang = AppLang.en}) {
     if (!hasCriteria) return null;
     if (!matchesDevice(report.product)) return null;
+    final s = Strings(lang);
     final evidence = <String>[];
-    if (devices.isNotEmpty) evidence.add('Device ${report.product}');
+    if (devices.isNotEmpty) evidence.add(s.evidenceDevice(report.product));
 
     final haystack = normalize(
       [
@@ -174,20 +247,20 @@ class DiagnosticRule {
     );
     for (final term in panicContains) {
       if (!haystack.contains(normalize(term))) return null;
-      evidence.add('“$term”');
+      evidence.add(s.evidenceTerm(term));
     }
     if (panicContainsAny.isNotEmpty) {
       final hits = panicContainsAny
           .where((t) => haystack.contains(normalize(t)))
           .toList();
       if (hits.length < minAny) return null;
-      evidence.addAll(hits.map((t) => '“$t”'));
+      evidence.addAll(hits.map(s.evidenceTerm));
     }
     if (headlineContainsAny.isNotEmpty) {
       final line = normalize(report.panicLine ?? '');
       final hit = headlineContainsAny.where((t) => line.contains(normalize(t)));
       if (hit.isEmpty) return null;
-      evidence.add('Panic line “${hit.first}”');
+      evidence.add(s.evidencePanicLine(hit.first));
     }
     for (final term in panicNotContains) {
       if (haystack.contains(normalize(term))) return null;
@@ -196,11 +269,11 @@ class DiagnosticRule {
       final kexts = report.backtraceKexts.map((k) => k.toLowerCase()).toSet();
       final hit = kextsAny.where((k) => kexts.contains(k.toLowerCase()));
       if (hit.isEmpty) return null;
-      evidence.add('Kext ${hit.first}');
+      evidence.add(s.evidenceKext(hit.first));
     }
     if (sensorMask != null) {
       if (report.sensorMask != sensorMask) return null;
-      evidence.add('Sensor mask ${PanicReport.formatHex(sensorMask!)}');
+      evidence.add(s.evidenceMask(PanicReport.formatHex(sensorMask!)));
     }
     if (missingSensorsAny.isNotEmpty) {
       final missing = report.missingSensors.map((s) => s.toLowerCase()).toSet();
@@ -208,7 +281,7 @@ class DiagnosticRule {
         (s) => missing.contains(s.toLowerCase()),
       );
       if (hit.isEmpty) return null;
-      evidence.add('Missing sensor ${hit.first}');
+      evidence.add(s.evidenceMissing(hit.first));
     }
     return evidence;
   }

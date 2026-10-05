@@ -1,3 +1,5 @@
+import '../l10n/strings.dart';
+
 enum DiagnosticFileType {
   panicFull,
   panicBase,
@@ -7,15 +9,7 @@ enum DiagnosticFileType {
   stacks,
   other;
 
-  String get label => switch (this) {
-    panicFull => 'Kernel panic (full)',
-    panicBase => 'Kernel panic (base)',
-    jetsamEvent => 'Jetsam event',
-    forceReset => 'Forced restart',
-    resetCounter => 'Reset counter',
-    stacks => 'Stackshot',
-    other => 'Other log',
-  };
+  String get label => tr.fileTypeLabel(name);
 }
 
 /// A diagnostic/crash file copied from the iPhone to this computer.

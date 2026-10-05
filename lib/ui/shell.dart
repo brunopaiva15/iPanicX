@@ -10,6 +10,7 @@ import 'panes/general_pane.dart';
 import 'panes/overview_pane.dart';
 import 'panes/panic_pane.dart';
 import 'panes/panics_pane.dart';
+import '../l10n/lang_scope.dart';
 
 enum Section { overview, panics, files, general }
 
@@ -121,6 +122,7 @@ class _Sidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
+    final t = context.tr;
     return Container(
       width: 196,
       margin: const EdgeInsets.all(4),
@@ -136,32 +138,32 @@ class _Sidebar extends StatelessWidget {
           const SizedBox(height: 48),
           _Row(
             badge: const SideBadge(Icons.phone_iphone, SideBadge.blue),
-            label: 'Overview',
+            label: t.overview,
             selected: section == Section.overview,
             onTap: () => onSelect(Section.overview),
           ),
           _Row(
             badge: const SideBadge(Icons.bolt, SideBadge.red),
-            label: 'Panics',
+            label: t.panicsSection,
             selected: section == Section.panics,
             onTap: () => onSelect(Section.panics),
           ),
           _Row(
             badge: const SideBadge(Icons.folder, SideBadge.gray),
-            label: 'Files',
+            label: t.filesSection,
             selected: section == Section.files,
             onTap: () => onSelect(Section.files),
           ),
           _Row(
             badge: const SideBadge(Icons.settings, SideBadge.indigo),
-            label: 'General',
+            label: t.general,
             selected: section == Section.general,
             onTap: () => onSelect(Section.general),
           ),
           const Spacer(),
           _Row(
             badge: const SideBadge(Icons.description, SideBadge.gray),
-            label: 'Open .ips…',
+            label: t.openIps,
             onTap: () => openLocalIps(context),
           ),
         ],
@@ -260,6 +262,6 @@ Future<void> openLocalIps(BuildContext context) async {
   try {
     shell.openPanic(await app.diagnostics.analyzeLocalFile(path));
   } catch (_) {
-    if (context.mounted) showToast(context, 'This file could not be read.');
+    if (context.mounted) showToast(context, context.tr.fileUnreadable);
   }
 }

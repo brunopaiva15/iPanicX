@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app/app_controller.dart';
 import '../../app/host_platform.dart';
 import '../../app/theme.dart';
+import '../../l10n/lang_scope.dart';
 import '../../models/device_status.dart';
 import '../../models/scan_result.dart';
 import '../format.dart';
@@ -19,7 +20,7 @@ class OverviewPane extends StatelessWidget {
     final app = AppScope.of(context);
     final s = app.status;
     return Pane(
-      title: 'Overview',
+      title: context.tr.overview,
       children: switch (s.state) {
         DeviceConnectionState.connected => _connected(context, app),
         _ => _disconnected(context, app),
@@ -30,6 +31,7 @@ class OverviewPane extends StatelessWidget {
   List<Widget> _disconnected(BuildContext context, AppController app) {
     final s = app.status;
     final c = AppColors.of(context);
+    final t = context.tr;
     final spinner = UsageRing(
       size: 16,
       fraction: 0,
@@ -40,7 +42,7 @@ class OverviewPane extends StatelessWidget {
     return switch (s.state) {
       DeviceConnectionState.searching => [
         Group(
-          children: [Item(leading: spinner, label: 'Looking for devices…')],
+          children: [Item(leading: spinner, label: t.lookingForDevices)],
         ),
       ],
       DeviceConnectionState.noDevice => [
@@ -48,27 +50,17 @@ class OverviewPane extends StatelessWidget {
           children: [
             Item(
               leading: const Glyph(Icons.phone_iphone),
-              label: 'No iPhone connected',
-              trailing: Btn('Check Again', onPressed: app.retry),
+              label: t.noIPhone,
+              trailing: Btn(t.checkAgain, onPressed: app.retry),
             ),
-            const CapItem(
-              'Connect an iPhone using USB, unlock it and tap “Trust” if '
-              'asked. iPaniX checks again every few seconds.',
-            ),
+            CapItem(t.noIPhoneHelp),
             if (s.technicalDetails != null)
               TechnicalDetails(details: s.technicalDetails!),
           ],
         ),
-        const Sec('iPhone plugged in but not detected?'),
+        Sec(t.notDetectedSection),
         Group(
-          children: [
-            const CapItem(
-              '• Use a data cable: some cables only charge.\n'
-              '• Unlock the iPhone. A locked iPhone may refuse new USB '
-              'connections.',
-            ),
-            CapItem(HostPlatform.driverHint),
-          ],
+          children: [CapItem(t.cableTips), CapItem(HostPlatform.driverHint)],
         ),
       ],
       DeviceConnectionState.notRecognized => [
@@ -76,8 +68,8 @@ class OverviewPane extends StatelessWidget {
           children: [
             Item(
               leading: Glyph(Icons.usb, color: c.danger),
-              label: 'iPhone not recognized',
-              trailing: Btn('Check Again', onPressed: app.retry),
+              label: t.notRecognized,
+              trailing: Btn(t.checkAgain, onPressed: app.retry),
             ),
             CapItem(
               s.reason == StatusReason.driverProblem
@@ -94,15 +86,15 @@ class OverviewPane extends StatelessWidget {
           children: [
             Item(
               leading: spinner,
-              label: 'Trust required',
+              label: t.trustRequired,
               hint: s.device?.modelName,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Btn('Retry', onPressed: app.retry),
+                  Btn(t.retry, onPressed: app.retry),
                   const SizedBox(width: 8),
                   Btn(
-                    'Show Trust Prompt',
+                    t.showTrustPrompt,
                     primary: true,
                     onPressed: app.requestPairing,
                   ),
@@ -110,8 +102,9 @@ class OverviewPane extends StatelessWidget {
               ),
             ),
             CapItem(
-              s.message ??
-                  'Unlock your iPhone and tap “Trust” to allow this ${HostPlatform.computer} to read diagnostics.',
+              s.reason == StatusReason.pairingDenied
+                  ? t.pairingDenied
+                  : t.trustHelp(HostPlatform.computer),
             ),
             if (s.technicalDetails != null)
               TechnicalDetails(details: s.technicalDetails!),
@@ -123,13 +116,10 @@ class OverviewPane extends StatelessWidget {
           children: [
             Item(
               leading: spinner,
-              label: 'Device locked',
-              trailing: Btn('Retry', onPressed: app.retry),
+              label: t.deviceLocked,
+              trailing: Btn(t.retry, onPressed: app.retry),
             ),
-            CapItem(
-              s.message ??
-                  'Unlock your iPhone with its passcode, then try again.',
-            ),
+            CapItem(t.lockedHelp),
             if (s.technicalDetails != null)
               TechnicalDetails(details: s.technicalDetails!),
           ],
@@ -140,13 +130,14 @@ class OverviewPane extends StatelessWidget {
           children: [
             Item(
               leading: Glyph(Icons.usb_off, color: c.danger),
-              label: 'Unable to communicate with iPhone',
-              trailing: Btn('Retry', onPressed: app.retry),
+              label: t.commError,
+              trailing: Btn(t.retry, onPressed: app.retry),
             ),
-            CapItem(
-              '${s.message ?? 'The iPhone did not respond correctly.'}\n'
-              'Try another cable or USB port, and make sure the iPhone is unlocked.',
-            ),
+            CapItem(switch (s.reason) {
+              StatusReason.usbServiceUnavailable => HostPlatform.usbServiceHint,
+              StatusReason.timeout => t.timeoutHelp,
+              _ => t.commHelp,
+            }),
             if (s.technicalDetails != null)
               TechnicalDetails(details: s.technicalDetails!),
           ],
@@ -157,8 +148,8 @@ class OverviewPane extends StatelessWidget {
           children: [
             Item(
               leading: Glyph(Icons.extension_off, color: c.danger),
-              label: 'libimobiledevice unavailable',
-              trailing: Btn('Check Again', onPressed: app.retry),
+              label: t.toolsUnavailable,
+              trailing: Btn(t.checkAgain, onPressed: app.retry),
             ),
             CapItem(HostPlatform.installHint),
             CapItem(HostPlatform.installCommand, mono: true),
@@ -173,36 +164,32 @@ class OverviewPane extends StatelessWidget {
 
   List<Widget> _connected(BuildContext context, AppController app) {
     final c = AppColors.of(context);
+    final t = context.tr;
     final d = app.status.device!;
     final scan = app.scan;
     return [
       if (app.status.hasMultipleDevices)
-        _Strip(
-          '${app.status.deviceCount} devices are connected. iPaniX is showing '
-          'the first one. Disconnect the others to choose a device.',
-        ),
+        _Strip(t.multipleDevices(app.status.deviceCount)),
       Group(
         children: [
           Item(
             leading: const Glyph(Icons.phone_iphone),
             label: d.displayName,
-            value: 'Connected via USB',
+            value: t.connectedViaUsb,
           ),
-          Item(label: 'Model', value: d.modelName),
-          Item(label: 'Product type', value: d.productType, mono: true),
+          Item(label: t.model, value: d.modelName),
+          Item(label: t.productType, value: d.productType, mono: true),
           Item(label: 'iOS', value: d.productVersion),
-          Item(label: 'Build', value: d.buildVersion, mono: true),
+          Item(label: t.build, value: d.buildVersion, mono: true),
           Item(label: 'UDID', value: d.maskedUdid, mono: true),
         ],
       ),
-      const Sec('Diagnostics'),
+      Sec(t.diagnostics),
       Group(
         children: [
           Item(
-            label: 'Scan diagnostics',
-            hint:
-                'Copies the crash reports to this ${HostPlatform.computer}. '
-                'They stay on the iPhone.',
+            label: t.scanDiagnostics,
+            hint: t.scanHint(HostPlatform.computer),
             trailing: app.isScanning
                 ? Row(
                     mainAxisSize: MainAxisSize.min,
@@ -217,16 +204,16 @@ class OverviewPane extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         app.phase == ScanPhase.analyzing
-                            ? 'Analyzing…'
+                            ? t.analyzing
                             : app.copiedFiles == 0
-                            ? 'Copying…'
-                            : 'Copying… ${plural(app.copiedFiles, 'file')}',
+                            ? t.copying
+                            : t.copyingFiles(app.copiedFiles),
                         style: TextStyle(fontSize: kBodySize, color: c.text2),
                       ),
                     ],
                   )
                 : Btn(
-                    scan == null ? 'Scan Diagnostics' : 'Scan Again',
+                    scan == null ? t.scanButton : t.scanAgain,
                     primary: scan == null,
                     onPressed: app.scanDiagnostics,
                   ),
@@ -235,7 +222,7 @@ class OverviewPane extends StatelessWidget {
             Item(
               leading: Glyph(Icons.error_outline, color: c.danger),
               label: app.scanError!.kind.title,
-              hint: app.scanError!.message,
+              hint: app.scanError!.kind.message,
             ),
             if (app.scanError!.technicalDetails != null)
               TechnicalDetails(details: app.scanError!.technicalDetails!),
@@ -248,20 +235,19 @@ class OverviewPane extends StatelessWidget {
 
   List<Widget> _results(BuildContext context, ScanResult scan) {
     final c = AppColors.of(context);
+    final t = context.tr;
     final shell = ShellScope.of(context);
     final h = scan.health;
     if (scan.panics.isEmpty) {
       return [
-        const Sec('Kernel Panics'),
+        Sec(t.kernelPanicsSection),
         Group(
           children: [
             Item(
-              label: 'No panic reports found',
-              hint:
-                  '${plural(scan.files.length, 'diagnostic file')} copied, none of '
-                  'them is a kernel panic report.',
+              label: t.noPanicReports,
+              hint: t.noPanicReportsHint(scan.files.length),
               trailing: Btn(
-                'Show Files',
+                t.showFiles,
                 onPressed: () => shell.select(Section.files),
               ),
             ),
@@ -273,26 +259,26 @@ class OverviewPane extends StatelessWidget {
     final health = Group(
       children: [
         Item(
-          label: 'Device Health',
+          label: t.deviceHealth,
           value: h.verdict.label,
           valueColor: h.verdict == HealthVerdict.hardwareIssueLikely
               ? c.danger
               : null,
         ),
-        Item(label: 'Kernel panics', value: '${h.panicCount}'),
+        Item(label: t.kernelPanicsLabel, value: '${h.panicCount}'),
         if (h.mostCommonPanic != null)
           Item(
-            label: 'Most common',
+            label: t.mostCommon,
             value: '${h.mostCommonPanic!}  (${h.mostCommonCount}×)',
           ),
-        Item(label: 'Latest', value: formatRelativeDate(h.latest)),
+        Item(label: t.latest, value: formatRelativeDate(h.latest)),
         if (h.forcedResetCount > 0)
-          Item(label: 'Forced restarts', value: '${h.forcedResetCount}'),
+          Item(label: t.forcedRestarts, value: '${h.forcedResetCount}'),
         Item(
-          label: 'Latest report',
+          label: t.latestReport,
           hint: latest.file.name,
           trailing: Btn(
-            'Analyze',
+            t.analyze,
             primary: true,
             onPressed: () => shell.openPanic(latest),
           ),
@@ -300,15 +286,15 @@ class OverviewPane extends StatelessWidget {
       ],
     );
     return [
-      const Sec('Kernel Panics'),
+      Sec(t.kernelPanicsSection),
       health,
-      const Sec('Recent'),
+      Sec(t.recent),
       Group(
         children: [
           for (final p in scan.panics.take(5)) PanicItem(panic: p),
           if (scan.panics.length > 5)
             Item(
-              label: 'Show all ${scan.panics.length}',
+              label: t.showAll(scan.panics.length),
               trailing: Icon(Icons.chevron_right, size: 16, color: c.text3),
               onTap: () => shell.select(Section.panics),
             ),

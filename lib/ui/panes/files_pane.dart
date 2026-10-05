@@ -6,6 +6,7 @@ import '../../models/diagnostic_file.dart';
 import '../format.dart';
 import '../kit.dart';
 import 'panics_pane.dart';
+import '../../l10n/lang_scope.dart';
 
 class FilesPane extends StatelessWidget {
   const FilesPane({super.key});
@@ -13,22 +14,23 @@ class FilesPane extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
+    final t = context.tr;
     final scan = app.scan;
     if (scan == null) {
-      return const Pane(title: 'Files', children: [NoScanGroup()]);
+      return Pane(title: t.filesSection, children: const [NoScanGroup()]);
     }
     final byType = <DiagnosticFileType, List<DiagnosticFile>>{};
     for (final f in scan.files) {
       byType.putIfAbsent(f.type, () => []).add(f);
     }
     return Pane(
-      title: 'Files',
+      title: t.filesSection,
       children: [
         Group(
           children: [
             Item(
-              label: plural(scan.files.length, 'file'),
-              hint: 'Copied ${formatRelativeDate(scan.scannedAt)}',
+              label: t.files(scan.files.length),
+              hint: t.copiedAt(formatRelativeDate(scan.scannedAt)),
               trailing: scan.directory.isEmpty
                   ? null
                   : Btn(
@@ -57,7 +59,7 @@ class FilesPane extends StatelessWidget {
                         '${formatBytes(f.sizeBytes)}  ·  ${formatRelativeDate(f.date)}',
                   ),
                 if (byType[type]!.length > 200)
-                  CapItem('…and ${byType[type]!.length - 200} more'),
+                  CapItem(t.andMore(byType[type]!.length - 200)),
               ],
             ),
           ],

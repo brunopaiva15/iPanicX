@@ -1,0 +1,466 @@
+// User-facing strings, English and French. Pure Dart (also used by models,
+// services and the report formatter).
+
+enum AppLang {
+  en,
+  fr;
+
+  /// `fr`, `fr_FR`, `fr-CA`… → French; anything else → English.
+  static AppLang fromLocale(String? locale) =>
+      (locale ?? '').toLowerCase().startsWith('fr') ? fr : en;
+}
+
+/// Active language. Set by AppController; isolates receive it explicitly.
+abstract final class L10n {
+  static AppLang lang = AppLang.en;
+  static Strings get s => Strings(lang);
+}
+
+/// Shorthand for the active strings.
+Strings get tr => L10n.s;
+
+class Strings {
+  const Strings(this.lang);
+
+  final AppLang lang;
+  bool get _fr => lang == AppLang.fr;
+  String _(String en, String fr) => _fr ? fr : en;
+
+  // ---------------------------------------------------------------- general
+  String plural(int n, String en, String fr, {String? enMany, String? frMany}) {
+    final many = n > 1 || (n == 0 && !_fr);
+    final word = _fr
+        ? (many ? (frMany ?? '${fr}s') : fr)
+        : (many ? (enMany ?? '${en}s') : en);
+    return '$n $word';
+  }
+
+  String files(int n) => plural(n, 'file', 'fichier');
+  String panics(int n) => plural(n, 'panic', 'panic');
+  String kernelPanics(int n) =>
+      plural(n, 'kernel panic', 'kernel panic', frMany: 'kernel panics');
+  String diagnosticFiles(int n) => plural(
+    n,
+    'diagnostic file',
+    'fichier de diagnostic',
+    frMany: 'fichiers de diagnostic',
+  );
+
+  // ------------------------------------------------------------------ dates
+  List<String> get months => _fr
+      ? const [
+          'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
+          'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.', //
+        ]
+      : const [
+          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', //
+        ];
+  String today(String time) => _('Today, $time', 'Aujourd’hui, $time');
+  String yesterday(String time) => _('Yesterday, $time', 'Hier, $time');
+  String todayShort(String time) => _('today $time', 'aujourd’hui $time');
+  String get yesterdayShort => _('yesterday', 'hier');
+  String get unknownDate => _('Unknown date', 'Date inconnue');
+
+  // ---------------------------------------------------------------- sidebar
+  String get overview => _('Overview', 'Vue d’ensemble');
+  String get panicsSection => 'Panics';
+  String get filesSection => _('Files', 'Fichiers');
+  String get general => _('General', 'Général');
+  String get openIps => _('Open .ips…', 'Ouvrir un .ips…');
+  String get back => _('Back', 'Retour');
+
+  // --------------------------------------------------------- device states
+  String get lookingForDevices =>
+      _('Looking for devices…', 'Recherche d’appareils…');
+  String get noIPhone => _('No iPhone connected', 'Aucun iPhone connecté');
+  String get noIPhoneHelp => _(
+    'Connect an iPhone using USB, unlock it and tap “Trust” if asked. iPaniX checks again every few seconds.',
+    'Branchez un iPhone en USB, déverrouillez-le et touchez « Se fier » si demandé. iPaniX revérifie automatiquement toutes les deux secondes.',
+  );
+  String get notDetectedSection => _(
+    'iPhone plugged in but not detected?',
+    'iPhone branché mais pas détecté ?',
+  );
+  String get cableTips => _(
+    '• Use a data cable: some cables only charge.\n• Unlock the iPhone. A locked iPhone may refuse new USB connections.',
+    '• Utilisez un câble de données : certains câbles ne font que charger.\n• Déverrouillez l’iPhone. Verrouillé, il peut refuser une nouvelle connexion USB.',
+  );
+  String get notRecognized => _('iPhone not recognized', 'iPhone non reconnu');
+  String get timeoutHelp => _(
+    'The iPhone did not answer in time. Keep it unlocked and try again.',
+    'L’iPhone n’a pas répondu à temps. Gardez-le déverrouillé et réessayez.',
+  );
+  String get scanFailedGeneric => _(
+    'Something went wrong while reading the crash reports.',
+    'Une erreur est survenue pendant la lecture des rapports.',
+  );
+  String get trustRequired => _('Trust required', 'Autorisation requise');
+  String trustHelp(String computer) => _(
+    'Unlock your iPhone and tap “Trust” to allow this $computer to read diagnostics.',
+    'Déverrouillez l’iPhone et touchez « Se fier » pour autoriser ce $computer à lire les diagnostics.',
+  );
+  String get pairingDenied => _(
+    'Pairing was declined on the iPhone. Unplug and reconnect it, then tap “Trust”.',
+    'L’association a été refusée sur l’iPhone. Débranchez-le, rebranchez-le, puis touchez « Se fier ».',
+  );
+  String get showTrustPrompt => _('Show Trust Prompt', 'Afficher la demande');
+  String get retry => _('Retry', 'Réessayer');
+  String get deviceLocked => _('Device locked', 'Appareil verrouillé');
+  String get lockedHelp => _(
+    'Unlock your iPhone with its passcode, then try again.',
+    'Déverrouillez l’iPhone avec son code, puis réessayez.',
+  );
+  String get commError => _(
+    'Unable to communicate with iPhone',
+    'Impossible de communiquer avec l’iPhone',
+  );
+  String get commHelp => _(
+    'The iPhone did not respond correctly.\nTry another cable or USB port, and make sure the iPhone is unlocked.',
+    'L’iPhone n’a pas répondu correctement.\nEssayez un autre câble ou port USB, et vérifiez que l’iPhone est déverrouillé.',
+  );
+  String get toolsUnavailable =>
+      _('libimobiledevice unavailable', 'libimobiledevice introuvable');
+  String get checkAgain => _('Check Again', 'Vérifier à nouveau');
+  String multipleDevices(int n) => _(
+    '$n devices are connected. iPaniX is showing the first one. Disconnect the others to choose a device.',
+    '$n appareils sont connectés. iPaniX affiche le premier. Débranchez les autres pour choisir un appareil.',
+  );
+  String get technicalDetails => _('Technical details', 'Détails techniques');
+  String get copy => _('Copy', 'Copier');
+  String get copied => _('Copied', 'Copié');
+
+  // --------------------------------------------------------------- overview
+  String get connectedViaUsb => _('Connected via USB', 'Connecté en USB');
+  String get model => _('Model', 'Modèle');
+  String get productType => _('Product type', 'Identifiant');
+  String get build => 'Build';
+  String get diagnostics => _('Diagnostics', 'Diagnostics');
+  String get scanDiagnostics =>
+      _('Scan diagnostics', 'Analyser les diagnostics');
+  String scanHint(String computer) => _(
+    'Copies the crash reports to this $computer. They stay on the iPhone.',
+    'Copie les rapports sur ce $computer. Ils restent sur l’iPhone.',
+  );
+  String get scanButton => _('Scan Diagnostics', 'Analyser');
+  String get scanAgain => _('Scan Again', 'Relancer');
+  String get analyzing => _('Analyzing…', 'Analyse…');
+  String get copying => _('Copying…', 'Copie…');
+  String copyingFiles(int n) => _('Copying… ${files(n)}', 'Copie… ${files(n)}');
+  String get kernelPanicsSection => _('Kernel Panics', 'Kernel panics');
+  String get noPanicReports =>
+      _('No panic reports found', 'Aucun rapport de panic trouvé');
+  String noPanicReportsHint(int n) => _(
+    '${diagnosticFiles(n)} copied, none of them is a kernel panic report.',
+    '${diagnosticFiles(n)} copiés, aucun n’est un rapport de kernel panic.',
+  );
+  String get showFiles => _('Show Files', 'Voir les fichiers');
+  String get deviceHealth => _('Device Health', 'État de l’appareil');
+  String get kernelPanicsLabel => 'Kernel panics';
+  String get mostCommon => _('Most common', 'Le plus fréquent');
+  String get latest => _('Latest', 'Dernier');
+  String get forcedRestarts => _('Forced restarts', 'Redémarrages forcés');
+  String get latestReport => _('Latest report', 'Dernier rapport');
+  String get analyze => _('Analyze', 'Analyser');
+  String get recent => _('Recent', 'Récents');
+  String showAll(int n) => _('Show all $n', 'Tout afficher ($n)');
+
+  // ----------------------------------------------------------------- panics
+  String get forcedRestartsSection =>
+      _('Forced Restarts', 'Redémarrages forcés');
+  String get noScanYet => _('No scan yet', 'Aucune analyse');
+  String get noScanHint => _(
+    'Scan the connected iPhone from Overview.',
+    'Analysez l’iPhone connecté depuis la vue d’ensemble.',
+  );
+
+  // ------------------------------------------------------------------ files
+  String copiedAt(String when) => _('Copied $when', 'Copiés $when');
+  String andMore(int n) => _('…and $n more', '…et $n de plus');
+
+  // ------------------------------------------------------------ panic pane
+  String get severity => _('Severity', 'Gravité');
+  String get confidence => _('Confidence', 'Confiance');
+  String get suspectedComponents =>
+      _('Suspected components', 'Composants suspectés');
+  String get possibleCauses => _('Possible causes', 'Causes possibles');
+  String get recommendedActions =>
+      _('Recommended actions', 'Actions recommandées');
+  String get nextSteps => _('Next steps', 'Étapes suivantes');
+  String get device => _('Device', 'Appareil');
+  String get sensorMask => _('Sensor mask', 'Masque capteur');
+  String get smcKeys => _('SMC keys', 'Clés SMC');
+  String get missingSensors => _('Missing sensors', 'Capteurs manquants');
+  String get panic => 'Panic';
+  String get initiator => _('Initiator', 'Origine');
+  String get panickedTask => _('Panicked task', 'Tâche en panic');
+  String get kexts => _('Kexts in backtrace', 'Kexts dans la backtrace');
+  String get panicFlags => _('Panic flags', 'Flags de panic');
+  String get bugType => _('Bug type', 'Type (bug_type)');
+  String get kernel => _('Kernel', 'Noyau');
+  String get date => 'Date';
+  String get rule => _('Rule', 'Règle');
+  String get matchedOn => _('Matched on', 'Reconnu sur');
+  String get detectedCodes => _('Detected codes', 'Codes détectés');
+  String get parserNotes => _('Parser notes', 'Notes du parser');
+  String get panicString => _('Panic string', 'Message de panic');
+  String get report => _('Report', 'Rapport');
+  String get rawReport => _('Raw report', 'Rapport brut');
+  String get viewRaw => _('View Raw Panic', 'Voir le rapport brut');
+  String get diagnosis => _('Diagnosis', 'Diagnostic');
+  String get diagnosisHint =>
+      _('Plain text, as exported', 'Texte brut, comme à l’export');
+  String get export => _('Export', 'Exporter');
+  String get exportHint => _(
+    'Save the diagnosis as a .txt file',
+    'Enregistrer le diagnostic en .txt',
+  );
+  String get exportButton => _('Export Report…', 'Exporter…');
+  String get diagnosisCopied => _('Diagnosis copied', 'Diagnostic copié');
+  String get panicStringCopied =>
+      _('Panic string copied', 'Message de panic copié');
+  String get rawCopied => _('Raw panic copied', 'Rapport brut copié');
+  String savedTo(String path) => _('Saved to $path', 'Enregistré : $path');
+  String get copyAll => _('Copy All', 'Tout copier');
+  String showingFirst(String shown, String total) => _(
+    'Showing the first $shown of $total. Copy All copies everything.',
+    'Affichage des premiers $shown sur $total. « Tout copier » copie tout.',
+  );
+  String get fileUnreadable =>
+      _('This file could not be read.', 'Ce fichier n’a pas pu être lu.');
+
+  // --------------------------------------------------------------- general
+  String get appearance => _('Appearance', 'Apparence');
+  String get system => _('System', 'Système');
+  String get light => _('Light', 'Clair');
+  String get dark => _('Dark', 'Sombre');
+  String get language => _('Language', 'Langue');
+  String get english => 'English';
+  String get french => 'Français';
+  String get simulatedDevice => _('Simulated device', 'Appareil simulé');
+  String get scenario => _('Scenario', 'Scénario');
+  String get mockOn => _('USE_MOCK_DEVICE is on', 'USE_MOCK_DEVICE est activé');
+  String get privacy => _('Privacy', 'Confidentialité');
+  String localOnly(String computer) => _(
+    'All diagnostic processing is performed locally on your $computer.',
+    'Tous les diagnostics sont traités localement sur votre $computer.',
+  );
+  String privacyDetail(String computer) => _(
+    'No analytics, no telemetry, no network requests. Crash reports are copied to a temporary folder on this $computer and never uploaded.',
+    'Aucune statistique, aucune télémétrie, aucune requête réseau. Les rapports sont copiés dans un dossier temporaire de ce $computer et ne sont jamais envoyés.',
+  );
+  String get about => _('About', 'À propos');
+  String get version => 'Version 0.1.0';
+  String get knowledgeBase => _('Knowledge base', 'Base de connaissances');
+  String signatures(int n) => plural(n, 'signature', 'signature');
+  String get kbDisclaimer => _(
+    'The signatures are examples and do not cover every panic. A diagnosis should be confirmed by hardware inspection.',
+    'Les signatures sont des exemples et ne couvrent pas tous les panics. Un diagnostic doit être confirmé par une inspection matérielle.',
+  );
+  String get deviceBackend => _('Device backend', 'Accès à l’appareil');
+
+  // ------------------------------------------------------- model labels
+  String severityLabel(String key) => switch (key) {
+    'low' => _('Low', 'Faible'),
+    'medium' => _('Medium', 'Moyenne'),
+    'high' => _('High', 'Élevée'),
+    _ => _('Unknown', 'Inconnue'),
+  };
+  String confidenceLabel(String key) => switch (key) {
+    'low' => _('Low confidence', 'Confiance faible'),
+    'medium' => _('Medium confidence', 'Confiance moyenne'),
+    'high' => _('High confidence', 'Confiance élevée'),
+    _ => _('No known signature', 'Signature inconnue'),
+  };
+  String verdictLabel(String key) => switch (key) {
+    'noPanics' => _('No kernel panics found', 'Aucun kernel panic trouvé'),
+    'hardwareIssueLikely' => _(
+      'Hardware issue likely',
+      'Problème matériel probable',
+    ),
+    _ => _('Cause not determined', 'Cause non déterminée'),
+  };
+  String fileTypeLabel(String key) => switch (key) {
+    'panicFull' => _('Kernel panic (full)', 'Kernel panic (complet)'),
+    'panicBase' => _('Kernel panic (base)', 'Kernel panic (base)'),
+    'jetsamEvent' => _('Jetsam event', 'Événement Jetsam'),
+    'forceReset' => _('Forced restart', 'Redémarrage forcé'),
+    'resetCounter' => _('Reset counter', 'Compteur de réinitialisations'),
+    'stacks' => 'Stackshot',
+    _ => _('Other log', 'Autre journal'),
+  };
+  String errorTitle(String key) => switch (key) {
+    'noDevice' => _('No iPhone detected', 'Aucun iPhone détecté'),
+    'deviceLocked' => deviceLocked,
+    'trustRequired' || 'pairingDenied' => trustRequired,
+    'communication' => commError,
+    'crashReportsUnavailable' => _(
+      'Unable to retrieve crash reports',
+      'Impossible de récupérer les rapports',
+    ),
+    'toolsUnavailable' => toolsUnavailable,
+    _ => _(
+      'The iPhone did not respond in time',
+      'L’iPhone n’a pas répondu à temps',
+    ),
+  };
+  String errorMessage(String key) => switch (key) {
+    'noDevice' => _(
+      'Connect an iPhone using USB.',
+      'Branchez un iPhone en USB.',
+    ),
+    'deviceLocked' => lockedHelp,
+    'trustRequired' => trustHelp(_('computer', 'ordinateur')),
+    'pairingDenied' => pairingDenied,
+    'crashReportsUnavailable' => _(
+      'The iPhone refused to share its crash reports.',
+      'L’iPhone a refusé de partager ses rapports.',
+    ),
+    'toolsUnavailable' => _(
+      'The libimobiledevice tools are not installed.',
+      'Les outils libimobiledevice ne sont pas installés.',
+    ),
+    'timeout' => _(
+      'Copying took too long. Keep the iPhone unlocked and try again.',
+      'La copie a pris trop de temps. Gardez l’iPhone déverrouillé et réessayez.',
+    ),
+    _ => _(
+      'The iPhone is connected but did not respond correctly.',
+      'L’iPhone est connecté mais n’a pas répondu correctement.',
+    ),
+  };
+  String bugTypeLabel(String? bugType) => switch (bugType) {
+    null => _('Unknown report type', 'Type de rapport inconnu'),
+    '210' => 'Kernel panic',
+    '151' => _('Forced restart', 'Redémarrage forcé'),
+    '109' => _('App crash (legacy format)', 'Crash d’app (ancien format)'),
+    '309' => _('App crash', 'Crash d’app'),
+    '308' => _(
+      'User fault (ExcUserFault)',
+      'Erreur utilisateur (ExcUserFault)',
+    ),
+    '288' => 'Stackshot',
+    '298' => _('Jetsam (memory pressure) event', 'Événement Jetsam (mémoire)'),
+    '115' => _('Reset counter', 'Compteur de réinitialisations'),
+    _ => _(
+      'Diagnostic report (bug_type $bugType)',
+      'Rapport de diagnostic (bug_type $bugType)',
+    ),
+  };
+
+  // ------------------------------------------------------------- platform
+  String get computerMac => 'Mac';
+  String get computerPc => 'PC';
+  String get revealInExplorer =>
+      _('Show in File Explorer', 'Afficher dans l’Explorateur');
+  String get revealInFinder => _('Show in Finder', 'Afficher dans le Finder');
+  String get driverHintWindows => _(
+    '• Windows needs Apple’s USB driver and the Apple Mobile Device Service: install “Apple Devices” from the Microsoft Store (or iTunes), open it once, then unplug and reconnect the iPhone.',
+    '• Windows a besoin du pilote USB d’Apple et du service Apple Mobile Device : installez « Appareils Apple » depuis le Microsoft Store (ou iTunes), ouvrez-le une fois, puis débranchez et rebranchez l’iPhone.',
+  );
+  String get driverHintMac => _(
+    '• Try another USB port or adapter, then unplug and reconnect.',
+    '• Essayez un autre port USB ou adaptateur, puis débranchez et rebranchez.',
+  );
+  String get notRecognizedWindows => _(
+    'Windows sees an iPhone on USB, but the Apple Mobile Device Service does not list it. Unlock the iPhone, unplug and reconnect it. If it persists, open “Apple Devices” (or iTunes) once, or restart “Apple Mobile Device Service” in services.msc.',
+    'Windows voit un iPhone en USB, mais le service Apple Mobile Device ne le liste pas. Déverrouillez l’iPhone, débranchez-le et rebranchez-le. Si cela persiste, ouvrez une fois « Appareils Apple » (ou iTunes), ou redémarrez « Apple Mobile Device Service » dans services.msc.',
+  );
+  String get notRecognizedMac => _(
+    'macOS sees an iPhone on USB, but usbmuxd does not list it. Unlock the iPhone, then unplug and reconnect it.',
+    'macOS voit un iPhone en USB, mais usbmuxd ne le liste pas. Déverrouillez l’iPhone, puis débranchez-le et rebranchez-le.',
+  );
+  String get driverProblem => _(
+    'Windows sees the iPhone, but its Apple USB driver is missing or not working. Install or repair “Apple Devices” (Microsoft Store) or iTunes, then unplug and reconnect the iPhone. In Device Manager it appears with a warning sign under “Portable Devices” or “Universal Serial Bus controllers”.',
+    'Windows voit l’iPhone, mais son pilote USB Apple est absent ou ne fonctionne pas. Installez ou réparez « Appareils Apple » (Microsoft Store) ou iTunes, puis débranchez et rebranchez l’iPhone. Dans le Gestionnaire de périphériques, il apparaît avec un avertissement sous « Appareils mobiles » ou « Contrôleurs de bus USB ».',
+  );
+  String get installHintWindows => _(
+    'Install “Apple Devices” (Microsoft Store) or iTunes for the iPhone USB driver, then libimobiledevice with MSYS2, or use a build of iPaniX that bundles the tools (see README).',
+    'Installez « Appareils Apple » (Microsoft Store) ou iTunes pour le pilote USB de l’iPhone, puis libimobiledevice avec MSYS2, ou utilisez une version d’iPaniX qui embarque les outils (voir README).',
+  );
+  String get installHintMac => _(
+    'Install it with Homebrew, or build iPaniX with the bundled tools (see README).',
+    'Installez-le avec Homebrew, ou compilez iPaniX avec les outils embarqués (voir README).',
+  );
+  String get usbServiceWindows => _(
+    'Unable to list USB devices. Make sure “Apple Devices” or iTunes is installed and the Apple Mobile Device Service is running.',
+    'Impossible de lister les appareils USB. Vérifiez que « Appareils Apple » ou iTunes est installé et que le service Apple Mobile Device est lancé.',
+  );
+  String get usbServiceMac => _(
+    'Unable to list USB devices. Is usbmuxd running?',
+    'Impossible de lister les appareils USB. usbmuxd est-il lancé ?',
+  );
+
+  // ------------------------------------------------------------- analyzer
+  String get knownSignatureDisclaimer => _(
+    'This diagnosis is based on a known panic signature and should be confirmed by hardware inspection.',
+    'Ce diagnostic repose sur une signature de panic connue et doit être confirmé par une inspection matérielle.',
+  );
+  String get knownSignatureSummary => _(
+    'This panic matches a known signature in the iPaniX knowledge base.',
+    'Ce panic correspond à une signature connue de la base iPaniX.',
+  );
+  String get defaultAction => _(
+    'Inspect the suspected components and their connectors before restoring the device.',
+    'Inspectez les composants suspectés et leurs connecteurs avant de restaurer l’appareil.',
+  );
+  String get unknownTitle =>
+      _('Unknown Hardware Panic', 'Panic matériel inconnu');
+  String get unknownSummary => _(
+    'The panic was successfully parsed, but this signature is not currently present in the iPaniX knowledge base.',
+    'Le panic a bien été lu, mais cette signature n’est pas encore dans la base de connaissances iPaniX.',
+  );
+  List<String> get unknownActions => _fr
+      ? const [
+          'Examinez le message de panic et les codes détectés ci-dessous.',
+          'Vérifiez si le même panic se répète sur plusieurs rapports.',
+        ]
+      : const [
+          'Review the panic string and detected codes below.',
+          'Check whether the same panic repeats across several reports.',
+        ];
+  String get incompleteTitle =>
+      _('Incomplete Panic Report', 'Rapport de panic incomplet');
+  String get incompleteSummary => _(
+    'The file was read, but no panic description could be found in it. It may be truncated or use an unsupported format.',
+    'Le fichier a été lu, mais aucune description de panic n’y a été trouvée. Il est peut-être tronqué ou dans un format non pris en charge.',
+  );
+  List<String> get incompleteActions => _fr
+      ? const [
+          'Ouvrez le rapport brut pour l’examiner.',
+          'Relancez une analyse après le prochain redémarrage.',
+        ]
+      : const [
+          'Open the raw panic to inspect it manually.',
+          'Scan again after the next restart to get a fresh report.',
+        ];
+  String get notPanicTitle => _('Not a Kernel Panic', 'Pas un kernel panic');
+  String notPanicSummary(String kind, String? bugType) => _(
+    'This file is a ${kind.toLowerCase()} report (bug_type $bugType), not a kernel panic. iPaniX only diagnoses kernel panics in this version.',
+    'Ce fichier est un rapport « $kind » (bug_type $bugType), pas un kernel panic. Cette version d’iPaniX ne diagnostique que les kernel panics.',
+  );
+  String get notPanicAction => _(
+    'Open a panic-full or panic-base file to get a hardware diagnosis.',
+    'Ouvrez un fichier panic-full ou panic-base pour obtenir un diagnostic matériel.',
+  );
+  String evidenceDevice(String? product) =>
+      _('Device $product', 'Appareil $product');
+  String evidencePanicLine(String term) =>
+      _('Panic line “$term”', 'Ligne de panic « $term »');
+  String evidenceTerm(String term) => _fr ? '« $term »' : '“$term”';
+  String evidenceKext(String kext) => 'Kext $kext';
+  String evidenceMask(String mask) =>
+      _('Sensor mask $mask', 'Masque capteur $mask');
+  String evidenceMissing(String sensor) =>
+      _('Missing sensor $sensor', 'Capteur manquant $sensor');
+
+  // --------------------------------------------------------- text report
+  String get reportTitle =>
+      _('iPaniX diagnostic report', 'Rapport de diagnostic iPaniX');
+  String get reportLocal => _(
+    'All diagnostic processing was performed locally on this computer.',
+    'Tout le diagnostic a été effectué localement sur cet ordinateur.',
+  );
+  String get file => _('File', 'Fichier');
+  String get codes => 'Codes';
+}

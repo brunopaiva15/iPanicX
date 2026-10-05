@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../l10n/strings.dart';
 import '../models/device_status.dart';
 import '../models/diagnostic_file.dart';
 import '../models/iphone_device.dart';
@@ -60,16 +61,10 @@ enum IPhoneErrorKind {
   toolsUnavailable,
   timeout;
 
-  String get title => switch (this) {
-    noDevice => 'No iPhone detected',
-    deviceLocked => 'Device locked',
-    trustRequired => 'Trust required',
-    pairingDenied => 'Trust required',
-    communication => 'Unable to communicate with iPhone',
-    crashReportsUnavailable => 'Unable to retrieve crash reports',
-    toolsUnavailable => 'libimobiledevice unavailable',
-    timeout => 'The iPhone did not respond in time',
-  };
+  String get title => tr.errorTitle(name);
+
+  /// Localized explanation; the service's English message is kept for logs.
+  String get message => tr.errorMessage(name);
 }
 
 /// Error with a user-facing message and (optional) raw technical details.

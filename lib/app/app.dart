@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+import '../l10n/lang_scope.dart';
+import '../l10n/strings.dart';
 
 import 'app_controller.dart';
 import '../ui/shell.dart';
@@ -21,6 +25,11 @@ class IPaniXApp extends StatelessWidget {
           theme: buildTheme(Brightness.light),
           darkTheme: buildTheme(Brightness.dark),
           themeMode: controller.themeMode,
+          locale: Locale(controller.language.name),
+          supportedLocales: [for (final l in AppLang.values) Locale(l.name)],
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          builder: (context, child) =>
+              LangScope(lang: controller.language, child: child!),
           home: const AppShell(),
         ),
       ),

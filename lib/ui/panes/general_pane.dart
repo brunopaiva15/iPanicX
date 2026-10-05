@@ -4,8 +4,9 @@ import '../../app/app_controller.dart';
 import '../../app/host_platform.dart';
 import '../../app/theme.dart';
 import '../../services/mock_iphone_service.dart';
-import '../format.dart';
 import '../kit.dart';
+import '../../l10n/lang_scope.dart';
+import '../../l10n/strings.dart';
 
 class GeneralPane extends StatelessWidget {
   const GeneralPane({super.key});
@@ -14,35 +15,48 @@ class GeneralPane extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
     final c = AppColors.of(context);
+    final t = context.tr;
     final mock = app.iphone is MockIPhoneService
         ? app.iphone as MockIPhoneService
         : null;
     return Pane(
-      title: 'General',
+      title: t.general,
       children: [
         Group(
           children: [
             Item(
-              label: 'Appearance',
+              label: t.appearance,
               trailing: Seg<ThemeMode>(
-                options: const {
-                  ThemeMode.system: 'System',
-                  ThemeMode.light: 'Light',
-                  ThemeMode.dark: 'Dark',
+                options: {
+                  ThemeMode.system: t.system,
+                  ThemeMode.light: t.light,
+                  ThemeMode.dark: t.dark,
                 },
                 value: app.themeMode,
                 onChanged: app.setThemeMode,
               ),
             ),
+            Item(
+              label: t.language,
+              trailing: Seg<AppLang?>(
+                options: {
+                  null: t.system,
+                  AppLang.en: t.english,
+                  AppLang.fr: t.french,
+                },
+                value: app.languageOverride,
+                onChanged: app.setLanguage,
+              ),
+            ),
           ],
         ),
         if (mock != null) ...[
-          const Sec('Simulated device'),
+          Sec(t.simulatedDevice),
           Group(
             children: [
               Item(
-                label: 'Scenario',
-                hint: 'USE_MOCK_DEVICE is on',
+                label: t.scenario,
+                hint: t.mockOn,
                 trailing: PopupMenuButton<MockScenario>(
                   tooltip: '',
                   initialValue: mock.scenario,
@@ -77,36 +91,28 @@ class GeneralPane extends StatelessWidget {
             ],
           ),
         ],
-        const Sec('Privacy'),
+        Sec(t.privacy),
         Group(
           children: [
             Item(
               leading: const Glyph(Icons.lock_outline),
-              label:
-                  'All diagnostic processing is performed locally on your ${HostPlatform.computer}.',
+              label: t.localOnly(HostPlatform.computer),
             ),
-            CapItem(
-              'No analytics, no telemetry, no network requests. Crash reports '
-              'are copied to a temporary folder on this ${HostPlatform.computer} '
-              'and never uploaded.',
-            ),
+            CapItem(t.privacyDetail(HostPlatform.computer)),
           ],
         ),
-        const Sec('About'),
+        Sec(t.about),
         Group(
           children: [
-            const Item(label: 'iPaniX', value: 'Version 0.1.0'),
+            Item(label: 'iPaniX', value: t.version),
             Item(
-              label: 'Knowledge base',
+              label: t.knowledgeBase,
               value:
-                  'v${app.knowledgeBase.version ?? '?'} · ${plural(app.knowledgeBase.rules.length, 'signature')}',
+                  'v${app.knowledgeBase.version ?? '?'} · ${t.signatures(app.knowledgeBase.rules.length)}',
             ),
-            const CapItem(
-              'The signatures are examples and do not cover every panic. '
-              'A diagnosis should be confirmed by hardware inspection.',
-            ),
+            CapItem(t.kbDisclaimer),
             Item(
-              label: 'Device backend',
+              label: t.deviceBackend,
               value: app.iphone.backendDescription,
               wrapValue: true,
             ),

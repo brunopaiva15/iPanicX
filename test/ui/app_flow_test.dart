@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ipanix/app/app.dart';
 import 'package:ipanix/app/app_controller.dart';
 import 'package:ipanix/app/host_platform.dart';
+import 'package:ipanix/l10n/strings.dart';
 import 'package:ipanix/services/mock_iphone_service.dart';
 
 import '../helpers.dart';
@@ -25,6 +26,7 @@ void main() {
   Future<(AppController, MockIPhoneService)> pumpApp(
     WidgetTester tester, {
     MockScenario scenario = MockScenario.connected,
+    String locale = 'en_US',
   }) async {
     tester.view.physicalSize = const Size(1200, 900);
     tester.view.devicePixelRatio = 1;
@@ -40,6 +42,7 @@ void main() {
       iphone: mock,
       knowledgeBase: loadKnowledgeBase(),
       useIsolate: false,
+      systemLocale: locale,
     );
     await tester.pumpWidget(IPaniXApp(controller: controller));
     await tester.runAsync(controller.start);
@@ -207,5 +210,52 @@ void main() {
     await tester.tap(find.text('Light'));
     await settle(tester);
     expect(controller.themeMode, ThemeMode.light);
+  });
+
+  testWidgets('French system locale → French UI and diagnosis', (tester) async {
+    final (controller, _) = await pumpApp(tester, locale: 'fr_FR');
+    addTearDown(() => L10n.lang = AppLang.en);
+    expect(controller.language, AppLang.fr);
+    expect(find.text('Vue d’ensemble'), findsWidgets);
+    expect(find.text('Connecté en USB'), findsOneWidget);
+
+    await tester.runAsync(controller.scanDiagnostics);
+    await settle(tester);
+    expect(find.text('État de l’appareil'), findsOneWidget);
+    expect(find.text('Problème matériel probable'), findsOneWidget);
+    expect(find.textContaining('Panne de capteur SMC  (12×)'), findsOneWidget);
+
+    await tester.tap(find.text('Analyser').last);
+    await settle(tester);
+    expect(find.text('Panne de capteur SMC'), findsOneWidget);
+    expect(find.text('Confiance élevée'), findsOneWidget);
+    expect(find.text('Nappe du connecteur de charge'), findsOneWidget);
+  });
+
+  testWidgets('General › Language switches the whole app live', (tester) async {
+    final (controller, _) = await pumpApp(tester);
+    addTearDown(() => L10n.lang = AppLang.en);
+    await tester.runAsync(controller.scanDiagnostics);
+    await settle(tester);
+
+    await tester.tap(find.text('General'));
+    await settle(tester);
+    await tester.tap(find.text('Français'));
+    await settle(tester);
+    expect(controller.language, AppLang.fr);
+    expect(find.text('Général'), findsWidgets);
+    expect(find.text('Langue'), findsOneWidget);
+
+    await tester.tap(find.text('Vue d’ensemble'));
+    await settle(tester);
+    // The existing scan is re-worded, not re-copied.
+    expect(find.text('Problème matériel probable'), findsOneWidget);
+
+    await tester.tap(find.text('Général'));
+    await settle(tester);
+    await tester.tap(find.text('English'));
+    await settle(tester);
+    expect(find.text('Language'), findsOneWidget);
+    expect(controller.scan!.panics.first.result.title, 'SMC Sensor Failure');
   });
 }

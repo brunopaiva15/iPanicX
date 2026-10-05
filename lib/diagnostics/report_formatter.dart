@@ -1,3 +1,4 @@
+import '../l10n/strings.dart';
 import '../models/iphone_device.dart';
 import '../models/scan_result.dart';
 
@@ -6,15 +7,16 @@ class ReportFormatter {
   const ReportFormatter._();
 
   static String diagnosis(AnalyzedPanic panic, {IPhoneDevice? device}) {
+    final t = tr;
     final r = panic.result;
     final p = panic.report;
     final b = StringBuffer()
-      ..writeln('iPaniX diagnostic report')
+      ..writeln(t.reportTitle)
       ..writeln('=' * 40)
       ..writeln()
       ..writeln(r.title)
-      ..writeln('Severity: ${r.severity.label}')
-      ..writeln('Confidence: ${r.confidence.label}')
+      ..writeln('${t.severity} : ${r.severity.label}'.colon(t))
+      ..writeln('${t.confidence} : ${r.confidence.label}'.colon(t))
       ..writeln()
       ..writeln(r.summary);
     if (r.disclaimer != null) {
@@ -33,55 +35,60 @@ class ReportFormatter {
       }
     }
 
-    list('Suspected components:', r.suspectedComponents);
-    list('Possible causes:', r.possibleCauses);
-    list('Recommended actions:', r.recommendedActions);
+    list('${t.suspectedComponents}:'.colon(t), r.suspectedComponents);
+    list('${t.possibleCauses}:'.colon(t), r.possibleCauses);
+    list('${t.recommendedActions}:'.colon(t), r.recommendedActions);
 
     b
       ..writeln()
-      ..writeln('Technical details:');
+      ..writeln('${t.technicalDetails}:'.colon(t));
     void row(String k, String? v) {
       if (v == null || v.isEmpty) return;
-      b.writeln('  ${k.padRight(14)}$v');
+      b.writeln('  ${k.padRight(22)}$v');
     }
 
-    row('Device', p.product ?? device?.productType);
-    row('Model', marketingNameFor(p.product ?? device?.productType));
+    row(t.device, p.product ?? device?.productType);
+    row(t.model, marketingNameFor(p.product ?? device?.productType));
     row('iOS', p.osVersion ?? device?.productVersion);
-    row('Build', p.build ?? device?.buildVersion);
-    row('Date', panic.date?.toString());
-    row('Bug type', p.bugType);
+    row(t.build, p.build ?? device?.buildVersion);
+    row(t.date, panic.date?.toString());
+    row(t.bugType, p.bugType);
     row(
-      'Sensor mask',
+      t.sensorMask,
       p.sensorMask == null ? null : '${p.sensorMaskHex} (${p.sensorMask})',
     );
-    row('SMC keys', p.sensorKeys.isEmpty ? null : p.sensorKeys.join(', '));
+    row(t.smcKeys, p.sensorKeys.isEmpty ? null : p.sensorKeys.join(', '));
     row(
-      'Missing',
+      t.missingSensors,
       p.missingSensors.isEmpty ? null : p.missingSensors.join(', '),
     );
-    row('Initiator', p.panicInitiator);
-    row('Panicked', p.panickedProcess);
-    row('Kexts', p.backtraceKexts.isEmpty ? null : p.backtraceKexts.join(', '));
-    row('Panic flags', p.panicFlags);
-    row('Kernel', p.kernelVersion);
+    row(t.initiator, p.panicInitiator);
+    row(t.panickedTask, p.panickedProcess);
+    row(t.kexts, p.backtraceKexts.isEmpty ? null : p.backtraceKexts.join(', '));
+    row(t.panicFlags, p.panicFlags);
+    row(t.kernel, p.kernelVersion);
     row('SoC', p.socId);
     row('Incident', p.incident);
-    row('File', panic.file.name);
-    row('Rule', r.matchedRuleId);
-    row('Matched on', r.evidence.isEmpty ? null : r.evidence.join(' | '));
-    if (r.rawCodes.isNotEmpty) row('Codes', r.rawCodes.join(' | '));
+    row(t.file, panic.file.name);
+    row(t.rule, r.matchedRuleId);
+    row(t.matchedOn, r.evidence.isEmpty ? null : r.evidence.join(' | '));
+    if (r.rawCodes.isNotEmpty) row(t.codes, r.rawCodes.join(' | '));
     if (p.hasPanicString) {
       b
         ..writeln()
-        ..writeln('Panic string:')
+        ..writeln('${t.panicString}:'.colon(t))
         ..writeln(p.panicString!.trim());
     }
     b
       ..writeln()
-      ..writeln(
-        'All diagnostic processing was performed locally on this computer.',
-      );
+      ..writeln(t.reportLocal);
     return b.toString();
   }
+}
+
+extension on String {
+  /// French puts a space before a colon, English does not.
+  String colon(Strings t) => t.lang == AppLang.fr
+      ? replaceFirst(RegExp(r'\s*:'), ' :')
+      : replaceFirst(RegExp(r'\s*:'), ':');
 }

@@ -5,6 +5,7 @@ import 'dart:isolate';
 import '../diagnostics/knowledge_base.dart';
 import '../diagnostics/panic_analyzer.dart';
 import '../diagnostics/panic_parser.dart';
+import '../l10n/strings.dart';
 import '../models/diagnostic_file.dart';
 import '../models/panic_report.dart';
 import '../models/scan_result.dart';
@@ -25,7 +26,8 @@ class DiagnosticService {
   /// Parse in a background isolate so large reports don't block the UI.
   final bool useIsolate;
 
-  PanicAnalyzer get analyzer => PanicAnalyzer(knowledgeBase);
+  /// Analyzer for the active UI language.
+  PanicAnalyzer get analyzer => PanicAnalyzer(knowledgeBase, lang: L10n.lang);
 
   Future<ScanResult> scan({
     CrashReportProgress? onProgress,
@@ -50,9 +52,10 @@ class DiagnosticService {
       }
     }
 
+    final lang = L10n.lang;
     final analysed = useIsolate
-        ? await _analyzeInIsolate(knowledgeBase, contents)
-        : _analyzeAll(knowledgeBase, contents);
+        ? await _analyzeInIsolate(knowledgeBase, contents, lang)
+        : _analyzeAll(knowledgeBase, contents, lang);
 
     // The same incident is often written as both panic-full and panic-base.
     final seenIncidents = <String>{};
@@ -96,7 +99,31 @@ class DiagnosticService {
       sizeBytes: stat.size,
       modified: stat.modified,
     );
-    return analyzeContent(knowledgeBase, entry, content);
+    return analyzeContent(knowledgeBase, entry, content, lang: L10n.lang);
+  }
+
+  /// Same reports, texts re-generated in [lang] (no re-parsing).
+  ScanResult relocalize(ScanResult scan, AppLang lang) {
+    final a = PanicAnalyzer(knowledgeBase, lang: lang);
+    AnalyzedPanic redo(AnalyzedPanic p) => AnalyzedPanic(
+      file: p.file,
+      report: p.report,
+      result: a.analyze(p.report),
+    );
+    final panics = scan.panics.map(redo).toList();
+    final forcedResets = scan.forcedResets.map(redo).toList();
+    return ScanResult(
+      directory: scan.directory,
+      files: scan.files,
+      panics: panics,
+      forcedResets: forcedResets,
+      health: DeviceHealthSummary.fromPanics(
+        panics,
+        forcedResetCount: forcedResets.length,
+      ),
+      unreadable: scan.unreadable,
+      scannedAt: scan.scannedAt,
+    );
   }
 
   static int _newestFirst(AnalyzedPanic a, AnalyzedPanic b) {
@@ -111,25 +138,29 @@ class DiagnosticService {
   static Future<List<AnalyzedPanic>> _analyzeInIsolate(
     KnowledgeBase kb,
     List<(DiagnosticFile, String)> contents,
-  ) => Isolate.run(() => _analyzeAll(kb, contents));
+    AppLang lang,
+  ) => Isolate.run(() => _analyzeAll(kb, contents, lang));
 
   static List<AnalyzedPanic> _analyzeAll(
     KnowledgeBase kb,
     List<(DiagnosticFile, String)> contents,
+    AppLang lang,
   ) => [
-    for (final (file, content) in contents) analyzeContent(kb, file, content),
+    for (final (file, content) in contents)
+      analyzeContent(kb, file, content, lang: lang),
   ];
 
   static AnalyzedPanic analyzeContent(
     KnowledgeBase kb,
     DiagnosticFile file,
-    String content,
-  ) {
+    String content, {
+    AppLang lang = AppLang.en,
+  }) {
     final PanicReport report = const PanicParser().parse(content);
     return AnalyzedPanic(
       file: file,
       report: report,
-      result: PanicAnalyzer(kb).analyze(report),
+      result: PanicAnalyzer(kb, lang: lang).analyze(report),
     );
   }
 

@@ -7,6 +7,7 @@ import '../format.dart';
 import '../kit.dart';
 import '../ring.dart';
 import '../shell.dart';
+import '../../l10n/lang_scope.dart';
 
 double confidenceFraction(Confidence c) => switch (c) {
   Confidence.high => 1,
@@ -62,6 +63,7 @@ class PanicItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
+    context.tr; // rebuild on language change (dates)
     final r = panic.result;
     return Item(
       leading: UsageRing(
@@ -87,7 +89,7 @@ class BackButtonSmall extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     return Tooltip(
-      message: 'Back',
+      message: context.tr.back,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(

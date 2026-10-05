@@ -1,3 +1,4 @@
+import '../l10n/strings.dart';
 import 'diagnostic_file.dart';
 import 'diagnostic_result.dart';
 import 'panic_report.dart';
@@ -23,11 +24,7 @@ enum HealthVerdict {
   hardwareIssueLikely,
   undetermined;
 
-  String get label => switch (this) {
-    noPanics => 'No kernel panics found',
-    hardwareIssueLikely => 'Hardware issue likely',
-    undetermined => 'Cause not determined',
-  };
+  String get label => tr.verdictLabel(name);
 }
 
 /// Factual summary of the device's panic history. Deliberately no score.

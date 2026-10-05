@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter/widgets.dart';
 
 import '../diagnostics/knowledge_base.dart';
+import '../l10n/strings.dart';
 import '../models/device_status.dart';
 import '../models/scan_result.dart';
 import '../services/diagnostic_service.dart';
@@ -19,12 +21,18 @@ class AppController extends ChangeNotifier {
     required this.knowledgeBase,
     PlatformBridge? bridge,
     bool useIsolate = true,
-  }) : bridge = bridge ?? PlatformBridge.forHost(),
+    String? systemLocale,
+  }) : _systemLang = AppLang.fromLocale(
+         systemLocale ?? PlatformDispatcher.instance.locale.toLanguageTag(),
+       ),
+       bridge = bridge ?? PlatformBridge.forHost(),
        diagnostics = DiagnosticService(
          iphone: iphone,
          knowledgeBase: knowledgeBase,
          useIsolate: useIsolate,
-       );
+       ) {
+    L10n.lang = language;
+  }
 
   final IPhoneService iphone;
   final KnowledgeBase knowledgeBase;
@@ -38,6 +46,26 @@ class AppController extends ChangeNotifier {
   void setThemeMode(ThemeMode mode) {
     if (mode == _themeMode) return;
     _themeMode = mode;
+    notifyListeners();
+  }
+
+  /// Language of the OS; used unless General › Language overrides it.
+  final AppLang _systemLang;
+  AppLang? _langOverride;
+
+  /// `null` = follow the system.
+  AppLang? get languageOverride => _langOverride;
+  AppLang get language => _langOverride ?? _systemLang;
+
+  void setLanguage(AppLang? lang) {
+    if (lang == _langOverride) return;
+    final before = language;
+    _langOverride = lang;
+    L10n.lang = language;
+    // Diagnoses are generated texts: regenerate them in the new language.
+    if (language != before && _scan != null) {
+      _scan = diagnostics.relocalize(_scan!, language);
+    }
     notifyListeners();
   }
 
@@ -110,7 +138,7 @@ class AppController extends ChangeNotifier {
     } catch (e) {
       _scanError = IPhoneServiceException(
         IPhoneErrorKind.crashReportsUnavailable,
-        'Something went wrong while reading the crash reports.',
+        tr.scanFailedGeneric,
         technicalDetails: e.toString(),
       );
       _phase = ScanPhase.failed;

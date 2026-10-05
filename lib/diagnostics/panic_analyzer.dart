@@ -1,3 +1,4 @@
+import '../l10n/strings.dart';
 import '../models/diagnostic_result.dart';
 import '../models/panic_report.dart';
 import 'diagnostic_rule.dart';
@@ -5,20 +6,22 @@ import 'knowledge_base.dart';
 
 /// Matches a [PanicReport] against the [KnowledgeBase].
 class PanicAnalyzer {
-  const PanicAnalyzer(this.knowledgeBase);
+  const PanicAnalyzer(this.knowledgeBase, {this.lang = AppLang.en});
 
   final KnowledgeBase knowledgeBase;
 
-  static const knownSignatureDisclaimer =
-      'This diagnosis is based on a known panic signature and should be '
-      'confirmed by hardware inspection.';
+  /// Language of every text in the results. Passed explicitly because
+  /// analysis runs in a background isolate.
+  final AppLang lang;
+
+  Strings get _s => Strings(lang);
 
   DiagnosticResult analyze(PanicReport report) {
     final codes = rawCodes(report);
     if (!report.isKernelReport) return _notAPanic(report, codes);
     final matches = <(DiagnosticRule, List<String>)>[];
     for (final rule in knowledgeBase.rules) {
-      final evidence = rule.evaluate(report);
+      final evidence = rule.evaluate(report, lang: lang);
       if (evidence != null) matches.add((rule, evidence));
     }
     if (matches.isEmpty) return _unknown(report, codes);
@@ -36,42 +39,36 @@ class PanicAnalyzer {
     List<String> codes,
     List<String> evidence,
   ) {
-    final technical = rule.technicalReason ?? _defaultTechnicalReason(report);
+    final t = rule.textFor(lang);
+    final technical = t.technicalReason ?? _defaultTechnicalReason(report);
     return DiagnosticResult(
-      title: rule.title,
+      title: t.title,
       severity: rule.severity,
-      summary:
-          rule.summary ??
-          'This panic matches a known signature in the iPaniX knowledge base.',
+      summary: t.summary ?? _s.knownSignatureSummary,
       technicalReason: technical,
-      suspectedComponents: rule.suspectedComponents,
-      possibleCauses: rule.possibleCauses,
-      recommendedActions: rule.recommendedActions.isNotEmpty
-          ? rule.recommendedActions
-          : const [
-              'Inspect the suspected components and their connectors before '
-                  'restoring the device.',
-            ],
+      suspectedComponents: t.suspectedComponents,
+      possibleCauses: t.possibleCauses,
+      recommendedActions: t.recommendedActions.isNotEmpty
+          ? t.recommendedActions
+          : [_s.defaultAction],
       confidence: rule.confidence,
       rawCodes: codes,
       evidence: evidence,
       matchedRuleId: rule.id,
       isHardwareRelated: rule.isHardware,
-      disclaimer: rule.note ?? knownSignatureDisclaimer,
+      disclaimer: t.note ?? _s.knownSignatureDisclaimer,
     );
   }
 
   DiagnosticResult _notAPanic(PanicReport report, List<String> codes) =>
       DiagnosticResult(
-        title: 'Not a Kernel Panic',
+        title: _s.notPanicTitle,
         severity: Severity.unknown,
-        summary:
-            'This file is a ${report.reportKind.toLowerCase()} report '
-            '(bug_type ${report.bugType}), not a kernel panic. iPaniX only '
-            'diagnoses kernel panics in this version.',
-        recommendedActions: const [
-          'Open a panic-full or panic-base file to get a hardware diagnosis.',
-        ],
+        summary: _s.notPanicSummary(
+          _s.bugTypeLabel(report.bugType),
+          report.bugType,
+        ),
+        recommendedActions: [_s.notPanicAction],
         confidence: Confidence.none,
         rawCodes: codes,
       );
@@ -79,33 +76,23 @@ class PanicAnalyzer {
   DiagnosticResult _unknown(PanicReport report, List<String> codes) {
     if (!report.hasPanicString) {
       return DiagnosticResult(
-        title: 'Incomplete Panic Report',
+        title: _s.incompleteTitle,
         severity: Severity.unknown,
-        summary:
-            'The file was read, but no panic description could be found '
-            'in it. It may be truncated or use an unsupported format.',
+        summary: _s.incompleteSummary,
         technicalReason: report.parseWarnings.isEmpty
             ? null
             : report.parseWarnings.join('\n'),
-        recommendedActions: const [
-          'Open the raw panic to inspect it manually.',
-          'Scan again after the next restart to get a fresh report.',
-        ],
+        recommendedActions: _s.incompleteActions,
         confidence: Confidence.none,
         rawCodes: codes,
       );
     }
     return DiagnosticResult(
-      title: 'Unknown Hardware Panic',
+      title: _s.unknownTitle,
       severity: Severity.unknown,
-      summary:
-          'The panic was successfully parsed, but this signature is not '
-          'currently present in the iPaniX knowledge base.',
+      summary: _s.unknownSummary,
       technicalReason: _defaultTechnicalReason(report),
-      recommendedActions: const [
-        'Review the panic string and detected codes below.',
-        'Check whether the same panic repeats across several reports.',
-      ],
+      recommendedActions: _s.unknownActions,
       confidence: Confidence.none,
       rawCodes: codes,
     );

@@ -1,3 +1,5 @@
+import '../l10n/strings.dart';
+
 /// Structured data extracted from a `panic-full*.ips` file.
 ///
 /// Every field is optional: the parser never throws on a missing field.
@@ -81,18 +83,7 @@ class PanicReport {
   /// Human label for [bugType] (only types observed in real reports).
   String get reportKind => describeBugType(bugType);
 
-  static String describeBugType(String? bugType) => switch (bugType) {
-    null => 'Unknown report type',
-    '210' => 'Kernel panic',
-    '151' => 'Forced restart',
-    '109' => 'App crash (legacy format)',
-    '309' => 'App crash',
-    '308' => 'User fault (ExcUserFault)',
-    '288' => 'Stackshot',
-    '298' => 'Jetsam (memory pressure) event',
-    '115' => 'Reset counter',
-    _ => 'Diagnostic report (bug_type $bugType)',
-  };
+  static String describeBugType(String? bugType) => tr.bugTypeLabel(bugType);
 
   bool get hasPanicString =>
       panicString != null && panicString!.trim().isNotEmpty;

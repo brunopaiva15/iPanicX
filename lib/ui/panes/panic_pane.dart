@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../app/app_controller.dart';
 import '../../app/theme.dart';
 import '../../diagnostics/report_formatter.dart';
+import '../../l10n/lang_scope.dart';
+import '../../models/diagnostic_result.dart';
 import '../../models/iphone_device.dart';
 import '../../models/scan_result.dart';
 import '../format.dart';
@@ -20,7 +22,10 @@ class PanicPane extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
     final c = AppColors.of(context);
-    final r = panic.result;
+    final t = context.tr;
+    // Re-generated in the current language (the panic may come from a scan
+    // or a local file analysed before a language change).
+    final r = app.diagnostics.analyzer.analyze(panic.report);
     final p = panic.report;
     final device = app.status.device;
     final severity = Notch.severity(r.severity);
@@ -59,16 +64,16 @@ class PanicPane extends StatelessWidget {
               ),
             ),
             Item(
-              label: 'Severity',
+              label: t.severity,
               value: r.severity.label,
               valueColor: r.severity.name == 'unknown' ? null : severity,
             ),
-            Item(label: 'Confidence', value: r.confidence.label),
+            Item(label: t.confidence, value: r.confidence.label),
             if (r.disclaimer != null) CapItem(r.disclaimer!),
           ],
         ),
         if (r.isKnownSignature && r.suspectedComponents.isNotEmpty) ...[
-          const Sec('Suspected components'),
+          Sec(t.suspectedComponents),
           Group(
             children: [
               for (final s in r.suspectedComponents)
@@ -77,11 +82,11 @@ class PanicPane extends StatelessWidget {
           ),
         ],
         if (r.possibleCauses.isNotEmpty) ...[
-          const Sec('Possible causes'),
+          Sec(t.possibleCauses),
           Group(children: [for (final s in r.possibleCauses) Item(label: s)]),
         ],
         if (r.recommendedActions.isNotEmpty) ...[
-          Sec(r.isKnownSignature ? 'Recommended actions' : 'Next steps'),
+          Sec(r.isKnownSignature ? t.recommendedActions : t.nextSteps),
           Group(
             children: [
               for (var i = 0; i < r.recommendedActions.length; i++)
@@ -99,16 +104,16 @@ class PanicPane extends StatelessWidget {
             ],
           ),
         ],
-        const Sec('Technical details'),
+        Sec(t.technicalDetails),
         Group(
           children: [
             Item(
-              label: 'Device',
+              label: t.device,
               value: p.product ?? device?.productType,
               mono: true,
             ),
             Item(
-              label: 'Model',
+              label: t.model,
               value: marketingNameFor(p.product ?? device?.productType),
             ),
             Item(
@@ -120,112 +125,112 @@ class PanicPane extends StatelessWidget {
             ),
             if (p.sensorMask != null)
               Item(
-                label: 'Sensor mask',
+                label: t.sensorMask,
                 value: '${p.sensorMaskHex}  (${p.sensorMask})',
                 mono: true,
               ),
             if (p.sensorKeys.isNotEmpty)
               Item(
-                label: 'SMC keys',
+                label: t.smcKeys,
                 value: p.sensorKeys.join(', '),
                 mono: true,
               ),
             if (p.missingSensors.isNotEmpty)
               Item(
-                label: 'Missing sensors',
+                label: t.missingSensors,
                 value: p.missingSensors.join(', '),
                 mono: true,
               ),
             if (p.headline != null)
-              Item(label: 'Panic', value: p.headline, wrapValue: true),
+              Item(label: t.panic, value: p.headline, wrapValue: true),
             if (p.panicInitiator != null)
-              Item(label: 'Initiator', value: p.panicInitiator),
+              Item(label: t.initiator, value: p.panicInitiator),
             if (p.panickedProcess != null)
-              Item(label: 'Panicked task', value: p.panickedProcess),
+              Item(label: t.panickedTask, value: p.panickedProcess),
             if (p.backtraceKexts.isNotEmpty)
               Item(
-                label: 'Kexts in backtrace',
+                label: t.kexts,
                 value: p.backtraceKexts.join('\n'),
                 mono: true,
                 wrapValue: true,
               ),
             if (p.panicFlags != null)
-              Item(label: 'Panic flags', value: p.panicFlags, mono: true),
+              Item(label: t.panicFlags, value: p.panicFlags, mono: true),
             if (p.bugType != null)
-              Item(label: 'Bug type', value: p.bugType, mono: true),
+              Item(label: t.bugType, value: p.bugType, mono: true),
             if (p.socId != null) Item(label: 'SoC', value: p.socId, mono: true),
             if (p.kernelVersion != null)
-              Item(label: 'Kernel', value: p.kernelVersion, wrapValue: true),
+              Item(label: t.kernel, value: p.kernelVersion, wrapValue: true),
             if (p.incident != null)
               Item(label: 'Incident', value: p.incident, mono: true),
             Item(
-              label: 'Date',
+              label: t.date,
               value: panic.date == null ? '—' : formatDate(panic.date!),
             ),
             if (r.matchedRuleId != null)
-              Item(label: 'Rule', value: r.matchedRuleId, mono: true),
+              Item(label: t.rule, value: r.matchedRuleId, mono: true),
             if (r.evidence.isNotEmpty)
               Item(
-                label: 'Matched on',
+                label: t.matchedOn,
                 value: r.evidence.join(' · '),
                 wrapValue: true,
               ),
             if (r.rawCodes.isNotEmpty)
               Item(
-                label: 'Detected codes',
+                label: t.detectedCodes,
                 value: r.rawCodes.join('  ·  '),
                 mono: true,
                 wrapValue: true,
               ),
             if (p.parseWarnings.isNotEmpty)
               TechnicalDetails(
-                label: 'Parser notes',
+                label: t.parserNotes,
                 details: p.parseWarnings.join('\n'),
               ),
           ],
         ),
         if (p.hasPanicString) ...[
-          const Sec('Panic string'),
+          Sec(t.panicString),
           Group(children: [CapItem(p.panicString!.trim(), mono: true)]),
         ],
-        const Sec('Report'),
+        Sec(t.report),
         Group(
           children: [
             Item(
-              label: 'Raw report',
+              label: t.rawReport,
               hint: panic.file.relativePath,
               trailing: Btn(
-                'View Raw Panic',
+                t.viewRaw,
                 onPressed: ShellScope.of(context).openRaw,
               ),
             ),
             Item(
-              label: 'Diagnosis',
-              hint: 'Plain text, as exported',
+              label: t.diagnosis,
+              hint: t.diagnosisHint,
               trailing: Btn(
-                'Copy',
+                t.copy,
                 onPressed: () => copyText(
                   context,
-                  ReportFormatter.diagnosis(panic, device: device),
-                  'Diagnosis copied',
+                  ReportFormatter.diagnosis(_current(r), device: device),
+                  t.diagnosisCopied,
                 ),
               ),
             ),
             if (p.hasPanicString)
               Item(
-                label: 'Panic string',
+                label: t.panicString,
                 trailing: Btn(
-                  'Copy',
+                  t.copy,
                   onPressed: () =>
-                      copyText(context, p.panicString!, 'Panic string copied'),
+                      copyText(context, p.panicString!, t.panicStringCopied),
                 ),
               ),
             Item(
-              label: 'Export',
-              hint: 'Save the diagnosis as a .txt file',
+              label: t.export,
+              hint: t.exportHint,
               trailing: Btn(
-                'Export Report…',
-                onPressed: () => _export(context, device),
+                t.exportButton,
+                onPressed: () => _export(context, _current(r), device),
               ),
             ),
           ],
@@ -234,15 +239,22 @@ class PanicPane extends StatelessWidget {
     );
   }
 
-  Future<void> _export(BuildContext context, IPhoneDevice? device) async {
+  AnalyzedPanic _current(DiagnosticResult r) =>
+      AnalyzedPanic(file: panic.file, report: panic.report, result: r);
+
+  Future<void> _export(
+    BuildContext context,
+    AnalyzedPanic current,
+    IPhoneDevice? device,
+  ) async {
     final app = AppScope.read(context);
     final base = panic.file.name.replaceAll(RegExp(r'\.ips.*$'), '');
     final saved = await app.bridge.saveTextFile(
       suggestedName: 'iPaniX-$base.txt',
-      contents: ReportFormatter.diagnosis(panic, device: device),
+      contents: ReportFormatter.diagnosis(current, device: device),
     );
     if (saved != null && context.mounted) {
-      showToast(context, 'Saved to $saved');
+      showToast(context, context.tr.savedTo(saved));
       await app.bridge.revealInFinder(saved);
     }
   }
@@ -259,21 +271,21 @@ class RawPane extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final raw = panic.report.rawContent;
+    final t = context.tr;
     final cut = raw.length > _limit;
     return Pane(
       title: panic.file.name,
       leading: const BackButtonSmall(),
       trailing: Btn(
-        'Copy All',
-        onPressed: () => copyText(context, raw, 'Raw panic copied'),
+        t.copyAll,
+        onPressed: () => copyText(context, raw, t.rawCopied),
       ),
       children: [
         Group(
           children: [
             if (cut)
               CapItem(
-                'Showing the first ${formatBytes(_limit)} of '
-                '${formatBytes(raw.length)}. Copy All copies everything.',
+                t.showingFirst(formatBytes(_limit), formatBytes(raw.length)),
               ),
             CapItem(cut ? raw.substring(0, _limit) : raw, mono: true),
           ],
