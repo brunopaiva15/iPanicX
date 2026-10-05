@@ -89,6 +89,33 @@ class DeviceHealthSummary {
   }
 }
 
+/// First line (IPS header) of a report that is not a kernel panic: enough
+/// to count app crashes, Jetsam events and reset counters without parsing
+/// megabytes of JSON.
+class ReportHeader {
+  const ReportHeader({
+    required this.file,
+    this.bugType,
+    this.timestamp,
+    this.name,
+  });
+
+  final DiagnosticFile file;
+  final String? bugType;
+  final DateTime? timestamp;
+
+  /// App or process name (`app_name` / `name`), when present.
+  final String? name;
+
+  DateTime? get date => timestamp ?? file.date;
+
+  bool get isAppCrash => bugType == '309' || bugType == '109';
+  bool get isJetsam =>
+      file.type == DiagnosticFileType.jetsamEvent || bugType == '298';
+  bool get isResetCounter =>
+      file.type == DiagnosticFileType.resetCounter || bugType == '115';
+}
+
 /// Output of a full "Scan Diagnostics" run.
 class ScanResult {
   const ScanResult({
@@ -99,6 +126,7 @@ class ScanResult {
     required this.health,
     this.unreadable = const [],
     required this.scannedAt,
+    this.reports = const [],
   });
 
   /// Local folder where crash reports were copied.
@@ -119,6 +147,28 @@ class ScanResult {
   /// panic-full files that could not be read from disk.
   final List<DiagnosticFile> unreadable;
   final DateTime scannedAt;
+
+  /// Headers of the other reports (app crashes, Jetsam, reset counters…).
+  final List<ReportHeader> reports;
+
+  /// App crashes in the [days] before [now] (default: the scan date).
+  List<ReportHeader> appCrashes({int days = 7, DateTime? now}) =>
+      _recent(reports.where((r) => r.isAppCrash), days, now);
+
+  List<ReportHeader> jetsamEvents({int days = 7, DateTime? now}) =>
+      _recent(reports.where((r) => r.isJetsam), days, now);
+
+  List<ReportHeader> _recent(
+    Iterable<ReportHeader> list,
+    int days,
+    DateTime? now,
+  ) {
+    final from = (now ?? scannedAt).subtract(Duration(days: days));
+    return [
+      for (final r in list)
+        if (r.date != null && r.date!.isAfter(from)) r,
+    ];
+  }
 
   AnalyzedPanic? get latestPanic => panics.isEmpty ? null : panics.first;
 

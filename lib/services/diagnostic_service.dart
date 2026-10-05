@@ -74,7 +74,13 @@ class DiagnosticService {
     panics.sort(_newestFirst);
     forcedResets.sort(_newestFirst);
 
+    final reports = <ReportHeader>[
+      for (final f in files)
+        if (!f.isKernelReport) await readReportHeader(f),
+    ];
+
     return ScanResult(
+      reports: reports,
       directory: files.isEmpty ? '' : _commonRoot(files),
       files: files,
       panics: panics,
@@ -102,6 +108,33 @@ class DiagnosticService {
     return analyzeContent(knowledgeBase, entry, content, lang: L10n.lang);
   }
 
+  /// Reads only the first line (IPS header) of [file].
+  static Future<ReportHeader> readReportHeader(DiagnosticFile file) async {
+    try {
+      final raf = await File(file.path).open();
+      try {
+        final bytes = await raf.read(8192);
+        final text = utf8.decode(bytes, allowMalformed: true);
+        final nl = text.indexOf('\n');
+        final first = (nl < 0 ? text : text.substring(0, nl)).trim();
+        final h = jsonDecode(first);
+        if (h is Map<String, dynamic>) {
+          return ReportHeader(
+            file: file,
+            bugType: h['bug_type']?.toString(),
+            timestamp: PanicParser.parseDate(h['timestamp']?.toString()),
+            name: (h['app_name'] ?? h['name'] ?? h['procname'])?.toString(),
+          );
+        }
+      } finally {
+        await raf.close();
+      }
+    } catch (_) {
+      // Not JSON / unreadable: type from the file name only.
+    }
+    return ReportHeader(file: file);
+  }
+
   /// Same reports, texts re-generated in [lang] (no re-parsing).
   ScanResult relocalize(ScanResult scan, AppLang lang) {
     final a = PanicAnalyzer(knowledgeBase, lang: lang);
@@ -123,6 +156,7 @@ class DiagnosticService {
       ),
       unreadable: scan.unreadable,
       scannedAt: scan.scannedAt,
+      reports: scan.reports,
     );
   }
 

@@ -1,6 +1,22 @@
 import 'dart:convert';
 
+import '../l10n/strings.dart';
 import 'diagnostic_rule.dart';
+
+/// Part that usually carries a sensor reported as missing by
+/// thermalmonitord (`"sensors"` in the JSON).
+class SensorInfo {
+  const SensorInfo({required this.component, this.fr, this.note, this.noteFr});
+
+  final String component;
+  final String? fr;
+  final String? note;
+  final String? noteFr;
+
+  String componentIn(AppLang lang) =>
+      lang == AppLang.fr ? (fr ?? component) : component;
+  String? noteIn(AppLang lang) => lang == AppLang.fr ? (noteFr ?? note) : note;
+}
 
 /// Panic signatures known to iPanicX.
 ///
@@ -10,6 +26,7 @@ class KnowledgeBase {
     required this.rules,
     this.version,
     this.warnings = const [],
+    this.sensors = const {},
   });
 
   static const assetPath = 'assets/diagnostics/knowledge_base.json';
@@ -19,6 +36,11 @@ class KnowledgeBase {
 
   /// Rules that were skipped because they are malformed.
   final List<String> warnings;
+
+  /// Sensor name (lower case) → part.
+  final Map<String, SensorInfo> sensors;
+
+  SensorInfo? sensor(String name) => sensors[name.toLowerCase()];
 
   static const empty = KnowledgeBase(rules: []);
 
@@ -47,10 +69,27 @@ class KnowledgeBase {
         }
       }
     }
+    final sensors = <String, SensorInfo>{};
+    final rawSensors = decoded['sensors'];
+    if (rawSensors is Map<String, dynamic>) {
+      for (final e in rawSensors.entries) {
+        final v = e.value;
+        if (e.key.startsWith('_') || v is! Map<String, dynamic>) continue;
+        final component = v['component']?.toString();
+        if (component == null) continue;
+        sensors[e.key.toLowerCase()] = SensorInfo(
+          component: component,
+          fr: v['fr']?.toString(),
+          note: v['note']?.toString(),
+          noteFr: v['noteFr']?.toString(),
+        );
+      }
+    }
     return KnowledgeBase(
       rules: rules,
       version: decoded['version']?.toString(),
       warnings: warnings,
+      sensors: sensors,
     );
   }
 }

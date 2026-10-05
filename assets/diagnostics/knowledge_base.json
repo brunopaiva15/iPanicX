@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "iPanicX V0 knowledge base. A small set of EXAMPLE signatures used to demonstrate the matching engine. It is NOT exhaustive and must be extended and validated against real repair data. Generic rule categories were informed by the open-source projects listed in README (ideas only, no code or data copied).",
   "rules": [
     {
@@ -512,5 +512,32 @@
     }
   ],
   "matching": "Text terms are matched case-insensitively against panicString + panicked process, whitespace collapsed. See lib/diagnostics/diagnostic_rule.dart.",
-  "localization": "Each rule may carry an \"fr\" object overriding title, summary, technicalReason, suspectedComponents, possibleCauses, recommendedActions and note. Missing fields fall back to English."
+  "localization": "Each rule may carry an \"fr\" object overriding title, summary, technicalReason, suspectedComponents, possibleCauses, recommendedActions and note. Missing fields fall back to English.",
+  "sensors": {
+    "_comment": "Missing-sensor names (thermalmonitord panics) to the part that usually carries them. Community repair knowledge, valid for most iPhone 11–15 models; always confirm by inspection.",
+    "TG0B": {
+      "component": "Battery (temperature sensor / gas gauge)",
+      "fr": "Batterie (capteur de température / jauge)",
+      "note": "Often a non-genuine or damaged battery, or its connector.",
+      "noteFr": "Souvent une batterie non d’origine ou endommagée, ou son connecteur."
+    },
+    "TG0V": {
+      "component": "Battery (gas gauge)",
+      "fr": "Batterie (jauge)",
+      "note": "Often a non-genuine or damaged battery, or its connector.",
+      "noteFr": "Souvent une batterie non d’origine ou endommagée, ou son connecteur."
+    },
+    "mic1": {
+      "component": "Charging Port Flex (bottom microphone)",
+      "fr": "Nappe du connecteur de charge (micro du bas)",
+      "note": "The bottom microphone sits on the charging port flex.",
+      "noteFr": "Le micro du bas est sur la nappe du connecteur de charge."
+    },
+    "prs0": {
+      "component": "Charging Port Flex (barometer)",
+      "fr": "Nappe du connecteur de charge (baromètre)",
+      "note": "The pressure sensor sits on the charging port flex on several models.",
+      "noteFr": "Le capteur de pression est sur la nappe du connecteur de charge sur plusieurs modèles."
+    }
+  }
 }

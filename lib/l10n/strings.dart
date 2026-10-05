@@ -440,6 +440,201 @@ class Strings {
     'Impossible de lister les appareils USB. usbmuxd est-il lancé ?',
   );
 
+  // ------------------------------------------------------------- health
+  String get healthSection => _('Health', 'Santé');
+  String get consoleSection => 'Console';
+  String get checkBattery => _('Battery', 'Batterie');
+  String get checkStorage => _('Storage', 'Stockage');
+  String get checkAppCrashes => _('App crashes', 'Crashs d’apps');
+  String get checkJetsam => _('Jetsam / memory', 'Jetsam / mémoire');
+  String get checkTemperature => _('Temperature', 'Température');
+  String get checkNand => _('NAND / storage chip', 'NAND / puce de stockage');
+  String get checkBaseband => _('Baseband (modem)', 'Baseband (modem)');
+  String get checkDeveloperMode => 'Developer Mode';
+  String get checkWifi => 'Wi-Fi';
+  String get checkWifiDetail => _(
+    'iOS only shares the Wi-Fi address, not the state of the Wi-Fi chip.',
+    'iOS ne donne que l’adresse Wi-Fi, pas l’état de la puce Wi-Fi.',
+  );
+  String get unavailable => _('Not available', 'Non disponible');
+  String chargeOnly(int n) => _('Charge $n %', 'Charge $n %');
+  String get batteryUnavailableDetail => _(
+    'This iPhone or iOS version does not expose the battery capacity.',
+    'Cet iPhone ou cette version d’iOS n’expose pas la capacité de la batterie.',
+  );
+  String healthValue(int n) => _('Health $n %', 'Santé $n %');
+  String cycles(int n) => _('$n cycles', '$n cycles');
+  String get batteryWorn => _(
+    'The battery holds noticeably less than when new. Below 80 %, Apple considers it worn.',
+    'La batterie tient nettement moins qu’à neuf. Sous 80 %, Apple la considère comme usée.',
+  );
+  String storageUsed(int n) => _('$n % used', '$n % utilisé');
+  String get storageFullDetail => _(
+    'An almost full storage slows iOS down and can cause restarts.',
+    'Un stockage presque plein ralentit iOS et peut provoquer des redémarrages.',
+  );
+  String get notScanned =>
+      _('Scan the iPhone first', 'Analysez d’abord l’iPhone');
+  String get noneFound => _('None', 'Aucun');
+  String detected(int n) =>
+      plural(n, 'detected', 'détecté', enMany: 'detected');
+  String inLastDays(int n, int d) => _('$n in $d days', '$n sur $d jours');
+  String eventsInLastDays(int n, int d) => _(
+    '${plural(n, 'event', 'événement')} in $d days',
+    '${plural(n, 'event', 'événement')} sur $d jours',
+  );
+  String get jetsamDetail => _(
+    'iOS often had to close apps to free memory.',
+    'iOS a souvent dû fermer des apps pour libérer de la mémoire.',
+  );
+  String degrees(double t) => _(
+    '${t.toStringAsFixed(1)} °C',
+    '${t.toStringAsFixed(1).replaceAll('.', ',')} °C',
+  );
+  String thermalPanics(int n) => plural(
+    n,
+    'thermal panic',
+    'panic thermique',
+    frMany: 'panics thermiques',
+  );
+  String get noIssueFound => _('No issue found', 'Aucun problème détecté');
+  String relatedPanics(int n) =>
+      plural(n, 'related panic', 'panic lié', frMany: 'panics liés');
+  String get enabled => _('On', 'Activé');
+  String get disabled => _('Off', 'Désactivé');
+  String get statusOk => 'OK';
+  String get statusWarning => _('Attention', 'Attention');
+  String get statusProblem => _('Problem', 'Problème');
+  String get overallState => _('Overall state', 'État général');
+  String get overallOk => _('No issue found', 'Aucun problème détecté');
+  String get overallWarning => _('Needs attention', 'À surveiller');
+  String get overallProblem => _('Problem detected', 'Problème détecté');
+  String get checklist => _('Checks', 'Vérifications');
+  String get mainIssue => _('Main issue', 'Problème principal');
+  String sameClue(int n, String what) => _(
+    '$n kernel panics with the same $what',
+    '$n kernel panics avec le même $what',
+  );
+  String clueKind(String kind) => switch (kind) {
+    'missingSensor' => _('missing sensor', 'capteur manquant'),
+    'sensorMask' => _('sensor mask', 'masque capteur'),
+    'watchdogService' => _('unresponsive service', 'service bloqué'),
+    _ => _('signature', 'signature'),
+  };
+  String get probableCause => _('Probable cause', 'Cause probable');
+  String get componentUnknown => _(
+    'Not mapped yet in the knowledge base',
+    'Pas encore référencé dans la base',
+  );
+  String get occurrences => 'Occurrences';
+  String get firstSeen => _('First seen', 'Première apparition');
+  String get lastSeen => _('Last seen', 'Dernière apparition');
+  String get correlation => _('Correlation', 'Corrélation');
+  String get correlationHint => _(
+    'Panics grouped by what they have in common. The same hardware clue seen 3 times or more raises the confidence.',
+    'Panics regroupés par point commun. Le même indice matériel vu 3 fois ou plus augmente la confiance.',
+  );
+  String get noCorrelation =>
+      _('No panic to correlate.', 'Aucun panic à corréler.');
+  String get refresh => _('Refresh', 'Actualiser');
+  String get readingDevice => _('Reading the iPhone…', 'Lecture de l’iPhone…');
+  String get healthNeedsDevice => _(
+    'Connect an iPhone to see its health.',
+    'Branchez un iPhone pour voir son état.',
+  );
+  String get healthNeedsScan => _(
+    'Battery and storage are read live. Scan the iPhone to add panics, crashes and correlation.',
+    'La batterie et le stockage sont lus en direct. Analysez l’iPhone pour ajouter panics, crashs et corrélation.',
+  );
+  // Battery page
+  String get battery => _('Battery', 'Batterie');
+  String get charge => _('Charge', 'Charge');
+  String get charging => _('charging', 'en charge');
+  String get cycleCount => _('Cycle count', 'Cycles de charge');
+  String get designCapacity => _('Design capacity', 'Capacité d’origine');
+  String get currentCapacity => _('Current capacity', 'Capacité actuelle');
+  String get estimatedHealth => _('Estimated health', 'Santé estimée');
+  String get batteryTemperature => _('Temperature', 'Température');
+  String mah(int n) => '$n mAh';
+  String get batteryHealthHint => _(
+    'Current capacity ÷ design capacity, from the battery’s own gauge. iOS Settings may show a slightly different figure.',
+    'Capacité actuelle ÷ capacité d’origine, selon la jauge de la batterie. Les Réglages d’iOS peuvent afficher un chiffre un peu différent.',
+  );
+  String get batteryWornWarning =>
+      _('Battery heavily worn', 'Batterie fortement usée');
+  String get batteryAgingWarning =>
+      _('Battery wearing out', 'Batterie en cours d’usure');
+  String get storageSection => _('Storage', 'Stockage');
+  String get capacity => _('Capacity', 'Capacité');
+  String get available => _('Available', 'Disponible');
+  String get basebandVersion => _('Baseband version', 'Version baseband');
+  String get wifiAddress => _('Wi-Fi address', 'Adresse Wi-Fi');
+  // Console
+  String get consoleStart => _('Start', 'Démarrer');
+  String get consoleStop => _('Stop', 'Arrêter');
+  String get consolePause => _('Pause', 'Pause');
+  String get consoleResume => _('Resume', 'Reprendre');
+  String get consoleClear => _('Clear', 'Effacer');
+  String get consoleExport => _('Export…', 'Exporter…');
+  String get consoleEventsOnly => _('Events only', 'Événements seulement');
+  String get consoleAll => _('All', 'Tout');
+  String get consoleIdle => _(
+    'Shows the iPhone’s live log. Important lines are highlighted and explained.',
+    'Affiche le journal en direct de l’iPhone. Les lignes importantes sont mises en évidence et expliquées.',
+  );
+  String get consoleNeedsDevice => _(
+    'Connect an iPhone to read its live log.',
+    'Branchez un iPhone pour lire son journal en direct.',
+  );
+  String consoleCount(int n, int events) =>
+      _('$n lines · $events events', '$n lignes · $events événements');
+  String get consoleWaiting =>
+      _('Waiting for log lines…', 'En attente de lignes…');
+  String consoleExplain(String key) => switch (key) {
+    'panic' => _('Kernel panic in progress', 'Kernel panic en cours'),
+    'watchdog' => _(
+      'A system service stopped answering (watchdog)',
+      'Un service système ne répond plus (watchdog)',
+    ),
+    'sensor' => _(
+      'A hardware sensor is missing',
+      'Un capteur matériel est manquant',
+    ),
+    'thermal' => _('Thermal event', 'Événement thermique'),
+    'memory' => _(
+      'Memory pressure: iOS is closing apps',
+      'Pression mémoire : iOS ferme des apps',
+    ),
+    'smc' => _('Power / SMC controller', 'Contrôleur d’alimentation / SMC'),
+    'battery' => _('Battery / charging', 'Batterie / charge'),
+    'crash' => _('An app crashed', 'Une app a planté'),
+    'usb' => _('USB / Lightning accessory', 'Accessoire USB / Lightning'),
+    _ => '',
+  };
+  // Scan cancel + history
+  String get cancel => _('Cancel', 'Annuler');
+  String sinceLastScan(String when) =>
+      _('Since the last scan ($when)', 'Depuis le dernier scan ($when)');
+  String panicsDelta(int n) => n == 0
+      ? _('no new kernel panic', 'aucun nouveau kernel panic')
+      : _('+$n kernel panics', '+$n kernel panics');
+  String batteryDelta(int from, int to) =>
+      _('battery $from → $to %', 'batterie $from → $to %');
+  String get history => _('History', 'Historique');
+  String get historyHint => _(
+    'A short summary of each scan is kept on this computer to compare scans of the same iPhone.',
+    'Un court résumé de chaque scan est gardé sur cet ordinateur pour comparer les scans d’un même iPhone.',
+  );
+  String historyCount(int n) =>
+      plural(n, 'saved scan', 'scan enregistré', frMany: 'scans enregistrés');
+  String get clearHistory => _('Clear History', 'Effacer l’historique');
+  String get historyCleared => _('History cleared', 'Historique effacé');
+  String get fullReport => _('Full report', 'Rapport complet');
+  String get fullReportHint => _(
+    'Health, battery, correlation and every panic, as a .txt file',
+    'Santé, batterie, corrélation et chaque panic, en .txt',
+  );
+
   // ------------------------------------------------------------- analyzer
   String get knownSignatureDisclaimer => _(
     'This diagnosis is based on a known panic signature and should be confirmed by hardware inspection.',

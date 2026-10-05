@@ -303,6 +303,8 @@ class PanicParser {
   // ---------------------------------------------------------------------------
   // Field helpers
 
+  static DateTime? parseDate(String? raw) => _parseDate(raw);
+
   static DateTime? _parseDate(String? raw) {
     if (raw == null) return null;
     final m = RegExp(
