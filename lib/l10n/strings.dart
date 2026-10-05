@@ -250,7 +250,7 @@ class Strings {
     'Aucune statistique, aucune télémétrie, aucune requête réseau. Les rapports sont copiés dans un dossier temporaire de ce $computer et ne sont jamais envoyés.',
   );
   String get about => _('About', 'À propos');
-  String get version => 'Version 0.1.0';
+  String get version => 'Version 0.1.1';
   String get knowledgeBase => _('Knowledge base', 'Base de connaissances');
   String signatures(int n) => plural(n, 'signature', 'signature');
   String get kbDisclaimer => _(
