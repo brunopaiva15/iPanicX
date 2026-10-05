@@ -534,6 +534,8 @@ class Strings {
     'iOS ne donne que l’adresse Wi-Fi, pas l’état de la puce Wi-Fi.',
   );
   String get unavailable => _('Not available', 'Non disponible');
+  String get notReportedByIos =>
+      _('Not reported by iOS', 'Non transmise par iOS');
   String chargeOnly(int n) => _('Charge $n %', 'Charge $n %');
   String get batteryUnavailableDetail => _(
     'This iPhone or iOS version does not expose the battery capacity.',

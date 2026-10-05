@@ -51,10 +51,16 @@ BatteryInfo? parseBattery({
   final design = positive(find('DesignCapacity'));
   final maxCap = _int(find('MaxCapacity'));
   // NominalChargeCapacity is what iOS Settings' "Maximum Capacity" uses.
+  // In mAh only: iOS 26's GasGauge reports FullChargeCapacity as 100 (%).
+  int? mAh(Object? v) {
+    final n = positive(v);
+    return n != null && n > 200 ? n : null;
+  }
+
   final fullCharge =
-      positive(find('NominalChargeCapacity')) ??
-      positive(find('FullChargeCapacity')) ??
-      positive(find('AppleRawMaxCapacity')) ??
+      mAh(find('NominalChargeCapacity')) ??
+      mAh(find('FullChargeCapacity')) ??
+      mAh(find('AppleRawMaxCapacity')) ??
       // Older iOS: MaxCapacity in mAh (newer ones report 100, a percent).
       (maxCap != null && maxCap > 200 ? maxCap : null);
 
@@ -120,8 +126,10 @@ double? batteryTemperature(Object? root) {
 /// purgeable or reserved space. The smallest one is what the user can
 /// actually use, as in iOS Settings.
 StorageInfo? parseStorage(Map<String, String> values) {
+  // TotalDiskCapacity is the size iOS Settings shows (256 GB); the data
+  // partition alone (TotalDataCapacity) is smaller.
   final total =
-      _int(values['TotalDataCapacity']) ?? _int(values['TotalDiskCapacity']);
+      _int(values['TotalDiskCapacity']) ?? _int(values['TotalDataCapacity']);
   final candidates = [
     _int(values['AmountDataAvailable']),
     _int(values['TotalDataAvailable']),
@@ -139,7 +147,8 @@ String rawValues(
 }) {
   final keys = (only ?? values.keys).where(values.containsKey).toList()..sort();
   if (keys.isEmpty) return '$label: (none)';
-  return '$label:\n${keys.map((k) => '  $k: ${values[k]}').join('\n')}';
+  String short(String v) => v.length > 120 ? '${v.substring(0, 117)}…' : v;
+  return '$label:\n${keys.map((k) => '  $k: ${short(values[k]!)}').join('\n')}';
 }
 
 /// Keys and scalar values of an `idevicediagnostics` plist, for the
@@ -166,3 +175,16 @@ String rawBatteryValues(String? xml, {String label = 'AppleSmartBattery'}) {
 /// `ideviceinfo -q com.apple.security.mac.amfi` → `DeveloperModeStatus`.
 bool? parseDeveloperMode(Map<String, String> values) =>
     _bool(values['DeveloperModeStatus']);
+
+/// Output of `ideviceinfo -q com.apple.security.mac.amfi -k
+/// DeveloperModeStatus`: the bare value (`true` / `false`), possibly after
+/// libimobiledevice's "unknown domain" warning.
+bool? parseDeveloperModeValue(String? out) {
+  if (out == null) return null;
+  for (final line in out.split('\n').reversed) {
+    final value = line.contains(':') ? line.split(':').last : line;
+    final v = _bool(value.trim());
+    if (v != null) return v;
+  }
+  return null;
+}

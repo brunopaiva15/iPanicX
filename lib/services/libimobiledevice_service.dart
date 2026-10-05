@@ -512,12 +512,15 @@ class LibimobiledeviceService implements IPhoneService {
     final disk = kv(
       await out(info, ['-u', udid, '-q', 'com.apple.disk_usage'], 'disk_usage'),
     );
-    final amfi = kv(
+    // Asking for the key itself: the whole amfi domain comes back empty.
+    final developerMode = parseDeveloperModeValue(
       await out(info, [
         '-u',
         udid,
         '-q',
         'com.apple.security.mac.amfi',
+        '-k',
+        'DeveloperModeStatus',
       ], 'amfi'),
     );
     final diag = _locator.find('idevicediagnostics');
@@ -557,7 +560,7 @@ class LibimobiledeviceService implements IPhoneService {
         lockdown: batteryDomain,
       ),
       storage: parseStorage(disk),
-      developerMode: parseDeveloperMode(amfi),
+      developerMode: developerMode,
       basebandVersion: general['BasebandVersion'],
       wifiAddress: general['WiFiAddress'],
       notes: notes,

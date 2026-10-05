@@ -489,7 +489,7 @@ void main() {
           ),
           'com.apple.security.mac.amfi' => const CommandResult(
             0,
-            'DeveloperModeStatus: false\n',
+            'false\n',
             '',
           ),
           'com.apple.mobile.battery' => const CommandResult(
@@ -528,6 +528,13 @@ void main() {
         isEmpty,
       );
       expect(f.raw, contains('GasGauge:'));
+      expect(
+        runner.calls,
+        contains(
+          'ideviceinfo -u $_udid -q com.apple.security.mac.amfi '
+          '-k DeveloperModeStatus',
+        ),
+      );
       s.dispose();
     });
 

@@ -360,8 +360,9 @@ class _BatteryGroup extends StatelessWidget {
         ),
         Item(
           label: t.batteryTemperature,
+          // The battery answered but without a temperature (iOS 26).
           value: b.temperatureC == null
-              ? t.unavailable
+              ? t.notReportedByIos
               : t.degrees(b.temperatureC!),
         ),
         CapItem(t.batteryHealthHint),

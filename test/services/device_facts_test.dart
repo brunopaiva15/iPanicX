@@ -112,7 +112,8 @@ void main() {
       'TotalDataCapacity': '119000000000',
       'TotalDataAvailable': '7140000000',
     })!;
-    expect(s.totalBytes, 119000000000);
+    // TotalDiskCapacity: the size iOS Settings shows.
+    expect(s.totalBytes, 128000000000);
     expect(s.usedPercent, 94);
     expect(parseStorage({}), isNull);
     expect(parseDeveloperMode({'DeveloperModeStatus': 'true'}), isTrue);
@@ -130,7 +131,76 @@ void main() {
       'AmountDataAvailable': '13000000000',
     })!;
     expect(s.availableBytes, 13000000000);
-    expect(s.usedPercent, 94);
+    expect(s.totalBytes, 256000000000);
+    expect(s.usedPercent, 95);
+  });
+
+  test('iPhone 14 Pro on iOS 26 (real values): battery and storage', () {
+    // Values reported by a real device (serial and blobs left out).
+    const ioreg =
+        '<plist><dict><key>IORegistry</key><dict>'
+        '<key>BatteryData</key><dict>'
+        '<key>AppleRawMaxCapacity</key><integer>3107</integer>'
+        '<key>CurrentCapacity</key><integer>12</integer>'
+        '<key>DesignCapacity</key><integer>3544</integer>'
+        '<key>FullChargeCapacity</key><integer>3107</integer>'
+        '<key>MaxCapacity</key><integer>100</integer>'
+        '<key>NominalChargeCapacity</key><integer>3075</integer>'
+        '</dict>'
+        '<key>CurrentCapacity</key><integer>12</integer>'
+        '<key>CycleCount</key><integer>950</integer>'
+        '<key>IsCharging</key><false/>'
+        '<key>MaxCapacity</key><integer>100</integer>'
+        '<key>DeadBatteryBootData</key><dict><key>GeneralPayload</key><dict>'
+        '<key>AverageBattSkinTemp</key><integer>0</integer>'
+        '</dict></dict>'
+        '</dict></dict></plist>';
+    const gasGauge =
+        '<plist><dict><key>GasGauge</key><dict>'
+        '<key>CycleCount</key><integer>950</integer>'
+        '<key>FullChargeCapacity</key><integer>100</integer>'
+        '<key>Status</key><string>Success</string>'
+        '</dict></dict></plist>';
+    final b = parseBattery(ioreg: ioreg, gasGauge: gasGauge)!;
+    expect(b.designCapacity, 3544);
+    expect(b.fullChargeCapacity, 3075);
+    expect(b.healthPercent, 87);
+    expect(b.cycleCount, 950);
+    expect(b.chargePercent, 12);
+    expect(b.isCharging, isFalse);
+    expect(b.temperatureC, isNull, reason: 'iOS 26 sends none');
+    // GasGauge alone: FullChargeCapacity 100 is a percent, not mAh.
+    expect(parseBattery(gasGauge: gasGauge)!.fullChargeCapacity, isNull);
+
+    final s = parseStorage({
+      'AmountDataAvailable': '6045429760',
+      'TotalDataAvailable': '127277871104',
+      'TotalDataCapacity': '235267575808',
+      'TotalDiskCapacity': '256000000000',
+    })!;
+    expect(s.totalBytes, 256000000000);
+    expect(s.availableBytes, 6045429760);
+    expect(s.usedPercent, 98);
+  });
+
+  test('developer mode: bare value from -k DeveloperModeStatus', () {
+    expect(parseDeveloperModeValue('true\n'), isTrue);
+    expect(
+      parseDeveloperModeValue(
+        'WARNING: Sending query with unknown domain '
+        '"com.apple.security.mac.amfi".\nfalse\n',
+      ),
+      isFalse,
+    );
+    expect(parseDeveloperModeValue('DeveloperModeStatus: true'), isTrue);
+    expect(parseDeveloperModeValue(''), isNull);
+    expect(parseDeveloperModeValue(null), isNull);
+  });
+
+  test('long raw values are shortened', () {
+    final r = rawValues('disk_usage', {'NANDInfo': 'A' * 5000});
+    expect(r.length, lessThan(200));
+    expect(r, endsWith('…'));
   });
 
   test('battery temperature: key and unit variants', () {
