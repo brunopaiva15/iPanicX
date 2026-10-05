@@ -96,6 +96,26 @@ class PanicAnalyzer {
       }
     }
 
+    if (rule.decodeI2cBus) {
+      final bus = _i2cBus
+          .firstMatch(DiagnosticRule.matchableText(report.panicString))
+          ?.group(1)
+          ?.toLowerCase();
+      final found = bus == null
+          ? const <(I2cModel, String)>[]
+          : knowledgeBase.i2cChips(report.product, bus);
+      if (bus != null && found.isNotEmpty) {
+        components = [for (final (_, chips) in found) _s.i2cChips(bus, chips)];
+        technical = [
+          for (final (m, chips) in found) _s.i2cReason(bus, m.model, chips),
+          ?technical,
+        ].join('\n');
+        for (final (m, _) in found) {
+          sourceKeys.addAll(m.sources);
+        }
+      }
+    }
+
     return DiagnosticResult(
       title: t.title,
       severity: rule.severity,
@@ -115,6 +135,8 @@ class PanicAnalyzer {
       sources: [for (final src in knowledgeBase.sourcesFor(sourceKeys)) '$src'],
     );
   }
+
+  static final _i2cBus = RegExp(r'\b(i2c\d)\b', caseSensitive: false);
 
   /// Part names in [lang], each once, in table order.
   List<String> _partNames(List<SmcCode> codes) =>

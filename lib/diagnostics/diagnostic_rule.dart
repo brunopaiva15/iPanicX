@@ -40,6 +40,7 @@ class RuleText {
 /// Options (not criteria):
 ///  * `decodeSensorMask`: name the parts from the per-model SMC mask table;
 ///  * `decodeMissingSensors`: name the parts carrying the missing sensors;
+///  * `decodeI2cBus`: name the chips on the reported I²C bus for the model;
 ///  * `sources`: keys of the top-level `sources` the rule is based on.
 class DiagnosticRule {
   const DiagnosticRule({
@@ -67,6 +68,7 @@ class DiagnosticRule {
     this.sources = const [],
     this.decodeSensorMask = false,
     this.decodeMissingSensors = false,
+    this.decodeI2cBus = false,
   });
 
   factory DiagnosticRule.fromJson(Map<String, dynamic> json) {
@@ -116,6 +118,7 @@ class DiagnosticRule {
       sources: list('sources'),
       decodeSensorMask: json['decodeSensorMask'] == true,
       decodeMissingSensors: json['decodeMissingSensors'] == true,
+      decodeI2cBus: json['decodeI2cBus'] == true,
     );
   }
 
@@ -188,6 +191,7 @@ class DiagnosticRule {
   final List<String> sources;
   final bool decodeSensorMask;
   final bool decodeMissingSensors;
+  final bool decodeI2cBus;
 
   bool get isHardware => category == 'hardware';
 

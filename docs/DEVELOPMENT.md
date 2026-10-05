@@ -443,6 +443,7 @@ Options (pas des critères) :
 |---|---|
 | `decodeSensorMask` | nomme les pièces avec la table `smcSensorMasks` du modèle |
 | `decodeMissingSensors` | nomme les pièces avec la table `sensors` |
+| `decodeI2cBus` | nomme les puces du bus `i2cN` cité, avec la table `i2cBuses` du modèle |
 | `sources` | clés de `sources` (référence publique affichée avec le diagnostic) |
 
 Si plusieurs règles correspondent, la plus spécifique gagne (appareil, masque,
@@ -463,12 +464,12 @@ pièce (`parts`) qu'ils désignent, avec leurs sources :
 
 | Modèle | Codes |
 |---|---|
-| iPhone 13 (toute la gamme) | `0x800` connecteur de charge, `0x1000` capteurs avant, `0x4000` / `0x40000` batterie (sources divergentes, confiance moyenne) |
-| iPhone 13 mini | + `0x400` gyroscope (carte sandwich) |
+| iPhone 13 (toute la gamme) | `0x800` connecteur de charge, `0x1000` capteurs avant, `0x4000` batterie (iPad Rehab + atelier ; iFixit seul donne `0x40000`, gardé en confiance faible) |
+| iPhone 13 mini | + `0x400` interposeur / carte sandwich (gyroscope) |
 | iPhone 14 / 14 Plus | `0x100000` connecteur, `0x200000` capteurs avant, `0x400000` bobine sans fil, `0x500000` batterie (exact uniquement) |
 | iPhone 14 Pro / Pro Max | `0x40000` connecteur, `0x80000` capteurs avant, `0x100000` bouton d'alimentation, `0x20000` gyroscope, `0x41` batterie |
 | iPhone 15 / 15 Plus | `0x80000` connecteur, `0x100000` capteurs avant, `0x200000` bobine, `0xa1` batterie |
-| iPhone 15 Pro / Pro Max | `0x300000` connecteur, `0x100000` capteurs avant (iPad Rehab seul), `0x400000` bobine, `0xa1` batterie |
+| iPhone 15 Pro / Pro Max | `0x300000` connecteur, capteurs avant `0x100000` (iPad Rehab) ou `0x200000` (atelier), `0x400000` bobine, `0xa1` batterie |
 | iPhone 16 Pro / Pro Max | `0x300000` (3145728) connecteur |
 
 Décodage (`KnowledgeBase.decodeSmcMask`) : un code exact gagne ; sinon le
@@ -490,16 +491,36 @@ iFixit écrit `0x10000` pour les capteurs avant de l'iPhone 13 (son exemple
 - iFixit — [iPhone SMC Panic Assertion Failed](https://www.ifixit.com/Wiki/iPhone_SMC_Panic_Assertion_Failed)
 - iFixit — [iPhone Kernel Panics](https://www.ifixit.com/Wiki/iPhone_Kernel_Panics)
 - iPad Rehab — [Troubleshooting thermal sensor problems](https://ipadrehab.rossmanngroup.com/articles/49)
+- Données d'atelier (`workshop_csv`) : CSV fourni par le mainteneur
+  (octobre 2026). Il confirme la quasi-totalité de la table SMC et apporte
+  les puces par bus I²C (iPhone 6 à XR), les noms `mic-temp-sens1/2` et
+  21 signatures. Les entrées venant uniquement de ce CSV sont en confiance
+  faible, sauf quand le nom de la signature désigne déjà la pièce
+  (`AppleCS42L75Audio`, Tristar, écran non détecté, root hash). Écartées
+  car incohérentes : `AMCC` → capteur de luminosité (AMCC est le contrôleur
+  mémoire), `AGXK` → accéléromètre (AGX est le GPU), « Attempting to
+  forcibly halt CPU » → processeur (préambule générique de panic), une ligne
+  corrompue (`Bad tailq elm`) et `eMemory apace pcie` (illisible).
+
+### Bus I²C (`i2cBuses`)
+
+Pour iPhone 6 à XR, les repères des puces (`U…`, `J…`) de chaque bus
+`i2c0`…`i2c3`. Une règle `decodeI2cBus` lit le premier `i2cN` du panic et
+affiche ces repères, à vérifier sur le boardview du modèle.
 
 Ces pages sont lues à la rédaction de la base, jamais par l'app (aucune
 requête réseau).
 
-> La base (v0.6.0, 21 règles) couvre : SMC BSC (table par modèle), capteur
-> thermique manquant (`TG0B`, `TG0V`, `TB0V`, `mic1`, `mic2`, `prs0`), jauge
-> batterie, watchdog, AOP (capteurs, NMI Power, canal audio Bosch),
-> AppleSocHot, NAND/ANS2, GPU/AGX, baseband, Wi-Fi, ECC, SEP, SEP ROM, I²C,
-> DART, fautes mémoire noyau, instruction noyau non définie, redémarrage
-> forcé. **Elle n'est pas exhaustive** et reste à valider avec des données
+> La base (v0.7.0, 42 règles) couvre : SMC BSC (table par modèle), SMC data
+> abort, capteur thermique manquant (`TG0B`, `TG0V`, `TB0V`, `mic1`, `mic2`,
+> `mic-temp-sens1/2`, `prs0`), thermalmonitord sans capteur (NTC), jauge
+> batterie, watchdogs (userspace, WDT, écran iPad Pro 10.5), AOP (capteurs,
+> timeout I²C, no pulse, proximité, Systick, data abort, NMI Power, canal
+> audio Bosch), AppleSocHot, PMP NMI, NAND/ANS/NVMe/PCIe, WKdm, GPU/AGX,
+> baseband/NFC, Wi-Fi (pilote, PCIe), codec audio CS42L75, bus LLC, Tristar,
+> écran (PMU, non détecté, DCP), ECC, SEP, SEP ROM, I²C (puces par modèle),
+> DART, fautes mémoire noyau, instruction noyau non définie, root hash non
+> authentifié, redémarrage forcé. **Elle n'est pas exhaustive** et reste à valider avec des données
 > d'atelier.
 
 ---

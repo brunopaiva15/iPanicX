@@ -1,5 +1,5 @@
 {
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "iPanicX V0 knowledge base. A small set of EXAMPLE signatures used to demonstrate the matching engine. It is NOT exhaustive and must be extended and validated against real repair data. Generic rule categories were informed by the open-source projects listed in README (ideas only, no code or data copied).",
   "rules": [
     {
@@ -56,7 +56,8 @@
       },
       "sources": [
         "ifixit_smc",
-        "ipadrehab"
+        "ipadrehab",
+        "workshop_csv"
       ],
       "decodeSensorMask": true
     },
@@ -112,7 +113,8 @@
       },
       "sources": [
         "ifixit_smc",
-        "ipadrehab"
+        "ipadrehab",
+        "workshop_csv"
       ],
       "decodeSensorMask": true
     },
@@ -159,7 +161,8 @@
       },
       "sources": [
         "ifixit_panics",
-        "ipadrehab"
+        "ipadrehab",
+        "workshop_csv"
       ],
       "decodeMissingSensors": true
     },
@@ -176,6 +179,7 @@
       "suspectedComponents": [],
       "possibleCauses": [
         "Unresponsive system daemon",
+        "Charging port flex or power button flex (sensors on these flexes)",
         "Hardware peripheral not answering",
         "Corrupted iOS installation"
       ],
@@ -188,6 +192,7 @@
         "summary": "Un processus système a cessé de répondre et le watchdog a redémarré l’appareil. La cause peut être logicielle ou matérielle (un périphérique qui bloque un service système).",
         "possibleCauses": [
           "Daemon système bloqué",
+          "Nappe du connecteur de charge ou du bouton d’alimentation (capteurs portés par ces nappes)",
           "Périphérique matériel qui ne répond pas",
           "Installation d’iOS corrompue"
         ],
@@ -197,7 +202,8 @@
         ]
       },
       "sources": [
-        "ifixit_panics"
+        "ifixit_panics",
+        "workshop_csv"
       ]
     },
     {
@@ -252,7 +258,9 @@
         "ANS2 Recoverable Panic",
         "ANS2 PANIC",
         "AppleANS2Controller",
-        "nand timeout"
+        "nand timeout",
+        "ANS Recoverab",
+        "PreNand"
       ],
       "panicNotContains": [
         "SMC BSC failure"
@@ -263,7 +271,8 @@
       "confidence": "low",
       "summary": "The panic involves the storage (NAND/ANS) controller. This can come from the storage itself or from a corrupted iOS installation.",
       "suspectedComponents": [
-        "NAND storage / storage controller"
+        "NAND storage / storage controller",
+        "Interposer (sandwich board)"
       ],
       "possibleCauses": [
         "Failing NAND",
@@ -278,7 +287,8 @@
         "title": "Panic du contrôleur de stockage",
         "summary": "Le panic concerne le contrôleur de stockage (NAND/ANS). Il peut venir du stockage lui-même ou d’une installation d’iOS corrompue.",
         "suspectedComponents": [
-          "Stockage NAND / contrôleur de stockage"
+          "Stockage NAND / contrôleur de stockage",
+          "Interposeur (carte sandwich)"
         ],
         "possibleCauses": [
           "NAND défaillante",
@@ -291,7 +301,8 @@
         ]
       },
       "sources": [
-        "ifixit_panics"
+        "ifixit_panics",
+        "workshop_csv"
       ]
     },
     {
@@ -340,7 +351,7 @@
       "confidence": "low",
       "summary": "The cellular modem (baseband) stopped responding or crashed.",
       "suspectedComponents": [
-        "Baseband / modem area of the logic board"
+        "Baseband / modem area of the logic board (also NFC on some models)"
       ],
       "possibleCauses": [
         "Modem firmware issue",
@@ -354,7 +365,7 @@
         "title": "Panic baseband",
         "summary": "Le modem cellulaire (baseband) a cessé de répondre ou a planté.",
         "suspectedComponents": [
-          "Zone baseband / modem de la carte mère"
+          "Zone baseband / modem de la carte mère (et NFC sur certains modèles)"
         ],
         "possibleCauses": [
           "Problème de firmware du modem",
@@ -364,7 +375,10 @@
           "Vérifiez que le réseau cellulaire fonctionne après le redémarrage.",
           "Mettez à jour ou restaurez iOS avant d’envisager une réparation de la carte mère."
         ]
-      }
+      },
+      "sources": [
+        "workshop_csv"
+      ]
     },
     {
       "id": "memory_ecc_generic",
@@ -511,7 +525,8 @@
       "possibleCauses": [
         "iOS or driver bug",
         "Jailbreak / tweaks / research tools",
-        "Memory or SoC fault (if frequent and varied)"
+        "Memory or SoC fault (if frequent and varied)",
+        "If it persists after a restore: CPU or broken traces to the CPU (board level)"
       ],
       "recommendedActions": [
         "Update or restore iOS.",
@@ -523,13 +538,17 @@
         "possibleCauses": [
           "Bug d’iOS ou d’un pilote",
           "Jailbreak / tweaks / outils de recherche",
-          "Défaut mémoire ou SoC (si fréquent et varié)"
+          "Défaut mémoire ou SoC (si fréquent et varié)",
+          "S’il persiste après une restauration : processeur ou pistes coupées vers le processeur (carte mère)"
         ],
         "recommendedActions": [
           "Mettez à jour ou restaurez iOS.",
           "Comparez plusieurs panics : le même appelant à chaque fois suggère un problème logiciel ; des adresses aléatoires suggèrent le matériel."
         ]
-      }
+      },
+      "sources": [
+        "workshop_csv"
+      ]
     },
     {
       "id": "aop_nmi_power",
@@ -559,7 +578,8 @@
         "Test with known-good parts to find the faulty one."
       ],
       "sources": [
-        "ifixit_panics"
+        "ifixit_panics",
+        "workshop_csv"
       ],
       "fr": {
         "title": "Panic AOP NMI Power",
@@ -695,7 +715,8 @@
         "Board-level repair is required; the SEP ROM content is unique to the device and cannot be recreated."
       ],
       "sources": [
-        "ifixit_panics"
+        "ifixit_panics",
+        "workshop_csv"
       ],
       "fr": {
         "title": "Panic SEP ROM",
@@ -734,14 +755,16 @@
       "possibleCauses": [
         "Damaged flex or part on that bus (sensors, ambient light sensor…)",
         "Liquid damage",
-        "Board-level fault on the bus lines"
+        "Board-level fault on the bus lines",
+        "On many models, i2c2 carries the front camera flex"
       ],
       "recommendedActions": [
         "Note the bus number, address and any part name (ALS, etc.) in the panic.",
         "Check the schematic of this model to find which chip uses that bus and address."
       ],
       "sources": [
-        "ifixit_panics"
+        "ifixit_panics",
+        "workshop_csv"
       ],
       "fr": {
         "title": "Erreur de bus I²C",
@@ -752,13 +775,15 @@
         "possibleCauses": [
           "Nappe ou pièce endommagée sur ce bus (capteurs, capteur de luminosité…)",
           "Contact avec un liquide",
-          "Défaut des lignes du bus sur la carte"
+          "Défaut des lignes du bus sur la carte",
+          "Sur de nombreux modèles, i2c2 dessert la nappe de la caméra avant"
         ],
         "recommendedActions": [
           "Relevez le numéro de bus, l’adresse et tout nom de pièce (ALS, etc.) dans le panic.",
           "Consultez le schéma de ce modèle pour savoir quelle puce utilise ce bus et cette adresse."
         ]
-      }
+      },
+      "decodeI2cBus": true
     },
     {
       "id": "undefined_kernel_instruction",
@@ -870,7 +895,8 @@
         "If Wi-Fi is greyed out or the panic repeats, suspect the Wi-Fi / Bluetooth module."
       ],
       "sources": [
-        "ifixit_panics"
+        "ifixit_panics",
+        "workshop_csv"
       ],
       "fr": {
         "title": "Panic du module Wi-Fi",
@@ -888,29 +914,916 @@
           "Si le Wi-Fi est grisé ou si le panic se répète, suspectez le module Wi-Fi / Bluetooth."
         ]
       }
+    },
+    {
+      "id": "apcie_wlan",
+      "headlineContainsAny": [
+        "apcie"
+      ],
+      "panicContainsAny": [
+        "wlan"
+      ],
+      "title": "PCIe Link Error (Wi-Fi)",
+      "category": "hardware",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "The PCIe link to the Wi-Fi module failed.",
+      "suspectedComponents": [
+        "Wi-Fi / Bluetooth module (logic board)"
+      ],
+      "possibleCauses": [
+        "Wi-Fi module fault",
+        "Board-level fault on the PCIe lines",
+        "iOS driver bug"
+      ],
+      "recommendedActions": [
+        "Check whether Wi-Fi works or is greyed out.",
+        "Update iOS; if the panic repeats, suspect the Wi-Fi module."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Erreur de lien PCIe (Wi-Fi)",
+        "summary": "Le lien PCIe vers le module Wi-Fi a échoué.",
+        "suspectedComponents": [
+          "Module Wi-Fi / Bluetooth (carte mère)"
+        ],
+        "possibleCauses": [
+          "Défaut du module Wi-Fi",
+          "Défaut des lignes PCIe sur la carte",
+          "Bug du pilote iOS"
+        ],
+        "recommendedActions": [
+          "Vérifiez si le Wi-Fi fonctionne ou s’il est grisé.",
+          "Mettez iOS à jour ; si le panic se répète, suspectez le module Wi-Fi."
+        ]
+      }
+    },
+    {
+      "id": "apcie_nand",
+      "headlineContainsAny": [
+        "apcie"
+      ],
+      "panicNotContains": [
+        "wlan",
+        "baseband"
+      ],
+      "title": "PCIe Link Error (storage)",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "A PCIe link failed. Without a Wi-Fi or baseband mention, it is usually the link to the NAND storage.",
+      "suspectedComponents": [
+        "NAND storage",
+        "Interposer (sandwich board)"
+      ],
+      "possibleCauses": [
+        "Failing NAND",
+        "Interposer or board fault on the PCIe lines"
+      ],
+      "recommendedActions": [
+        "Back up the device as soon as possible.",
+        "If the panic persists after a restore, suspect the NAND or the interposer."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Erreur de lien PCIe (stockage)",
+        "summary": "Un lien PCIe a échoué. Sans mention du Wi-Fi ou du baseband, il s’agit en général du lien vers le stockage NAND.",
+        "suspectedComponents": [
+          "Stockage NAND",
+          "Interposeur (carte sandwich)"
+        ],
+        "possibleCauses": [
+          "NAND défaillante",
+          "Défaut de l’interposeur ou des lignes PCIe sur la carte"
+        ],
+        "recommendedActions": [
+          "Sauvegardez l’appareil dès que possible.",
+          "Si le panic persiste après une restauration, suspectez la NAND ou l’interposeur."
+        ]
+      }
+    },
+    {
+      "id": "nand_nvme",
+      "headlineContainsAny": [
+        "nvme"
+      ],
+      "title": "NVMe Storage Panic",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "The storage driver (NVMe) raised the panic.",
+      "suspectedComponents": [
+        "NAND storage / storage controller"
+      ],
+      "possibleCauses": [
+        "Failing NAND",
+        "Logic board damage near the storage",
+        "Corrupted iOS installation"
+      ],
+      "recommendedActions": [
+        "Back up the device as soon as possible.",
+        "If the panic persists after an iOS update or restore, suspect the storage hardware."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Panic du stockage NVMe",
+        "summary": "Le pilote de stockage (NVMe) a déclenché le panic.",
+        "suspectedComponents": [
+          "Stockage NAND / contrôleur de stockage"
+        ],
+        "possibleCauses": [
+          "NAND défaillante",
+          "Carte mère endommagée près du stockage",
+          "Installation d’iOS corrompue"
+        ],
+        "recommendedActions": [
+          "Sauvegardez l’appareil dès que possible.",
+          "Si le panic persiste après une mise à jour ou une restauration d’iOS, suspectez le stockage."
+        ]
+      }
+    },
+    {
+      "id": "wkdm_memory",
+      "panicContainsAny": [
+        "WKDMD",
+        "WKdm"
+      ],
+      "title": "Memory Compression Failure (WKdm)",
+      "category": "hardware",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "Compressed memory could not be decompressed. Repeated occurrences point to RAM or NAND.",
+      "suspectedComponents": [
+        "RAM / NAND (logic board)"
+      ],
+      "possibleCauses": [
+        "RAM or NAND fault",
+        "iOS bug (if isolated)"
+      ],
+      "recommendedActions": [
+        "Update or restore iOS.",
+        "If it repeats, suspect the RAM or NAND (board level)."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Échec de décompression mémoire (WKdm)",
+        "summary": "La mémoire compressée n’a pas pu être décompressée. Des occurrences répétées désignent la RAM ou la NAND.",
+        "suspectedComponents": [
+          "RAM / NAND (carte mère)"
+        ],
+        "possibleCauses": [
+          "Défaut de RAM ou de NAND",
+          "Bug d’iOS (si isolé)"
+        ],
+        "recommendedActions": [
+          "Mettez à jour ou restaurez iOS.",
+          "S’il se répète, suspectez la RAM ou la NAND (carte mère)."
+        ]
+      }
+    },
+    {
+      "id": "wdt_timeout",
+      "panicContains": [
+        "WDT timeout"
+      ],
+      "title": "Hardware Watchdog Timeout (WDT)",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "The hardware watchdog expired. Repairers associate it with the battery data line, the charging port flex or the vibrator.",
+      "suspectedComponents": [
+        "Battery data line (SWI)",
+        "Charging Port Flex",
+        "Taptic Engine / vibrator driver"
+      ],
+      "possibleCauses": [
+        "Damaged or poorly seated flex",
+        "Liquid damage",
+        "Faulty replacement part"
+      ],
+      "recommendedActions": [
+        "Inspect and reseat the suspected part and its connector, then test with a known-good part.",
+        "Test with a known-good battery and charging port flex."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Watchdog matériel dépassé (WDT)",
+        "summary": "Le watchdog matériel a expiré. Les réparateurs l’associent à la ligne de données batterie, à la nappe du connecteur de charge ou au vibreur.",
+        "suspectedComponents": [
+          "Ligne de données batterie (SWI)",
+          "Nappe du connecteur de charge",
+          "Taptic Engine / pilote du vibreur"
+        ],
+        "possibleCauses": [
+          "Nappe endommagée ou mal branchée",
+          "Contact avec un liquide",
+          "Pièce de remplacement défectueuse"
+        ],
+        "recommendedActions": [
+          "Inspectez et rebranchez la pièce suspectée et son connecteur, puis testez avec une pièce en bon état.",
+          "Testez avec une batterie et une nappe de connecteur de charge en bon état."
+        ]
+      }
+    },
+    {
+      "id": "audio_codec_cs42l75",
+      "panicContainsAny": [
+        "AppleCS42L75Audio",
+        "CS42L75"
+      ],
+      "title": "Audio Codec Panic (CS42L75)",
+      "category": "hardware",
+      "severity": "medium",
+      "confidence": "medium",
+      "summary": "The main audio codec (CS42L75) stopped answering.",
+      "suspectedComponents": [
+        "Audio codec IC (U4700 “big audio codec” on the iPhone 7 series)"
+      ],
+      "possibleCauses": [
+        "Audio codec IC fault (often after a drop or bending)",
+        "Board-level fault around the codec"
+      ],
+      "recommendedActions": [
+        "Check audio, microphones and calls.",
+        "Board-level repair of the audio codec is usually required."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Panic du codec audio (CS42L75)",
+        "summary": "Le codec audio principal (CS42L75) ne répond plus.",
+        "suspectedComponents": [
+          "Puce codec audio (U4700 « big audio codec » sur la gamme iPhone 7)"
+        ],
+        "possibleCauses": [
+          "Défaut de la puce codec audio (souvent après une chute ou une torsion)",
+          "Défaut de la carte autour du codec"
+        ],
+        "recommendedActions": [
+          "Vérifiez l’audio, les micros et les appels.",
+          "Une réparation du codec audio au niveau de la carte est en général nécessaire."
+        ]
+      }
+    },
+    {
+      "id": "llc_bus_error",
+      "panicContains": [
+        "LLC Bus error"
+      ],
+      "title": "LLC Bus Error",
+      "category": "hardware",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "A bus error was reported. Repairers associate it with the audio circuit or the front camera flex.",
+      "suspectedComponents": [
+        "Audio circuit",
+        "Front Camera Flex"
+      ],
+      "possibleCauses": [
+        "Damaged or poorly seated flex",
+        "Liquid damage",
+        "Faulty replacement part"
+      ],
+      "recommendedActions": [
+        "Inspect and reseat the suspected part and its connector, then test with a known-good part."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Erreur de bus LLC",
+        "summary": "Une erreur de bus a été signalée. Les réparateurs l’associent au circuit audio ou à la nappe de la caméra avant.",
+        "suspectedComponents": [
+          "Circuit audio",
+          "Nappe de la caméra avant"
+        ],
+        "possibleCauses": [
+          "Nappe endommagée ou mal branchée",
+          "Contact avec un liquide",
+          "Pièce de remplacement défectueuse"
+        ],
+        "recommendedActions": [
+          "Inspectez et rebranchez la pièce suspectée et son connecteur, puis testez avec une pièce en bon état."
+        ]
+      }
+    },
+    {
+      "id": "ipad_watchdog_lcd",
+      "devices": [
+        "iPad7,3",
+        "iPad7,4"
+      ],
+      "panicContains": [
+        "userspace watchdog timeout"
+      ],
+      "title": "Watchdog Timeout (display assembly)",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "medium",
+      "summary": "On this iPad, a watchdog timeout is often caused by a non-genuine display assembly that carries required sensors.",
+      "suspectedComponents": [
+        "Display assembly (non-genuine LCD)"
+      ],
+      "possibleCauses": [
+        "Non-genuine or faulty replacement display",
+        "Damaged display flex"
+      ],
+      "recommendedActions": [
+        "Test with a genuine display assembly.",
+        "Inspect the display flex and its connector."
+      ],
+      "sources": [
+        "workshop_csv",
+        "ifixit_panics"
+      ],
+      "fr": {
+        "title": "Watchdog dépassé (écran)",
+        "summary": "Sur cet iPad, un dépassement du watchdog vient souvent d’un écran non d’origine, qui porte des capteurs requis.",
+        "suspectedComponents": [
+          "Écran (LCD non d’origine)"
+        ],
+        "possibleCauses": [
+          "Écran de remplacement non d’origine ou défectueux",
+          "Nappe d’écran endommagée"
+        ],
+        "recommendedActions": [
+          "Testez avec un écran d’origine.",
+          "Inspectez la nappe de l’écran et son connecteur."
+        ]
+      }
+    },
+    {
+      "id": "aop_i2c_timeout",
+      "panicContains": [
+        "AOP PANIC",
+        "unexpected i2c timeout"
+      ],
+      "title": "AOP Sensor Timeout (proximity)",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "The Always-On Processor timed out on a sensor bus. Repairers usually trace it to the proximity sensor.",
+      "suspectedComponents": [
+        "Proximity sensor (front sensor flex)"
+      ],
+      "possibleCauses": [
+        "Damaged or poorly seated flex",
+        "Liquid damage",
+        "Faulty replacement part"
+      ],
+      "recommendedActions": [
+        "Inspect and reseat the suspected part and its connector, then test with a known-good part."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Délai capteur AOP dépassé (proximité)",
+        "summary": "Le processeur toujours actif (AOP) a dépassé le délai sur un bus de capteurs. Les réparateurs le relient en général au capteur de proximité.",
+        "suspectedComponents": [
+          "Capteur de proximité (nappe des capteurs avant)"
+        ],
+        "possibleCauses": [
+          "Nappe endommagée ou mal branchée",
+          "Contact avec un liquide",
+          "Pièce de remplacement défectueuse"
+        ],
+        "recommendedActions": [
+          "Inspectez et rebranchez la pièce suspectée et son connecteur, puis testez avec une pièce en bon état."
+        ]
+      }
+    },
+    {
+      "id": "aop_no_pulse",
+      "panicContains": [
+        "AOP PANIC",
+        "no pulse on"
+      ],
+      "title": "AOP Panic: No Pulse",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "A sensor watched by the Always-On Processor stopped sending its pulse.",
+      "suspectedComponents": [
+        "Proximity sensor",
+        "Taptic Engine / vibrator driver",
+        "Rear microphone"
+      ],
+      "possibleCauses": [
+        "Damaged or poorly seated flex",
+        "Liquid damage",
+        "Faulty replacement part"
+      ],
+      "recommendedActions": [
+        "Inspect and reseat the suspected part and its connector, then test with a known-good part."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Panic AOP : plus d’impulsion",
+        "summary": "Un capteur surveillé par le processeur toujours actif (AOP) n’envoie plus d’impulsion.",
+        "suspectedComponents": [
+          "Capteur de proximité",
+          "Taptic Engine / pilote du vibreur",
+          "Micro arrière"
+        ],
+        "possibleCauses": [
+          "Nappe endommagée ou mal branchée",
+          "Contact avec un liquide",
+          "Pièce de remplacement défectueuse"
+        ],
+        "recommendedActions": [
+          "Inspectez et rebranchez la pièce suspectée et son connecteur, puis testez avec une pièce en bon état."
+        ]
+      }
+    },
+    {
+      "id": "aop_prox",
+      "panicContains": [
+        "AOP PANIC",
+        "prox"
+      ],
+      "title": "AOP Panic: Proximity",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "The Always-On Processor lost the proximity sensor.",
+      "suspectedComponents": [
+        "Front Camera / proximity flex"
+      ],
+      "possibleCauses": [
+        "Damaged or poorly seated flex",
+        "Liquid damage",
+        "Faulty replacement part"
+      ],
+      "recommendedActions": [
+        "Inspect and reseat the suspected part and its connector, then test with a known-good part."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Panic AOP : proximité",
+        "summary": "Le processeur toujours actif (AOP) a perdu le capteur de proximité.",
+        "suspectedComponents": [
+          "Nappe caméra avant / proximité"
+        ],
+        "possibleCauses": [
+          "Nappe endommagée ou mal branchée",
+          "Contact avec un liquide",
+          "Pièce de remplacement défectueuse"
+        ],
+        "recommendedActions": [
+          "Inspectez et rebranchez la pièce suspectée et son connecteur, puis testez avec une pièce en bon état."
+        ]
+      }
+    },
+    {
+      "id": "aop_systick",
+      "panicContains": [
+        "AOP PANIC",
+        "Systick Watchdog"
+      ],
+      "title": "AOP Watchdog Not Serviced",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "The Always-On Processor watchdog was not serviced. Repairers associate it with the proximity sensor.",
+      "suspectedComponents": [
+        "Proximity sensor (front sensor flex)"
+      ],
+      "possibleCauses": [
+        "Damaged or poorly seated flex",
+        "Liquid damage",
+        "Faulty replacement part",
+        "AOP firmware issue"
+      ],
+      "recommendedActions": [
+        "Inspect and reseat the suspected part and its connector, then test with a known-good part."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Watchdog AOP non servi",
+        "summary": "Le watchdog du processeur toujours actif (AOP) n’a pas été servi. Les réparateurs l’associent au capteur de proximité.",
+        "suspectedComponents": [
+          "Capteur de proximité (nappe des capteurs avant)"
+        ],
+        "possibleCauses": [
+          "Nappe endommagée ou mal branchée",
+          "Contact avec un liquide",
+          "Pièce de remplacement défectueuse",
+          "Problème de firmware de l’AOP"
+        ],
+        "recommendedActions": [
+          "Inspectez et rebranchez la pièce suspectée et son connecteur, puis testez avec une pièce en bon état."
+        ]
+      }
+    },
+    {
+      "id": "aop_data_abort",
+      "panicContains": [
+        "AOP DATA ABORT"
+      ],
+      "title": "AOP Data Abort",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "The Always-On Processor hit a data abort. Repairers associate it with open lines to the CPU.",
+      "suspectedComponents": [
+        "Logic board (lines to the CPU)"
+      ],
+      "possibleCauses": [
+        "Board-level fault (open line, damaged component)",
+        "Liquid damage or drop"
+      ],
+      "recommendedActions": [
+        "Rule out software first: update or restore iOS.",
+        "If it persists, a board-level diagnosis is required."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Data abort de l’AOP",
+        "summary": "Le processeur toujours actif (AOP) a subi un data abort. Les réparateurs l’associent à des lignes coupées vers le processeur.",
+        "suspectedComponents": [
+          "Carte mère (lignes vers le processeur)"
+        ],
+        "possibleCauses": [
+          "Défaut au niveau de la carte (ligne coupée, composant endommagé)",
+          "Contact avec un liquide ou chute"
+        ],
+        "recommendedActions": [
+          "Écartez d’abord le logiciel : mettez à jour ou restaurez iOS.",
+          "S’il persiste, un diagnostic au niveau de la carte est nécessaire."
+        ]
+      }
+    },
+    {
+      "id": "smc_data_abort",
+      "panicContains": [
+        "SMC DATA ABORT"
+      ],
+      "title": "SMC Data Abort",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "The SMC hit a data abort, usually a communication fault with the CPU.",
+      "suspectedComponents": [
+        "Logic board (SMC to CPU communication)"
+      ],
+      "possibleCauses": [
+        "Board-level fault (open line, damaged component)",
+        "Liquid damage or drop"
+      ],
+      "recommendedActions": [
+        "Rule out software first: update or restore iOS.",
+        "If it persists, a board-level diagnosis is required."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Data abort du SMC",
+        "summary": "Le SMC a subi un data abort, en général un défaut de communication avec le processeur.",
+        "suspectedComponents": [
+          "Carte mère (communication SMC – processeur)"
+        ],
+        "possibleCauses": [
+          "Défaut au niveau de la carte (ligne coupée, composant endommagé)",
+          "Contact avec un liquide ou chute"
+        ],
+        "recommendedActions": [
+          "Écartez d’abord le logiciel : mettez à jour ou restaurez iOS.",
+          "S’il persiste, un diagnostic au niveau de la carte est nécessaire."
+        ]
+      }
+    },
+    {
+      "id": "tristar",
+      "headlineContainsAny": [
+        "tristar"
+      ],
+      "title": "Charging IC Panic (Tristar)",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "medium",
+      "summary": "The Tristar chip, which manages the charging port, raised the panic.",
+      "suspectedComponents": [
+        "Charging Port Flex",
+        "Tristar IC (logic board)"
+      ],
+      "possibleCauses": [
+        "Damaged charging port flex",
+        "Tristar damaged by a faulty charger or cable",
+        "Liquid damage"
+      ],
+      "recommendedActions": [
+        "Test with a known-good charging port flex and a genuine cable.",
+        "If it persists, check the Tristar IC at board level."
+      ],
+      "sources": [
+        "workshop_csv",
+        "ifixit_panics"
+      ],
+      "fr": {
+        "title": "Panic de la puce de charge (Tristar)",
+        "summary": "La puce Tristar, qui gère le connecteur de charge, a déclenché le panic.",
+        "suspectedComponents": [
+          "Nappe du connecteur de charge",
+          "Puce Tristar (carte mère)"
+        ],
+        "possibleCauses": [
+          "Nappe du connecteur de charge endommagée",
+          "Tristar endommagée par un chargeur ou câble défectueux",
+          "Contact avec un liquide"
+        ],
+        "recommendedActions": [
+          "Testez avec une nappe de connecteur en bon état et un câble d’origine.",
+          "S’il persiste, vérifiez la puce Tristar au niveau de la carte."
+        ]
+      }
+    },
+    {
+      "id": "display_pmu",
+      "panicContainsAny": [
+        "display PMU"
+      ],
+      "title": "Display Power Panic",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "The display power controller did not answer.",
+      "suspectedComponents": [
+        "Display assembly",
+        "LCD driver (logic board)"
+      ],
+      "possibleCauses": [
+        "Faulty or non-genuine display",
+        "Damaged display flex or connector",
+        "LCD driver fault"
+      ],
+      "recommendedActions": [
+        "Test with a known-good display assembly.",
+        "If it persists, check the display power circuit on the board."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Panic de l’alimentation écran",
+        "summary": "Le contrôleur d’alimentation de l’écran n’a pas répondu.",
+        "suspectedComponents": [
+          "Écran",
+          "Pilote LCD (carte mère)"
+        ],
+        "possibleCauses": [
+          "Écran défectueux ou non d’origine",
+          "Nappe ou connecteur d’écran endommagé",
+          "Défaut du pilote LCD"
+        ],
+        "recommendedActions": [
+          "Testez avec un écran en bon état.",
+          "S’il persiste, vérifiez le circuit d’alimentation de l’écran sur la carte."
+        ]
+      }
+    },
+    {
+      "id": "display_timing",
+      "panicContains": [
+        "valid timing element for display"
+      ],
+      "title": "Display Not Detected",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "medium",
+      "summary": "The system could not find the display timings: the screen is not connected or not recognised.",
+      "suspectedComponents": [
+        "Display assembly and its connector"
+      ],
+      "possibleCauses": [
+        "Display unplugged or poorly seated",
+        "Damaged display flex or connector",
+        "Faulty display"
+      ],
+      "recommendedActions": [
+        "Reseat the display connector.",
+        "Test with a known-good display assembly."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Écran non détecté",
+        "summary": "Le système n’a pas trouvé les paramètres de l’écran : il n’est pas branché ou pas reconnu.",
+        "suspectedComponents": [
+          "Écran et son connecteur"
+        ],
+        "possibleCauses": [
+          "Écran débranché ou mal branché",
+          "Nappe ou connecteur d’écran endommagé",
+          "Écran défectueux"
+        ],
+        "recommendedActions": [
+          "Rebranchez le connecteur de l’écran.",
+          "Testez avec un écran en bon état."
+        ]
+      }
+    },
+    {
+      "id": "pmp_nmi_fiq",
+      "panicContains": [
+        "PMP NMI FIQ"
+      ],
+      "title": "Power Manager Interrupt (PMP NMI)",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "low",
+      "summary": "The power manager raised a non-maskable interrupt, usually a problem on the CPU power rails.",
+      "suspectedComponents": [
+        "Logic board (CPU power rails)"
+      ],
+      "possibleCauses": [
+        "Board-level fault (open line, damaged component)",
+        "Liquid damage or drop"
+      ],
+      "recommendedActions": [
+        "Rule out software first: update or restore iOS.",
+        "If it persists, a board-level diagnosis is required."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Interruption du gestionnaire d’alimentation (PMP NMI)",
+        "summary": "Le gestionnaire d’alimentation a levé une interruption non masquable, en général un problème sur les alimentations du processeur.",
+        "suspectedComponents": [
+          "Carte mère (alimentations du processeur)"
+        ],
+        "possibleCauses": [
+          "Défaut au niveau de la carte (ligne coupée, composant endommagé)",
+          "Contact avec un liquide ou chute"
+        ],
+        "recommendedActions": [
+          "Écartez d’abord le logiciel : mettez à jour ou restaurez iOS.",
+          "S’il persiste, un diagnostic au niveau de la carte est nécessaire."
+        ]
+      }
+    },
+    {
+      "id": "dcp_panic",
+      "headlineContainsAny": [
+        "DCP PANIC"
+      ],
+      "title": "Display Coprocessor Panic (DCP)",
+      "category": "hardware",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "The display coprocessor raised the panic. It can be a software bug or a display problem.",
+      "suspectedComponents": [
+        "Display assembly"
+      ],
+      "possibleCauses": [
+        "Faulty or non-genuine display",
+        "iOS display driver bug"
+      ],
+      "recommendedActions": [
+        "Update iOS.",
+        "If it repeats, test with a known-good display assembly."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Panic du coprocesseur d’affichage (DCP)",
+        "summary": "Le coprocesseur d’affichage a déclenché le panic. Il peut s’agir d’un bug logiciel ou d’un problème d’écran.",
+        "suspectedComponents": [
+          "Écran"
+        ],
+        "possibleCauses": [
+          "Écran défectueux ou non d’origine",
+          "Bug du pilote d’affichage d’iOS"
+        ],
+        "recommendedActions": [
+          "Mettez iOS à jour.",
+          "S’il se répète, testez avec un écran en bon état."
+        ]
+      }
+    },
+    {
+      "id": "root_hash_auth",
+      "panicContains": [
+        "could not authenticate personalized root hash"
+      ],
+      "title": "System Volume Not Authenticated",
+      "category": "software",
+      "severity": "high",
+      "confidence": "high",
+      "summary": "The signed system volume could not be verified at boot. It is a software problem: the iOS install must be restored.",
+      "possibleCauses": [
+        "Interrupted or corrupted iOS update",
+        "Modified system volume"
+      ],
+      "recommendedActions": [
+        "Restore the device with Finder or Apple Devices (update first, then restore if needed)."
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "fr": {
+        "title": "Volume système non authentifié",
+        "summary": "Le volume système signé n’a pas pu être vérifié au démarrage. C’est un problème logiciel : l’installation d’iOS doit être restaurée.",
+        "possibleCauses": [
+          "Mise à jour d’iOS interrompue ou corrompue",
+          "Volume système modifié"
+        ],
+        "recommendedActions": [
+          "Restaurez l’appareil avec le Finder ou Apple Devices (mise à jour d’abord, puis restauration si besoin)."
+        ]
+      }
+    },
+    {
+      "id": "thermalmonitord_checkin",
+      "panicContains": [
+        "thermalmonitord",
+        "no successful checkins"
+      ],
+      "panicNotContains": [
+        "Missing sensor"
+      ],
+      "title": "thermalmonitord Not Responding",
+      "category": "unknown",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "The thermal monitor stopped checking in, without naming a missing sensor. It is often software, but damaged temperature sensing on the board (NTC thermistors) is also reported.",
+      "suspectedComponents": [
+        "NTC thermistor circuit (logic board)"
+      ],
+      "possibleCauses": [
+        "iOS bug (common on early iOS 16)",
+        "Damaged NTC thermistor lines on the board (drop, layer damage)"
+      ],
+      "recommendedActions": [
+        "Back up, then update or restore iOS.",
+        "If it persists after a restore, check the NTC thermistor circuits on the board."
+      ],
+      "sources": [
+        "workshop_csv",
+        "ifixit_panics",
+        "ipadrehab"
+      ],
+      "fr": {
+        "title": "thermalmonitord ne répond plus",
+        "summary": "Le moniteur thermique ne se signale plus, sans nommer de capteur manquant. C’est souvent logiciel, mais des thermistances NTC endommagées sur la carte sont aussi signalées.",
+        "suspectedComponents": [
+          "Circuit des thermistances NTC (carte mère)"
+        ],
+        "possibleCauses": [
+          "Bug d’iOS (fréquent sur les premières versions d’iOS 16)",
+          "Lignes de thermistances NTC endommagées sur la carte (chute, couches internes)"
+        ],
+        "recommendedActions": [
+          "Sauvegardez, puis mettez à jour ou restaurez iOS.",
+          "S’il persiste après une restauration, vérifiez les circuits de thermistances NTC sur la carte."
+        ]
+      }
     }
   ],
   "matching": "Text terms are matched case-insensitively against panicString + panicked process, whitespace collapsed. See lib/diagnostics/diagnostic_rule.dart.",
   "localization": "Each rule may carry an \"fr\" object overriding title, summary, technicalReason, suspectedComponents, possibleCauses, recommendedActions and note. Missing fields fall back to English.",
   "sensors": {
-    "_comment": "Missing-sensor names (thermalmonitord panics) to the part that usually carries them. Sources: iFixit (iPhone Kernel Panics), iPad Rehab. Required sensors vary by model and iOS version; always confirm by inspection.",
+    "_comment": "Missing-sensor names (thermalmonitord panics) to the part that usually carries them. Sources: iFixit (iPhone Kernel Panics), iPad Rehab, workshop data. Required sensors vary by model and iOS version; always confirm by inspection.",
     "TG0B": {
       "component": "Battery (temperature sensor / gas gauge)",
       "fr": "Batterie (capteur de température / jauge)",
-      "note": "Often a non-genuine or damaged battery, or its connector. On iPhone 11 Pro / Pro Max, also check the charge port flex.",
-      "noteFr": "Souvent une batterie non d’origine ou endommagée, ou son connecteur. Sur iPhone 11 Pro / Pro Max, vérifiez aussi la nappe du connecteur de charge."
+      "note": "Battery, its FPC connector or the battery data line (SWI). On iPhone 11 Pro / Pro Max, also check the charge port flex.",
+      "noteFr": "Batterie, son connecteur FPC ou la ligne de données batterie (SWI). Sur iPhone 11 Pro / Pro Max, vérifiez aussi la nappe du connecteur de charge."
     },
     "TG0V": {
       "component": "Battery (gas gauge)",
       "fr": "Batterie (jauge)",
-      "note": "Often a non-genuine or damaged battery, or its connector. On iPhone 11 Pro / Pro Max, also check the charge port flex.",
-      "noteFr": "Souvent une batterie non d’origine ou endommagée, ou son connecteur. Sur iPhone 11 Pro / Pro Max, vérifiez aussi la nappe du connecteur de charge."
+      "note": "Battery, its FPC connector or the battery data line (SWI). On iPhone 11 Pro / Pro Max, also check the charge port flex.",
+      "noteFr": "Batterie, son connecteur FPC ou la ligne de données batterie (SWI). Sur iPhone 11 Pro / Pro Max, vérifiez aussi la nappe du connecteur de charge."
     },
     "mic1": {
       "component": "Charging Port Flex (bottom microphone)",
       "fr": "Nappe du connecteur de charge (micro du bas)",
-      "note": "The bottom microphone sits on the charging port flex.",
-      "noteFr": "Le micro du bas est sur la nappe du connecteur de charge."
+      "note": "The bottom microphone sits on the charging port flex. On iPhone SE (2nd gen), broken traces between the CPU and the charge port connector have also been reported.",
+      "noteFr": "Le micro du bas est sur la nappe du connecteur de charge. Sur iPhone SE (2e gén.), des pistes coupées entre le processeur et le connecteur de charge ont aussi été signalées."
     },
     "prs0": {
       "component": "Charging Port Flex (barometer)",
@@ -921,14 +1834,26 @@
     "TB0V": {
       "component": "Battery (gas gauge)",
       "fr": "Batterie (jauge)",
-      "note": "Battery data line: battery, its connector, or the charging chip passing the data to the CPU.",
-      "noteFr": "Ligne de données de la batterie : batterie, son connecteur, ou la puce de charge qui transmet ces données au processeur."
+      "note": "Battery, its FPC connector or the battery data line (SWI).",
+      "noteFr": "Batterie, son connecteur FPC ou la ligne de données batterie (SWI)."
     },
     "mic2": {
       "component": "Power Button Flex / Camera Flash Flex (rear microphone)",
       "fr": "Nappe du bouton d’alimentation / nappe du flash (micro arrière)",
-      "note": "The rear microphone sits on the power button or flash flex depending on the model.",
-      "noteFr": "Le micro arrière est sur la nappe du bouton d’alimentation ou du flash selon le modèle."
+      "note": "The rear microphone sits on the power button or flash flex depending on the model (power button flex on the iPhone 11 series; the interposer has also been reported).",
+      "noteFr": "Le micro arrière est sur la nappe du bouton d’alimentation ou du flash selon le modèle (nappe du bouton sur la gamme iPhone 11 ; l’interposeur a aussi été signalé)."
+    },
+    "mic-temp-sens1": {
+      "component": "Charging Port Flex (microphone temperature sensor)",
+      "fr": "Nappe du connecteur de charge (capteur de température du micro)",
+      "note": "Name used by some iOS versions for the bottom microphone sensor.",
+      "noteFr": "Nom utilisé par certaines versions d’iOS pour le capteur du micro du bas."
+    },
+    "mic-temp-sens2": {
+      "component": "Charging Port Flex or Power Button Flex (microphone temperature sensor)",
+      "fr": "Nappe du connecteur de charge ou du bouton d’alimentation (capteur de température du micro)",
+      "note": "Depends on the model: check both flexes.",
+      "noteFr": "Dépend du modèle : vérifiez les deux nappes."
     }
   },
   "sources": {
@@ -944,6 +1869,9 @@
     "ipadrehab": {
       "title": "iPad Rehab — Troubleshooting thermal sensor problems",
       "url": "https://ipadrehab.rossmanngroup.com/articles/49"
+    },
+    "workshop_csv": {
+      "title": "Workshop data (CSV provided by the iPanicX maintainer, Oct 2026)"
     }
   },
   "parts": {
@@ -961,8 +1889,8 @@
       "fr": "Batterie (données / jauge)"
     },
     "gyro": {
-      "en": "Gyroscope (sandwich board)",
-      "fr": "Gyroscope (carte sandwich)"
+      "en": "Interposer / sandwich board (gyroscope)",
+      "fr": "Interposeur / carte sandwich (gyroscope)"
     },
     "coil": {
       "en": "Wireless Charging Coil",
@@ -989,7 +1917,8 @@
           "part": "chargePort",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -997,7 +1926,8 @@
           "part": "frontSensor",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ],
           "note": "iFixit’s table prints 0x10000, but its own 0x1800 example (charge port + front sensor) confirms 0x1000.",
           "noteFr": "Le tableau d’iFixit indique 0x10000, mais son propre exemple 0x1800 (connecteur + capteurs avant) confirme 0x1000."
@@ -1006,11 +1936,11 @@
           "mask": "0x4000",
           "part": "battery",
           "sources": [
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ],
-          "confidence": "medium",
-          "note": "Sources disagree on the iPhone 13 battery code (0x4000 or 0x40000).",
-          "noteFr": "Les sources divergent sur le code batterie de l’iPhone 13 (0x4000 ou 0x40000)."
+          "note": "iFixit lists 0x40000 for the iPhone 13 battery; iPad Rehab and workshop data agree on 0x4000.",
+          "noteFr": "iFixit indique 0x40000 pour la batterie de l’iPhone 13 ; iPad Rehab et les données d’atelier s’accordent sur 0x4000."
         },
         {
           "mask": "0x40000",
@@ -1018,9 +1948,9 @@
           "sources": [
             "ifixit_smc"
           ],
-          "confidence": "medium",
-          "note": "Sources disagree on the iPhone 13 battery code (0x4000 or 0x40000).",
-          "noteFr": "Les sources divergent sur le code batterie de l’iPhone 13 (0x4000 ou 0x40000)."
+          "confidence": "low",
+          "note": "iFixit only; iPad Rehab and workshop data give 0x4000 for the iPhone 13 battery.",
+          "noteFr": "iFixit uniquement ; iPad Rehab et les données d’atelier donnent 0x4000 pour la batterie de l’iPhone 13."
         }
       ]
     },
@@ -1035,7 +1965,8 @@
           "part": "gyro",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         }
       ]
@@ -1052,7 +1983,8 @@
           "part": "chargePort",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -1060,7 +1992,8 @@
           "part": "frontSensor",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -1068,7 +2001,8 @@
           "part": "coil",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -1076,7 +2010,8 @@
           "part": "battery",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ],
           "exactOnly": true
         }
@@ -1094,7 +2029,8 @@
           "part": "chargePort",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -1102,7 +2038,8 @@
           "part": "frontSensor",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -1110,7 +2047,8 @@
           "part": "powerFlex",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ],
           "note": "iPad Rehab lists 0x10000, but its own 0x1C0000 example (charge port + power button + proximity) confirms 0x100000.",
           "noteFr": "iPad Rehab indique 0x10000, mais son propre exemple 0x1C0000 (connecteur + bouton + proximité) confirme 0x100000."
@@ -1120,7 +2058,8 @@
           "part": "gyro",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -1128,7 +2067,8 @@
           "part": "battery",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ],
           "exactOnly": true
         }
@@ -1146,7 +2086,8 @@
           "part": "chargePort",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -1154,7 +2095,8 @@
           "part": "frontSensor",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -1162,7 +2104,8 @@
           "part": "coil",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -1188,7 +2131,8 @@
           "part": "chargePort",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -1197,14 +2141,27 @@
           "sources": [
             "ipadrehab"
           ],
-          "confidence": "medium"
+          "confidence": "medium",
+          "note": "Sources disagree on the 15 Pro proximity code: 0x100000 (iPad Rehab) or 0x200000 (workshop data). Both overlap the charge port code 0x300000.",
+          "noteFr": "Les sources divergent sur le code proximité du 15 Pro : 0x100000 (iPad Rehab) ou 0x200000 (données d’atelier). Les deux recoupent le code du connecteur 0x300000."
+        },
+        {
+          "mask": "0x200000",
+          "part": "frontSensor",
+          "sources": [
+            "workshop_csv"
+          ],
+          "confidence": "medium",
+          "note": "Sources disagree on the 15 Pro proximity code: 0x100000 (iPad Rehab) or 0x200000 (workshop data). Both overlap the charge port code 0x300000.",
+          "noteFr": "Les sources divergent sur le code proximité du 15 Pro : 0x100000 (iPad Rehab) ou 0x200000 (données d’atelier). Les deux recoupent le code du connecteur 0x300000."
         },
         {
           "mask": "0x400000",
           "part": "coil",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ]
         },
         {
@@ -1212,7 +2169,8 @@
           "part": "battery",
           "sources": [
             "ifixit_smc",
-            "ipadrehab"
+            "ipadrehab",
+            "workshop_csv"
           ],
           "exactOnly": true
         }
@@ -1234,6 +2192,106 @@
           ]
         }
       ]
+    }
+  ],
+  "i2cBuses": [
+    {
+      "_comment": "Chips (board reference designators) on each I²C bus, per model. Source: workshop data. Check them on the boardview of the model.",
+      "model": "iPhone 6 / 6 Plus",
+      "devices": [
+        "iPhone7,1",
+        "iPhone7,2"
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "buses": {
+        "i2c0": "U1202 / U1501 / U1502 / U1700",
+        "i2c1": "U1580 / U1400 / U1401 / U1601 / J2118",
+        "i2c2": "J1111 / J2019"
+      }
+    },
+    {
+      "model": "iPhone 6s / 6s Plus / SE",
+      "devices": [
+        "iPhone8,1",
+        "iPhone8,2",
+        "iPhone8,4"
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "buses": {
+        "i2c0": "U2000 / U4000 / U4020",
+        "i2c1": "U3800 / U2300 / U3700 / U4500",
+        "i2c2": "J3100 / J4200 / U4050"
+      }
+    },
+    {
+      "model": "iPhone 7 / 7 Plus",
+      "devices": [
+        "iPhone9,1",
+        "iPhone9,2",
+        "iPhone9,3",
+        "iPhone9,4"
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "buses": {
+        "i2c0": "U1801 / U3703 / U3701 / U4001 / U2301",
+        "i2c1": "U1801 / U2101 / U4601",
+        "i2c2": "U3301 / J4503"
+      }
+    },
+    {
+      "model": "iPhone 8 / 8 Plus / X",
+      "devices": [
+        "iPhone10,1",
+        "iPhone10,2",
+        "iPhone10,3",
+        "iPhone10,4",
+        "iPhone10,5",
+        "iPhone10,6"
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "buses": {
+        "i2c0": "U2700 / U5600 / U5660 / U6110 / J6400",
+        "i2c1": "J4300 / J6400",
+        "i2c2": "U3301 / J4200 / U5000"
+      }
+    },
+    {
+      "model": "iPhone X",
+      "devices": [
+        "iPhone10,3",
+        "iPhone10,6"
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "buses": {
+        "i2c3": "U3700 / U4100 / U4120 / U4400 / U5600 · J4500 (Face ID) · Touch EEPROM · interposer"
+      }
+    },
+    {
+      "model": "iPhone XS / XS Max / XR",
+      "devices": [
+        "iPhone11,2",
+        "iPhone11,4",
+        "iPhone11,6",
+        "iPhone11,8"
+      ],
+      "sources": [
+        "workshop_csv"
+      ],
+      "buses": {
+        "i2c0": "U2700 / U6110 / J6400",
+        "i2c1": "J4300",
+        "i2c2": "U5002"
+      }
     }
   ]
 }

@@ -101,11 +101,29 @@ void main() {
       expect(none.isMapped, isFalse);
     });
 
-    test('single-source codes are medium confidence', () {
+    test('confidence follows the sources', () {
+      // iPad Rehab + workshop data agree on 0x4000; iFixit alone on 0x40000.
       expect(
         kb.decodeSmcMask('iPhone14,5', 0x4000)!.confidence,
+        Confidence.high,
+      );
+      expect(
+        kb.decodeSmcMask('iPhone14,5', 0x40000)!.confidence,
+        Confidence.low,
+      );
+      // 15 Pro proximity: sources disagree (0x100000 / 0x200000).
+      expect(
+        kb.decodeSmcMask('iPhone16,1', 0x200000)!.confidence,
         Confidence.medium,
       );
+    });
+
+    test('workshop combinations decode as listed', () {
+      expect(parts('iPhone14,8', 0x600000), ['frontSensor', 'coil']);
+      expect(parts('iPhone16,2', 0x600000), ['frontSensor', 'coil']);
+      expect(parts('iPhone16,2', 0x700000), ['chargePort', 'coil']);
+      expect(parts('iPhone15,3', 0x180000), ['frontSensor', 'powerFlex']);
+      expect(parts('iPhone15,2', 0x20000), ['gyro']);
     });
 
     test('models outside the table and zero masks give nothing', () {
@@ -171,6 +189,29 @@ void main() {
 
   group('signatures from public references', () {
     final cases = {
+      'apcie: link down (wlan)': 'apcie_wlan',
+      'apcie[0]: link down': 'apcie_nand',
+      'nvme: command timeout': 'nand_nvme',
+      'ANS Recoverabe Panic - assert': 'nand_storage_generic',
+      'WKDMD decompression failed': 'wkdm_memory',
+      'WDT timeout: 0x1': 'wdt_timeout',
+      'AppleCS42L75Audio::timeout': 'audio_codec_cs42l75',
+      'LLC Bus error at 0x2': 'llc_bus_error',
+      'AOP PANIC - unexpected i2c timeout': 'aop_i2c_timeout',
+      'AOP PANIC - no pulse on vibe': 'aop_no_pulse',
+      'AOP PANIC - SCMto:0 - prox': 'aop_prox',
+      'AOP PANIC - Systick Watchdog2 not pet': 'aop_systick',
+      'AOP DATA ABORT at pc 0x1': 'aop_data_abort',
+      'SMC DATA ABORT at pc 0x1': 'smc_data_abort',
+      'AppleTriStar2: unexpected status': 'tristar',
+      'SCL display PMU timeout': 'display_pmu',
+      "Can't find valid timing element for display": 'display_timing',
+      'PMP NMI FIQ': 'pmp_nmi_fiq',
+      'DCP PANIC - assert': 'dcp_panic',
+      'could not authenticate personalized root hash': 'root_hash_auth',
+      'userspace watchdog timeout: no successful checkins from '
+              'com.apple.thermalmonitord':
+          'thermalmonitord_checkin',
       'AOP PANIC - NMI POWER asserted': 'aop_nmi_power',
       'AOP PANIC - K2 - Bosch control channel write failure': 'aop_bosch_audio',
       'AppleSocHot: Hot Hot Hot': 'soc_hot',
@@ -191,6 +232,52 @@ void main() {
         expect(fr.title, isNot(r.title), reason: 'French title');
       });
     }
+
+    test('iPad Pro 10.5 watchdog points to the display', () {
+      expect(
+        analyzer
+            .analyze(
+              panic(
+                'userspace watchdog timeout: no successful checkins from '
+                'backboardd',
+                product: 'iPad7,3',
+              ),
+            )
+            .matchedRuleId,
+        'ipad_watchdog_lcd',
+      );
+    });
+
+    test('I²C bus is decoded with the chips of the model', () {
+      final r = analyzer.analyze(
+        panic('i2c1::_doTransaction timeout', product: 'iPhone9,3'),
+      );
+      expect(r.matchedRuleId, 'i2c_bus_generic');
+      expect(r.suspectedComponents, ['Chips on i2c1: U1801 / U2101 / U4601']);
+      expect(r.technicalReason, contains('iPhone 7 / 7 Plus'));
+      expect(r.sources.join(), contains('Workshop data'));
+      // iPhone X: shared 8/X bus table plus the X-only i2c3.
+      final x = analyzer.analyze(
+        panic('i2c3::_doTransaction timeout', product: 'iPhone10,3'),
+      );
+      expect(x.suspectedComponents.single, contains('J4500 (Face ID)'));
+      // Model outside the table: generic texts.
+      final other = analyzer.analyze(
+        panic('i2c1::_doTransaction timeout', product: 'iPhone14,5'),
+      );
+      expect(other.suspectedComponents.single, contains('model-specific'));
+    });
+
+    test('mic-temp-sens names are mapped', () {
+      final r = analyzer.analyze(
+        panic(
+          'userspace watchdog timeout: no successful checkins from '
+          'thermalmonitord. Missing sensor(s): mic-temp-sens1',
+        ),
+      );
+      expect(r.suspectedComponents.single, contains('Charging Port Flex'));
+      expect(r.confidence, Confidence.high);
+    });
 
     test('an AOP i2c panic stays an AOP sensor panic', () {
       final r = analyzer.analyze(panic('AOP PANIC - i2c timeout on sensor'));

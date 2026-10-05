@@ -856,6 +856,12 @@ class Strings {
     'Non référencés dans la base : $names.',
   );
   String get sources => _('Sources', 'Sources');
+  String i2cChips(String bus, String chips) =>
+      _('Chips on $bus: $chips', 'Puces sur $bus : $chips');
+  String i2cReason(String bus, String model, String chips) => _(
+    'Bus $bus on $model: $chips (board reference designators, check them on the boardview).',
+    'Bus $bus sur $model : $chips (repères de la carte, à vérifier sur le boardview).',
+  );
 
   // --------------------------------------------------------- text report
   String get reportTitle =>

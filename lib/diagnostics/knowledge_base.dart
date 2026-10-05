@@ -21,12 +21,30 @@ class SensorInfo {
 
 /// Public reference a rule, mask or sensor is based on (`"sources"`).
 class KbSource {
-  const KbSource({required this.title, required this.url});
+  const KbSource({required this.title, this.url});
   final String title;
-  final String url;
+
+  /// Null for unpublished data (workshop notes).
+  final String? url;
 
   @override
-  String toString() => '$title — $url';
+  String toString() => url == null ? title : '$title — $url';
+}
+
+/// Chips on each I²C bus of one model family (`"i2cBuses"`).
+class I2cModel {
+  const I2cModel({
+    required this.model,
+    required this.devices,
+    required this.buses,
+    this.sources = const [],
+  });
+  final String model;
+  final List<String> devices;
+
+  /// `i2c0` → board reference designators.
+  final Map<String, String> buses;
+  final List<String> sources;
 }
 
 /// One code of the per-model SMC sensor-mask table.
@@ -113,6 +131,7 @@ class KnowledgeBase {
     this.sources = const {},
     this.parts = const {},
     this.smcMasks = const [],
+    this.i2cBuses = const [],
   });
 
   static const assetPath = 'assets/diagnostics/knowledge_base.json';
@@ -133,6 +152,16 @@ class KnowledgeBase {
   /// Part key → language code → name.
   final Map<String, Map<String, String>> parts;
   final List<SmcModel> smcMasks;
+  final List<I2cModel> i2cBuses;
+
+  /// Every model family of [product] that lists [bus] (`i2c0`…), with the
+  /// chips on it.
+  List<(I2cModel, String)> i2cChips(String? product, String bus) => [
+    for (final m in i2cBuses)
+      if (DiagnosticRule.deviceIn(m.devices, product) &&
+          m.buses[bus.toLowerCase()] != null)
+        (m, m.buses[bus.toLowerCase()]!),
+  ];
 
   String partName(String key, AppLang lang) =>
       parts[key]?[lang.name] ?? parts[key]?['en'] ?? key;
@@ -287,11 +316,9 @@ class KnowledgeBase {
         final v = e.value;
         if (e.key.startsWith('_') || v is! Map<String, dynamic>) continue;
         final url = v['url']?.toString();
-        if (url == null) continue;
-        sources[e.key] = KbSource(
-          title: v['title']?.toString() ?? url,
-          url: url,
-        );
+        final title = v['title']?.toString() ?? url;
+        if (title == null) continue;
+        sources[e.key] = KbSource(title: title, url: url);
       }
     }
     final parts = <String, Map<String, String>>{};
@@ -349,6 +376,31 @@ class KnowledgeBase {
         );
       }
     }
+    final i2cBuses = <I2cModel>[];
+    final rawI2c = decoded['i2cBuses'];
+    if (rawI2c is List) {
+      for (var i = 0; i < rawI2c.length; i++) {
+        final m = rawI2c[i];
+        final devices = m is Map ? m['devices'] : null;
+        final buses = m is Map ? m['buses'] : null;
+        if (devices is! List || buses is! Map) {
+          warnings.add('I2C bus table #$i skipped: needs devices and buses');
+          continue;
+        }
+        final src = m['sources'];
+        i2cBuses.add(
+          I2cModel(
+            model: m['model']?.toString() ?? devices.join(', '),
+            devices: devices.map((e) => '$e').toList(),
+            buses: {
+              for (final b in buses.entries)
+                '${b.key}'.toLowerCase(): '${b.value}',
+            },
+            sources: src is List ? src.map((e) => '$e').toList() : const [],
+          ),
+        );
+      }
+    }
     return KnowledgeBase(
       rules: rules,
       version: decoded['version']?.toString(),
@@ -357,6 +409,7 @@ class KnowledgeBase {
       sources: sources,
       parts: parts,
       smcMasks: smcMasks,
+      i2cBuses: i2cBuses,
     );
   }
 }
