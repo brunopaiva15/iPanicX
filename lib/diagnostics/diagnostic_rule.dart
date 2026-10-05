@@ -36,6 +36,11 @@ class RuleText {
 ///  * `kextsAny`: one of these kexts appears in the backtrace;
 ///  * `sensorMask`: exact SMC sensor mask (hex `"0x140000"` or decimal);
 ///  * `missingSensorsAny`: one of these sensors is reported missing.
+///
+/// Options (not criteria):
+///  * `decodeSensorMask`: name the parts from the per-model SMC mask table;
+///  * `decodeMissingSensors`: name the parts carrying the missing sensors;
+///  * `sources`: keys of the top-level `sources` the rule is based on.
 class DiagnosticRule {
   const DiagnosticRule({
     required this.id,
@@ -59,6 +64,9 @@ class DiagnosticRule {
     this.recommendedActions = const [],
     this.note,
     this.translations = const {},
+    this.sources = const [],
+    this.decodeSensorMask = false,
+    this.decodeMissingSensors = false,
   });
 
   factory DiagnosticRule.fromJson(Map<String, dynamic> json) {
@@ -105,6 +113,9 @@ class DiagnosticRule {
       translations: {
         for (final e in translations.entries) e.key: _translation(e.value),
       },
+      sources: list('sources'),
+      decodeSensorMask: json['decodeSensorMask'] == true,
+      decodeMissingSensors: json['decodeMissingSensors'] == true,
     );
   }
 
@@ -173,6 +184,11 @@ class DiagnosticRule {
   /// Per-language overrides keyed by [AppLang.name] (`"fr"` in the JSON).
   final Map<String, RuleText> translations;
 
+  /// Keys of [KnowledgeBase.sources].
+  final List<String> sources;
+  final bool decodeSensorMask;
+  final bool decodeMissingSensors;
+
   bool get isHardware => category == 'hardware';
 
   /// A rule needs at least one positive criterion besides the device.
@@ -214,8 +230,11 @@ class DiagnosticRule {
   static String normalize(String value) =>
       value.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
 
-  bool matchesDevice(String? product) {
-    if (devices.isEmpty) return true;
+  bool matchesDevice(String? product) =>
+      devices.isEmpty || deviceIn(devices, product);
+
+  /// [product] is one of [devices] (`*` suffix allowed).
+  static bool deviceIn(List<String> devices, String? product) {
     if (product == null) return false;
     for (final d in devices) {
       if (d == '*') return true;

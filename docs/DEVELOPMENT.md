@@ -437,6 +437,14 @@ positifs) :
 | `sensorMask` | masque exact, hexa `"0x140000"` ou décimal |
 | `missingSensorsAny` | un capteur listé dans `Missing sensor(s)` |
 
+Options (pas des critères) :
+
+| Clé | Effet |
+|---|---|
+| `decodeSensorMask` | nomme les pièces avec la table `smcSensorMasks` du modèle |
+| `decodeMissingSensors` | nomme les pièces avec la table `sensors` |
+| `sources` | clés de `sources` (référence publique affichée avec le diagnostic) |
+
 Si plusieurs règles correspondent, la plus spécifique gagne (appareil, masque,
 nombre de termes…). L'écran de diagnostic affiche les preuves (*Reconnu sur* / *Matched on*).
 Sans correspondance : **Panic matériel inconnu** (*Unknown Hardware Panic*), avec panic string, codes,
@@ -448,12 +456,51 @@ Pour valider une règle sur des rapports réels :
 dart run tool/analyze_corpus.dart ~/Desktop/mes-panics
 ```
 
-> La base V0 contient **une règle précise d'exemple** (iPhone15,2 + SMC BSC
-> failure + masque `0x140000` → Charging Port Flex / Power Button Flex) et des
-> signatures génériques à confiance faible ou moyenne (SMC, capteur thermique
-> manquant, watchdog, AOP, NAND, GPU/AGX, baseband, ECC, SEP, DART, fautes
-> mémoire noyau, redémarrage forcé). **Elle n'est pas exhaustive** et doit être
-> enrichie et validée avec des données de réparation réelles.
+### Table des masques SMC (`smcSensorMasks`)
+
+Pour chaque famille de modèles (`devices`), les codes du *sensor array* et la
+pièce (`parts`) qu'ils désignent, avec leurs sources :
+
+| Modèle | Codes |
+|---|---|
+| iPhone 13 (toute la gamme) | `0x800` connecteur de charge, `0x1000` capteurs avant, `0x4000` / `0x40000` batterie (sources divergentes, confiance moyenne) |
+| iPhone 13 mini | + `0x400` gyroscope (carte sandwich) |
+| iPhone 14 / 14 Plus | `0x100000` connecteur, `0x200000` capteurs avant, `0x400000` bobine sans fil, `0x500000` batterie (exact uniquement) |
+| iPhone 14 Pro / Pro Max | `0x40000` connecteur, `0x80000` capteurs avant, `0x100000` bouton d'alimentation, `0x20000` gyroscope, `0x41` batterie |
+| iPhone 15 / 15 Plus | `0x80000` connecteur, `0x100000` capteurs avant, `0x200000` bobine, `0xa1` batterie |
+| iPhone 15 Pro / Pro Max | `0x300000` connecteur, `0x100000` capteurs avant (iPad Rehab seul), `0x400000` bobine, `0xa1` batterie |
+| iPhone 16 Pro / Pro Max | `0x300000` (3145728) connecteur |
+
+Décodage (`KnowledgeBase.decodeSmcMask`) : un code exact gagne ; sinon le
+masque est décomposé bit à bit, codes les plus larges d'abord (`0x1800` sur
+iPhone 13 = connecteur + capteurs avant). Un code `exactOnly` chevauche
+d'autres bits (`0x500000` = `0x400000` + `0x100000`) : il ne sert qu'en
+correspondance exacte et l'autre lecture est signalée. Les bits non
+référencés sont affichés, jamais devinés. Confiance : haute si deux sources
+concordent, moyenne pour une source unique, un code ambigu ou des bits
+inconnus.
+
+Erreurs relevées dans les sources et tranchées par leurs propres exemples :
+iFixit écrit `0x10000` pour les capteurs avant de l'iPhone 13 (son exemple
+`0x1800` confirme `0x1000`) ; iPad Rehab écrit `0x10000` pour le bouton du
+14 Pro (son exemple `0x1C0000` confirme `0x100000`).
+
+### Sources
+
+- iFixit — [iPhone SMC Panic Assertion Failed](https://www.ifixit.com/Wiki/iPhone_SMC_Panic_Assertion_Failed)
+- iFixit — [iPhone Kernel Panics](https://www.ifixit.com/Wiki/iPhone_Kernel_Panics)
+- iPad Rehab — [Troubleshooting thermal sensor problems](https://ipadrehab.rossmanngroup.com/articles/49)
+
+Ces pages sont lues à la rédaction de la base, jamais par l'app (aucune
+requête réseau).
+
+> La base (v0.6.0, 21 règles) couvre : SMC BSC (table par modèle), capteur
+> thermique manquant (`TG0B`, `TG0V`, `TB0V`, `mic1`, `mic2`, `prs0`), jauge
+> batterie, watchdog, AOP (capteurs, NMI Power, canal audio Bosch),
+> AppleSocHot, NAND/ANS2, GPU/AGX, baseband, Wi-Fi, ECC, SEP, SEP ROM, I²C,
+> DART, fautes mémoire noyau, instruction noyau non définie, redémarrage
+> forcé. **Elle n'est pas exhaustive** et reste à valider avec des données
+> d'atelier.
 
 ---
 
@@ -467,7 +514,8 @@ flutter test
 - `test/diagnostics/` : parser (JSON valide, panicString manquant, sensor array
   décimal, sensor mask hexa, JSON partiellement invalide, texte legacy…),
   analyzer (iPhone15,2 + SMC BSC failure + 0x140000 → Charging Port Flex /
-  Power Button Flex, panic inconnu, moteur de règles), extraits de rapports
+  Power Button Flex, panic inconnu, moteur de règles), table des masques SMC
+  et signatures sourcées (`knowledge_sources_test.dart`), extraits de rapports
   réels (`test/fixtures/real/`, sources dans `SOURCES.md`) ;
 - `test/services/` : service libimobiledevice avec un faux `CommandRunner`
   (parsing, erreurs lockdown, timeouts, outils absents, copie `-k`, iPhone vu
@@ -506,8 +554,9 @@ Tu peux aussi déposer tes propres rapports dans `test/fixtures/real_full/`.
   (Détails techniques dans Santé).
 - Un seul appareil analysé à la fois (le premier si plusieurs).
 - Dépend des exécutables libimobiledevice (pas encore de FFI).
-- Table capteur → pièce limitée (`TG0B`, `TG0V`, `mic1`, `prs0`) et un seul
-  masque SMC précis (iPhone15,2 `0x140000`).
+- Table des masques SMC : iPhone 13 à 16 Pro seulement (rien de public pour
+  iPhone 16 / 16 Plus / 16e / 17) ; table capteur → pièce limitée à six
+  capteurs ; les capteurs requis varient selon le modèle et la version d'iOS.
 - Wi-Fi : iOS ne donne que l'adresse, pas l'état de la puce.
 - App non signée : Developer ID / notarisation (macOS) et Authenticode / MSIX
   (Windows) restent à configurer avec ton identité.

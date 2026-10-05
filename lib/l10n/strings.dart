@@ -823,6 +823,39 @@ class Strings {
       _('Sensor mask $mask', 'Masque capteur $mask');
   String evidenceMissing(String sensor) =>
       _('Missing sensor $sensor', 'Capteur manquant $sensor');
+  String evidenceMaskTable(String model) =>
+      _('SMC mask table: $model', 'Table des masques SMC : $model');
+
+  // SMC sensor mask decoding (per-model table).
+  String smcDecodedSummary(String parts) => _(
+    'The SMC lost contact with one or more sensors. On this model, the sensor mask points to: $parts.',
+    'Le SMC a perdu le contact avec un ou plusieurs capteurs. Sur ce modèle, le masque capteur désigne : $parts.',
+  );
+  String smcDecodedReason(String mask, String model, String codes) => _(
+    'The SMC reported a BSC (sensor bus) failure with sensor mask $mask. On $model: $codes.',
+    'Le SMC a signalé une panne BSC (bus des capteurs) avec le masque $mask. Sur $model : $codes.',
+  );
+  String smcUnknownBits(String bits) => _(
+    'Bits $bits are not referenced for this model: another part may also be involved.',
+    'Les bits $bits ne sont pas référencés pour ce modèle : une autre pièce peut aussi être en cause.',
+  );
+  String smcAlternative(String mask, String codes) => _(
+    '$mask can also be read as $codes: check those parts too.',
+    '$mask peut aussi se lire $codes : vérifiez aussi ces pièces.',
+  );
+  String smcNotMapped(String mask, String model) => _(
+    'Sensor mask $mask is not referenced for $model in the knowledge base.',
+    'Le masque capteur $mask n’est pas référencé pour $model dans la base.',
+  );
+  String missingSensorsReason(String list) => _(
+    'thermalmonitord stopped receiving data from: $list.',
+    'thermalmonitord ne reçoit plus de données de : $list.',
+  );
+  String missingSensorsUnknown(String names) => _(
+    'Not referenced in the knowledge base: $names.',
+    'Non référencés dans la base : $names.',
+  );
+  String get sources => _('Sources', 'Sources');
 
   // --------------------------------------------------------- text report
   String get reportTitle =>

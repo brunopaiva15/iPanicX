@@ -1,5 +1,5 @@
 {
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "iPanicX V0 knowledge base. A small set of EXAMPLE signatures used to demonstrate the matching engine. It is NOT exhaustive and must be extended and validated against real repair data. Generic rule categories were informed by the open-source projects listed in README (ideas only, no code or data copied).",
   "rules": [
     {
@@ -53,7 +53,12 @@
           "Testez avec des nappes en bon état pour confirmer la pièce défectueuse."
         ],
         "note": "Ce diagnostic repose sur une signature de panic connue et doit être confirmé par une inspection matérielle."
-      }
+      },
+      "sources": [
+        "ifixit_smc",
+        "ipadrehab"
+      ],
+      "decodeSensorMask": true
     },
     {
       "id": "smc_bsc_generic",
@@ -104,7 +109,12 @@
           "Relevez le masque capteur et les clés SMC indiqués dans les détails techniques.",
           "Inspectez les nappes et connecteurs associés à ces capteurs avant de restaurer l’appareil."
         ]
-      }
+      },
+      "sources": [
+        "ifixit_smc",
+        "ipadrehab"
+      ],
+      "decodeSensorMask": true
     },
     {
       "id": "thermalmonitord_missing_sensor",
@@ -146,7 +156,12 @@
           "Identifiez la pièce qui porte le ou les capteurs manquants pour ce modèle.",
           "Rebranchez ou remplacez cette pièce, puis vérifiez si le panic disparaît."
         ]
-      }
+      },
+      "sources": [
+        "ifixit_panics",
+        "ipadrehab"
+      ],
+      "decodeMissingSensors": true
     },
     {
       "id": "userspace_watchdog_generic",
@@ -180,7 +195,10 @@
           "Regardez quel processus est cité dans le message de panic.",
           "Si le panic se répète avec le même processus, mettez à jour ou restaurez iOS avant de remplacer du matériel."
         ]
-      }
+      },
+      "sources": [
+        "ifixit_panics"
+      ]
     },
     {
       "id": "aop_sensorhub_generic",
@@ -271,7 +289,10 @@
           "Sauvegardez l’appareil dès que possible.",
           "Si le panic persiste après une mise à jour ou une restauration d’iOS, suspectez le stockage."
         ]
-      }
+      },
+      "sources": [
+        "ifixit_panics"
+      ]
     },
     {
       "id": "gpu_agx_generic",
@@ -509,23 +530,381 @@
           "Comparez plusieurs panics : le même appelant à chaque fois suggère un problème logiciel ; des adresses aléatoires suggèrent le matériel."
         ]
       }
+    },
+    {
+      "id": "aop_nmi_power",
+      "panicContains": [
+        "AOP",
+        "NMI"
+      ],
+      "panicContainsAny": [
+        "POWER"
+      ],
+      "title": "AOP NMI Power Panic",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "medium",
+      "summary": "The Always-On Processor received a non-maskable power interrupt. Repairers usually trace it to the power button flex or the front camera.",
+      "suspectedComponents": [
+        "Power Button Flex",
+        "Front Camera Assembly"
+      ],
+      "possibleCauses": [
+        "Damaged or poorly seated flex cable",
+        "Liquid damage",
+        "Faulty replacement part"
+      ],
+      "recommendedActions": [
+        "Inspect and reseat the power button flex and the front camera connectors.",
+        "Test with known-good parts to find the faulty one."
+      ],
+      "sources": [
+        "ifixit_panics"
+      ],
+      "fr": {
+        "title": "Panic AOP NMI Power",
+        "summary": "Le processeur toujours actif (AOP) a reçu une interruption d’alimentation non masquable. Les réparateurs la relient en général à la nappe du bouton d’alimentation ou à la caméra avant.",
+        "suspectedComponents": [
+          "Nappe du bouton d’alimentation",
+          "Caméra avant"
+        ],
+        "possibleCauses": [
+          "Nappe endommagée ou mal branchée",
+          "Contact avec un liquide",
+          "Pièce de remplacement défectueuse"
+        ],
+        "recommendedActions": [
+          "Inspectez et rebranchez la nappe du bouton d’alimentation et les connecteurs de la caméra avant.",
+          "Testez avec des pièces en bon état pour trouver la pièce défectueuse."
+        ]
+      }
+    },
+    {
+      "id": "aop_bosch_audio",
+      "panicContains": [
+        "Bosch",
+        "control channel"
+      ],
+      "title": "AOP Audio Panic (Bosch control channel)",
+      "category": "hardware",
+      "severity": "medium",
+      "confidence": "medium",
+      "summary": "The Always-On Processor could not write to an audio-related chip. It often happens during audio playback, for example at full volume.",
+      "suspectedComponents": [
+        "Charge Port Flex (carries the speaker signals)"
+      ],
+      "possibleCauses": [
+        "Liquid damage on the bottom flex",
+        "Damaged flex cable or connector",
+        "Low-quality replacement charge port"
+      ],
+      "recommendedActions": [
+        "Check the charge port flex for liquid damage or corrosion.",
+        "Replace it with a high-quality or genuine part and test audio at full volume."
+      ],
+      "sources": [
+        "ifixit_panics"
+      ],
+      "fr": {
+        "title": "Panic audio AOP (canal Bosch)",
+        "summary": "Le processeur toujours actif (AOP) n’a pas pu écrire vers une puce liée à l’audio. Cela arrive souvent pendant la lecture audio, par exemple à volume maximal.",
+        "suspectedComponents": [
+          "Nappe du connecteur de charge (transporte les signaux du haut-parleur)"
+        ],
+        "possibleCauses": [
+          "Contact avec un liquide sur la nappe du bas",
+          "Nappe ou connecteur endommagé",
+          "Connecteur de charge de remplacement de mauvaise qualité"
+        ],
+        "recommendedActions": [
+          "Recherchez des traces de liquide ou de corrosion sur la nappe du connecteur de charge.",
+          "Remplacez-la par une pièce de qualité ou d’origine, puis testez l’audio à volume maximal."
+        ]
+      }
+    },
+    {
+      "id": "soc_hot",
+      "panicContainsAny": [
+        "AppleSocHot",
+        "Hot Hot Hot"
+      ],
+      "title": "SoC Overheat Signal (AppleSocHot)",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "medium",
+      "summary": "The power management chip signalled that the processor is too hot. It is almost always a logic board issue, not a removable part.",
+      "suspectedComponents": [
+        "Logic board (line between the power management chip and the CPU)"
+      ],
+      "possibleCauses": [
+        "A board component heating the CPU (often Wi-Fi or audio areas)",
+        "Fault on the SoC-hot line between PMU and CPU",
+        "Previous board repair in that area"
+      ],
+      "recommendedActions": [
+        "Check whether the device really overheats (thermal camera, touch).",
+        "Inspect areas that were previously repaired; Wi-Fi and audio components are frequent causes.",
+        "Board-level diagnosis is usually required."
+      ],
+      "sources": [
+        "ifixit_panics"
+      ],
+      "fr": {
+        "title": "Signal de surchauffe du SoC (AppleSocHot)",
+        "summary": "La puce de gestion d’alimentation a signalé que le processeur est trop chaud. C’est presque toujours un problème de carte mère, pas d’une pièce démontable.",
+        "suspectedComponents": [
+          "Carte mère (ligne entre la puce de gestion d’alimentation et le processeur)"
+        ],
+        "possibleCauses": [
+          "Un composant de la carte qui fait chauffer le processeur (souvent zone Wi-Fi ou audio)",
+          "Défaut sur la ligne SoC-hot entre PMU et processeur",
+          "Réparation antérieure de la carte dans cette zone"
+        ],
+        "recommendedActions": [
+          "Vérifiez si l’appareil chauffe réellement (caméra thermique, toucher).",
+          "Inspectez les zones déjà réparées ; les composants Wi-Fi et audio sont des causes fréquentes.",
+          "Un diagnostic au niveau de la carte est en général nécessaire."
+        ]
+      }
+    },
+    {
+      "id": "sep_rom",
+      "headlineContainsAny": [
+        "SEP"
+      ],
+      "panicContainsAny": [
+        "SEP ROM",
+        "SEPROM",
+        "SEP-ROM"
+      ],
+      "title": "SEP ROM Panic",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "medium",
+      "summary": "The Secure Enclave could not start from its ROM. The ROM chip or its link to the CPU is likely damaged.",
+      "suspectedComponents": [
+        "Logic board (SEP ROM and its link to the CPU)"
+      ],
+      "possibleCauses": [
+        "Damaged SEP ROM chip",
+        "Broken connection between the SEP ROM and the CPU",
+        "Drop or liquid damage to the logic board"
+      ],
+      "recommendedActions": [
+        "Back up the data if the device still boots.",
+        "Board-level repair is required; the SEP ROM content is unique to the device and cannot be recreated."
+      ],
+      "sources": [
+        "ifixit_panics"
+      ],
+      "fr": {
+        "title": "Panic SEP ROM",
+        "summary": "La Secure Enclave n’a pas pu démarrer depuis sa ROM. La puce ROM ou sa liaison avec le processeur est probablement endommagée.",
+        "suspectedComponents": [
+          "Carte mère (ROM du SEP et sa liaison avec le processeur)"
+        ],
+        "possibleCauses": [
+          "Puce ROM du SEP endommagée",
+          "Liaison coupée entre la ROM du SEP et le processeur",
+          "Chute ou liquide sur la carte mère"
+        ],
+        "recommendedActions": [
+          "Sauvegardez les données si l’appareil démarre encore.",
+          "Une réparation au niveau de la carte est nécessaire ; le contenu de la ROM du SEP est propre à l’appareil et ne peut pas être recréé."
+        ]
+      }
+    },
+    {
+      "id": "i2c_bus_generic",
+      "headlineContainsAny": [
+        "i2c"
+      ],
+      "panicNotContains": [
+        "AOP PANIC",
+        "SMC BSC failure"
+      ],
+      "title": "I²C Bus Error",
+      "category": "hardware",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "A chip did not answer on an I²C bus. Which part sits on that bus depends on the model.",
+      "suspectedComponents": [
+        "Chip on the reported I²C bus (model-specific)"
+      ],
+      "possibleCauses": [
+        "Damaged flex or part on that bus (sensors, ambient light sensor…)",
+        "Liquid damage",
+        "Board-level fault on the bus lines"
+      ],
+      "recommendedActions": [
+        "Note the bus number, address and any part name (ALS, etc.) in the panic.",
+        "Check the schematic of this model to find which chip uses that bus and address."
+      ],
+      "sources": [
+        "ifixit_panics"
+      ],
+      "fr": {
+        "title": "Erreur de bus I²C",
+        "summary": "Une puce n’a pas répondu sur un bus I²C. La pièce reliée à ce bus dépend du modèle.",
+        "suspectedComponents": [
+          "Puce sur le bus I²C indiqué (selon le modèle)"
+        ],
+        "possibleCauses": [
+          "Nappe ou pièce endommagée sur ce bus (capteurs, capteur de luminosité…)",
+          "Contact avec un liquide",
+          "Défaut des lignes du bus sur la carte"
+        ],
+        "recommendedActions": [
+          "Relevez le numéro de bus, l’adresse et tout nom de pièce (ALS, etc.) dans le panic.",
+          "Consultez le schéma de ce modèle pour savoir quelle puce utilise ce bus et cette adresse."
+        ]
+      }
+    },
+    {
+      "id": "undefined_kernel_instruction",
+      "headlineContainsAny": [
+        "Undefined kernel instruction"
+      ],
+      "title": "Undefined Kernel Instruction",
+      "category": "software",
+      "severity": "medium",
+      "confidence": "medium",
+      "summary": "The kernel ran an invalid instruction. It is usually a software problem; if it persists after a restore, suspect RAM or NAND storage.",
+      "possibleCauses": [
+        "iOS or app bug",
+        "Corrupted system install",
+        "RAM or NAND storage fault (if it persists after a restore)"
+      ],
+      "recommendedActions": [
+        "Update iOS and apps.",
+        "If the panic continues, back up and restore the device.",
+        "If it still continues after a restore, suspect the RAM or NAND (logic board)."
+      ],
+      "sources": [
+        "ifixit_panics"
+      ],
+      "fr": {
+        "title": "Instruction noyau non définie",
+        "summary": "Le noyau a exécuté une instruction invalide. C’est en général un problème logiciel ; s’il persiste après une restauration, suspectez la RAM ou le stockage NAND.",
+        "possibleCauses": [
+          "Bug d’iOS ou d’une app",
+          "Installation du système corrompue",
+          "Défaut de RAM ou de stockage NAND (s’il persiste après une restauration)"
+        ],
+        "recommendedActions": [
+          "Mettez à jour iOS et les apps.",
+          "Si le panic continue, sauvegardez puis restaurez l’appareil.",
+          "S’il continue encore après une restauration, suspectez la RAM ou la NAND (carte mère)."
+        ]
+      }
+    },
+    {
+      "id": "battery_gas_gauge",
+      "panicContains": [
+        "gas gauge"
+      ],
+      "title": "Battery Gas Gauge Not Responding",
+      "category": "hardware",
+      "severity": "high",
+      "confidence": "medium",
+      "summary": "The system could not read the battery’s gas gauge (charge and temperature data) and restarted the device.",
+      "suspectedComponents": [
+        "Battery",
+        "Battery connector",
+        "Charging chip passing battery data (logic board)"
+      ],
+      "possibleCauses": [
+        "Non-genuine or damaged battery",
+        "Damaged battery connector or pins near it",
+        "Damaged charging chip (for example after a faulty charger)"
+      ],
+      "recommendedActions": [
+        "Test with a known-good genuine battery.",
+        "Inspect the battery connector and nearby components for damage.",
+        "If a known-good battery does not help, check the battery data lines on the board."
+      ],
+      "sources": [
+        "ipadrehab"
+      ],
+      "fr": {
+        "title": "Jauge de batterie muette",
+        "summary": "Le système n’a pas pu lire la jauge de la batterie (données de charge et de température) et a redémarré l’appareil.",
+        "suspectedComponents": [
+          "Batterie",
+          "Connecteur de batterie",
+          "Puce de charge qui transmet les données batterie (carte mère)"
+        ],
+        "possibleCauses": [
+          "Batterie non d’origine ou endommagée",
+          "Connecteur de batterie ou composants voisins endommagés",
+          "Puce de charge endommagée (par exemple après un chargeur défectueux)"
+        ],
+        "recommendedActions": [
+          "Testez avec une batterie d’origine en bon état.",
+          "Inspectez le connecteur de batterie et les composants voisins.",
+          "Si une batterie en bon état n’aide pas, vérifiez les lignes de données batterie sur la carte."
+        ]
+      }
+    },
+    {
+      "id": "wlan_generic",
+      "headlineContainsAny": [
+        "AppleBCMWLAN",
+        "WLAN"
+      ],
+      "title": "Wi-Fi Module Panic",
+      "category": "hardware",
+      "severity": "medium",
+      "confidence": "low",
+      "summary": "The panic was raised by the Wi-Fi driver. It can be a software bug or a fault of the Wi-Fi / Bluetooth module.",
+      "suspectedComponents": [
+        "Wi-Fi / Bluetooth module (logic board)"
+      ],
+      "possibleCauses": [
+        "iOS Wi-Fi driver bug",
+        "Wi-Fi / Bluetooth module fault",
+        "Antenna or board damage"
+      ],
+      "recommendedActions": [
+        "Update iOS and check whether the panic repeats.",
+        "If Wi-Fi is greyed out or the panic repeats, suspect the Wi-Fi / Bluetooth module."
+      ],
+      "sources": [
+        "ifixit_panics"
+      ],
+      "fr": {
+        "title": "Panic du module Wi-Fi",
+        "summary": "Le panic vient du pilote Wi-Fi. Il peut s’agir d’un bug logiciel ou d’un défaut du module Wi-Fi / Bluetooth.",
+        "suspectedComponents": [
+          "Module Wi-Fi / Bluetooth (carte mère)"
+        ],
+        "possibleCauses": [
+          "Bug du pilote Wi-Fi d’iOS",
+          "Défaut du module Wi-Fi / Bluetooth",
+          "Antenne ou carte endommagée"
+        ],
+        "recommendedActions": [
+          "Mettez iOS à jour et regardez si le panic se répète.",
+          "Si le Wi-Fi est grisé ou si le panic se répète, suspectez le module Wi-Fi / Bluetooth."
+        ]
+      }
     }
   ],
   "matching": "Text terms are matched case-insensitively against panicString + panicked process, whitespace collapsed. See lib/diagnostics/diagnostic_rule.dart.",
   "localization": "Each rule may carry an \"fr\" object overriding title, summary, technicalReason, suspectedComponents, possibleCauses, recommendedActions and note. Missing fields fall back to English.",
   "sensors": {
-    "_comment": "Missing-sensor names (thermalmonitord panics) to the part that usually carries them. Community repair knowledge, valid for most iPhone 11–15 models; always confirm by inspection.",
+    "_comment": "Missing-sensor names (thermalmonitord panics) to the part that usually carries them. Sources: iFixit (iPhone Kernel Panics), iPad Rehab. Required sensors vary by model and iOS version; always confirm by inspection.",
     "TG0B": {
       "component": "Battery (temperature sensor / gas gauge)",
       "fr": "Batterie (capteur de température / jauge)",
-      "note": "Often a non-genuine or damaged battery, or its connector.",
-      "noteFr": "Souvent une batterie non d’origine ou endommagée, ou son connecteur."
+      "note": "Often a non-genuine or damaged battery, or its connector. On iPhone 11 Pro / Pro Max, also check the charge port flex.",
+      "noteFr": "Souvent une batterie non d’origine ou endommagée, ou son connecteur. Sur iPhone 11 Pro / Pro Max, vérifiez aussi la nappe du connecteur de charge."
     },
     "TG0V": {
       "component": "Battery (gas gauge)",
       "fr": "Batterie (jauge)",
-      "note": "Often a non-genuine or damaged battery, or its connector.",
-      "noteFr": "Souvent une batterie non d’origine ou endommagée, ou son connecteur."
+      "note": "Often a non-genuine or damaged battery, or its connector. On iPhone 11 Pro / Pro Max, also check the charge port flex.",
+      "noteFr": "Souvent une batterie non d’origine ou endommagée, ou son connecteur. Sur iPhone 11 Pro / Pro Max, vérifiez aussi la nappe du connecteur de charge."
     },
     "mic1": {
       "component": "Charging Port Flex (bottom microphone)",
@@ -538,6 +917,323 @@
       "fr": "Nappe du connecteur de charge (baromètre)",
       "note": "The pressure sensor sits on the charging port flex on several models.",
       "noteFr": "Le capteur de pression est sur la nappe du connecteur de charge sur plusieurs modèles."
+    },
+    "TB0V": {
+      "component": "Battery (gas gauge)",
+      "fr": "Batterie (jauge)",
+      "note": "Battery data line: battery, its connector, or the charging chip passing the data to the CPU.",
+      "noteFr": "Ligne de données de la batterie : batterie, son connecteur, ou la puce de charge qui transmet ces données au processeur."
+    },
+    "mic2": {
+      "component": "Power Button Flex / Camera Flash Flex (rear microphone)",
+      "fr": "Nappe du bouton d’alimentation / nappe du flash (micro arrière)",
+      "note": "The rear microphone sits on the power button or flash flex depending on the model.",
+      "noteFr": "Le micro arrière est sur la nappe du bouton d’alimentation ou du flash selon le modèle."
     }
-  }
+  },
+  "sources": {
+    "_comment": "Public references each rule, mask and sensor cites. Read at build time only; iPanicX never fetches them.",
+    "ifixit_smc": {
+      "title": "iFixit — iPhone SMC Panic Assertion Failed",
+      "url": "https://www.ifixit.com/Wiki/iPhone_SMC_Panic_Assertion_Failed"
+    },
+    "ifixit_panics": {
+      "title": "iFixit — iPhone Kernel Panics",
+      "url": "https://www.ifixit.com/Wiki/iPhone_Kernel_Panics"
+    },
+    "ipadrehab": {
+      "title": "iPad Rehab — Troubleshooting thermal sensor problems",
+      "url": "https://ipadrehab.rossmanngroup.com/articles/49"
+    }
+  },
+  "parts": {
+    "_comment": "Part names used by smcSensorMasks.",
+    "chargePort": {
+      "en": "Charging Port Flex",
+      "fr": "Nappe du connecteur de charge"
+    },
+    "frontSensor": {
+      "en": "Front Sensor (Proximity) Flex",
+      "fr": "Nappe des capteurs avant (proximité)"
+    },
+    "battery": {
+      "en": "Battery (data / gas gauge)",
+      "fr": "Batterie (données / jauge)"
+    },
+    "gyro": {
+      "en": "Gyroscope (sandwich board)",
+      "fr": "Gyroscope (carte sandwich)"
+    },
+    "coil": {
+      "en": "Wireless Charging Coil",
+      "fr": "Bobine de recharge sans fil"
+    },
+    "powerFlex": {
+      "en": "Power Button Flex",
+      "fr": "Nappe du bouton d’alimentation"
+    }
+  },
+  "smcSensorMasks": [
+    {
+      "_comment": "A mask can combine several codes (0x1800 = 0x800 + 0x1000). exactOnly codes overlap other bits and only count as an exact match. Codes from a single source are medium confidence.",
+      "model": "iPhone 13 / 13 mini / 13 Pro / 13 Pro Max",
+      "devices": [
+        "iPhone14,2",
+        "iPhone14,3",
+        "iPhone14,4",
+        "iPhone14,5"
+      ],
+      "codes": [
+        {
+          "mask": "0x800",
+          "part": "chargePort",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0x1000",
+          "part": "frontSensor",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ],
+          "note": "iFixit’s table prints 0x10000, but its own 0x1800 example (charge port + front sensor) confirms 0x1000.",
+          "noteFr": "Le tableau d’iFixit indique 0x10000, mais son propre exemple 0x1800 (connecteur + capteurs avant) confirme 0x1000."
+        },
+        {
+          "mask": "0x4000",
+          "part": "battery",
+          "sources": [
+            "ipadrehab"
+          ],
+          "confidence": "medium",
+          "note": "Sources disagree on the iPhone 13 battery code (0x4000 or 0x40000).",
+          "noteFr": "Les sources divergent sur le code batterie de l’iPhone 13 (0x4000 ou 0x40000)."
+        },
+        {
+          "mask": "0x40000",
+          "part": "battery",
+          "sources": [
+            "ifixit_smc"
+          ],
+          "confidence": "medium",
+          "note": "Sources disagree on the iPhone 13 battery code (0x4000 or 0x40000).",
+          "noteFr": "Les sources divergent sur le code batterie de l’iPhone 13 (0x4000 ou 0x40000)."
+        }
+      ]
+    },
+    {
+      "model": "iPhone 13 mini",
+      "devices": [
+        "iPhone14,4"
+      ],
+      "codes": [
+        {
+          "mask": "0x400",
+          "part": "gyro",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "iPhone 14 / 14 Plus",
+      "devices": [
+        "iPhone14,7",
+        "iPhone14,8"
+      ],
+      "codes": [
+        {
+          "mask": "0x100000",
+          "part": "chargePort",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0x200000",
+          "part": "frontSensor",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0x400000",
+          "part": "coil",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0x500000",
+          "part": "battery",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ],
+          "exactOnly": true
+        }
+      ]
+    },
+    {
+      "model": "iPhone 14 Pro / 14 Pro Max",
+      "devices": [
+        "iPhone15,2",
+        "iPhone15,3"
+      ],
+      "codes": [
+        {
+          "mask": "0x40000",
+          "part": "chargePort",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0x80000",
+          "part": "frontSensor",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0x100000",
+          "part": "powerFlex",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ],
+          "note": "iPad Rehab lists 0x10000, but its own 0x1C0000 example (charge port + power button + proximity) confirms 0x100000.",
+          "noteFr": "iPad Rehab indique 0x10000, mais son propre exemple 0x1C0000 (connecteur + bouton + proximité) confirme 0x100000."
+        },
+        {
+          "mask": "0x20000",
+          "part": "gyro",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0x41",
+          "part": "battery",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ],
+          "exactOnly": true
+        }
+      ]
+    },
+    {
+      "model": "iPhone 15 / 15 Plus",
+      "devices": [
+        "iPhone15,4",
+        "iPhone15,5"
+      ],
+      "codes": [
+        {
+          "mask": "0x80000",
+          "part": "chargePort",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0x100000",
+          "part": "frontSensor",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0x200000",
+          "part": "coil",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0xa1",
+          "part": "battery",
+          "sources": [
+            "ifixit_smc"
+          ],
+          "confidence": "medium",
+          "exactOnly": true
+        }
+      ]
+    },
+    {
+      "model": "iPhone 15 Pro / 15 Pro Max",
+      "devices": [
+        "iPhone16,1",
+        "iPhone16,2"
+      ],
+      "codes": [
+        {
+          "mask": "0x300000",
+          "part": "chargePort",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0x100000",
+          "part": "frontSensor",
+          "sources": [
+            "ipadrehab"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "mask": "0x400000",
+          "part": "coil",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        },
+        {
+          "mask": "0xa1",
+          "part": "battery",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ],
+          "exactOnly": true
+        }
+      ]
+    },
+    {
+      "model": "iPhone 16 Pro / 16 Pro Max",
+      "devices": [
+        "iPhone17,1",
+        "iPhone17,2"
+      ],
+      "codes": [
+        {
+          "mask": "0x300000",
+          "part": "chargePort",
+          "sources": [
+            "ifixit_smc",
+            "ipadrehab"
+          ]
+        }
+      ]
+    }
+  ]
 }

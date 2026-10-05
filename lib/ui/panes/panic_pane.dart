@@ -107,6 +107,10 @@ class PanicPane extends StatelessWidget {
         Sec(t.technicalDetails),
         Group(
           children: [
+            if (r.isKnownSignature &&
+                r.technicalReason != null &&
+                r.technicalReason != p.headline)
+              CapItem(r.technicalReason!),
             Item(
               label: t.device,
               value: p.product ?? device?.productType,
@@ -173,6 +177,12 @@ class PanicPane extends StatelessWidget {
               Item(
                 label: t.matchedOn,
                 value: r.evidence.join(' · '),
+                wrapValue: true,
+              ),
+            if (r.sources.isNotEmpty)
+              Item(
+                label: t.sources,
+                value: r.sources.join('\n'),
                 wrapValue: true,
               ),
             if (r.rawCodes.isNotEmpty)

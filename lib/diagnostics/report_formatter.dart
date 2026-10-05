@@ -21,6 +21,13 @@ class ReportFormatter {
       ..writeln('${t.confidence} : ${r.confidence.label}'.colon(t))
       ..writeln()
       ..writeln(r.summary);
+    if (r.isKnownSignature &&
+        r.technicalReason != null &&
+        r.technicalReason != p.headline) {
+      b
+        ..writeln()
+        ..writeln(r.technicalReason);
+    }
     if (r.disclaimer != null) {
       b
         ..writeln()
@@ -40,6 +47,7 @@ class ReportFormatter {
     list('${t.suspectedComponents}:'.colon(t), r.suspectedComponents);
     list('${t.possibleCauses}:'.colon(t), r.possibleCauses);
     list('${t.recommendedActions}:'.colon(t), r.recommendedActions);
+    list('${t.sources}:'.colon(t), r.sources);
 
     b
       ..writeln()

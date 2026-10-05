@@ -55,6 +55,7 @@ class DiagnosticResult {
     this.matchedRuleId,
     this.isHardwareRelated = false,
     this.disclaimer,
+    this.sources = const [],
   });
 
   final String title;
@@ -76,6 +77,9 @@ class DiagnosticResult {
   final String? matchedRuleId;
   final bool isHardwareRelated;
   final String? disclaimer;
+
+  /// Public references the diagnosis is based on ("Title — URL").
+  final List<String> sources;
 
   bool get isKnownSignature => matchedRuleId != null;
 }

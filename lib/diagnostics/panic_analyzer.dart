@@ -40,25 +40,93 @@ class PanicAnalyzer {
     List<String> evidence,
   ) {
     final t = rule.textFor(lang);
-    final technical = t.technicalReason ?? _defaultTechnicalReason(report);
+    var summary = t.summary ?? _s.knownSignatureSummary;
+    var technical = t.technicalReason ?? _defaultTechnicalReason(report);
+    var components = t.suspectedComponents;
+    var confidence = rule.confidence;
+    final sourceKeys = [...rule.sources];
+
+    if (rule.decodeSensorMask && report.sensorMask != null) {
+      final mask = PanicReport.formatHex(report.sensorMask!);
+      final d = knowledgeBase.decodeSmcMask(report.product, report.sensorMask);
+      if (d != null && d.isMapped) {
+        components = _partNames(d.hits);
+        summary = _s.smcDecodedSummary(components.join(', '));
+        technical = [
+          _s.smcDecodedReason(mask, d.model, _codeList(d.hits)),
+          if (d.unknownBits != 0)
+            _s.smcUnknownBits(PanicReport.formatHex(d.unknownBits)),
+          if (d.alternative.isNotEmpty)
+            _s.smcAlternative(mask, _codeList(d.alternative)),
+          ...{
+            for (final c in [...d.hits, ...d.alternative]) ?c.noteIn(lang),
+          },
+        ].join('\n');
+        confidence = d.confidence;
+        evidence = [...evidence, _s.evidenceMaskTable(d.model)];
+        sourceKeys.addAll(d.sourceKeys);
+      } else if (d != null) {
+        technical = [?technical, _s.smcNotMapped(mask, d.model)].join('\n');
+      }
+    }
+
+    if (rule.decodeMissingSensors && report.missingSensors.isNotEmpty) {
+      final known = <String, SensorInfo>{
+        for (final name in report.missingSensors)
+          if (knowledgeBase.sensor(name) != null)
+            name: knowledgeBase.sensor(name)!,
+      };
+      final unknown = report.missingSensors
+          .where((n) => !known.containsKey(n))
+          .toList();
+      if (known.isNotEmpty) {
+        components = {
+          for (final i in known.values) i.componentIn(lang),
+        }.toList();
+        technical = [
+          _s.missingSensorsReason(
+            known.entries
+                .map((e) => '${e.key} → ${e.value.componentIn(lang)}')
+                .join(', '),
+          ),
+          if (unknown.isNotEmpty) _s.missingSensorsUnknown(unknown.join(', ')),
+          ...{for (final i in known.values) ?i.noteIn(lang)},
+        ].join('\n');
+        if (unknown.isEmpty) confidence = Confidence.high;
+      }
+    }
+
     return DiagnosticResult(
       title: t.title,
       severity: rule.severity,
-      summary: t.summary ?? _s.knownSignatureSummary,
+      summary: summary,
       technicalReason: technical,
-      suspectedComponents: t.suspectedComponents,
+      suspectedComponents: components,
       possibleCauses: t.possibleCauses,
       recommendedActions: t.recommendedActions.isNotEmpty
           ? t.recommendedActions
           : [_s.defaultAction],
-      confidence: rule.confidence,
+      confidence: confidence,
       rawCodes: codes,
       evidence: evidence,
       matchedRuleId: rule.id,
       isHardwareRelated: rule.isHardware,
       disclaimer: t.note ?? _s.knownSignatureDisclaimer,
+      sources: [for (final src in knowledgeBase.sourcesFor(sourceKeys)) '$src'],
     );
   }
+
+  /// Part names in [lang], each once, in table order.
+  List<String> _partNames(List<SmcCode> codes) =>
+      {for (final c in codes) knowledgeBase.partName(c.part, lang)}.toList();
+
+  /// "0x40000 → Charge Port Flex, 0x100000 → Power Button Flex".
+  String _codeList(List<SmcCode> codes) => codes
+      .map(
+        (c) =>
+            '${PanicReport.formatHex(c.mask)} → ${knowledgeBase.partName(c.part, lang)}',
+      )
+      .join(', ');
 
   DiagnosticResult _notAPanic(PanicReport report, List<String> codes) =>
       DiagnosticResult(

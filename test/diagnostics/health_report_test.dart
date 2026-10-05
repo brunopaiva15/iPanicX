@@ -92,7 +92,8 @@ void main() {
         .where((p) => p.report.missingSensors.isNotEmpty)
         .take(1)
         .toList();
-    expect(Correlator(kb).correlate(tg).single.confidence, Confidence.medium);
+    // TG0B is referenced: the analyzer itself rates it high, not the count.
+    expect(Correlator(kb).correlate(tg).single.confidence, Confidence.high);
   });
 
   test('health checklist from scan + device facts (English)', () {
