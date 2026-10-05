@@ -23,7 +23,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${ROOT}/windows/libimobiledevice"
-TOOLS=(idevice_id ideviceinfo idevicecrashreport idevicepair)
+TOOLS=(idevice_id ideviceinfo idevicecrashreport idevicepair idevicediagnostics idevicesyslog)
 PREFIX="${MINGW_PREFIX:-/ucrt64}"
 
 rm -rf "${OUT:?}"

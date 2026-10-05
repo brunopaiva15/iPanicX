@@ -1,7 +1,8 @@
 # libimobiledevice for the Windows build of iPanicX.
 #
-# iPanicX needs idevice_id.exe, ideviceinfo.exe, idevicecrashreport.exe and
-# idevicepair.exe next to iPanicX.exe (in "libimobiledevice\", where
+# iPanicX needs idevice_id.exe, ideviceinfo.exe, idevicecrashreport.exe,
+# idevicepair.exe, idevicediagnostics.exe and idevicesyslog.exe next to
+# iPanicX.exe (in "libimobiledevice\", where
 # lib/services/tool_locator.dart looks first).
 #
 # Source, in this order:
@@ -29,6 +30,7 @@ set(IPANICX_LIBIMOBILEDEVICE_PACKAGES
 )
 set(IPANICX_LIBIMOBILEDEVICE_FILES
   idevice_id.exe ideviceinfo.exe idevicecrashreport.exe idevicepair.exe
+  idevicediagnostics.exe idevicesyslog.exe
   libimobiledevice-1.0.dll libimobiledevice-glue-1.0.dll libplist-2.0.dll
   libusbmuxd-2.0.dll libssl-3-x64.dll libcrypto-3-x64.dll
 )
@@ -53,7 +55,8 @@ function(ipanicx_prepare_libimobiledevice source_dir binary_dir out_var)
 
   set(root "${binary_dir}/libimobiledevice")
   set(out "${root}/bin")
-  string(SHA256 stamp "${IPANICX_LIBIMOBILEDEVICE_PACKAGES}")
+  string(SHA256 stamp
+    "${IPANICX_LIBIMOBILEDEVICE_PACKAGES}${IPANICX_LIBIMOBILEDEVICE_FILES}")
   if(EXISTS "${out}/.stamp-${stamp}")
     set(${out_var} "${out}" PARENT_SCOPE)
     return()

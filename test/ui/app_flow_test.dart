@@ -67,7 +67,7 @@ void main() {
 
     expect(controller.scanError, isNull);
     expect(find.text('Kernel Panics'), findsOneWidget);
-    expect(find.text('14'), findsOneWidget);
+    expect(find.text('17'), findsOneWidget);
     expect(find.text('Device Health'), findsOneWidget);
     expect(find.text('Hardware issue likely'), findsOneWidget);
     expect(find.textContaining('SMC Sensor Failure  (12×)'), findsOneWidget);

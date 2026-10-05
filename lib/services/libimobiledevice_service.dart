@@ -3,10 +3,12 @@ import 'dart:io';
 
 import '../app/host_platform.dart';
 import '../l10n/strings.dart';
+import '../models/device_facts.dart';
 import '../models/device_status.dart';
 import '../models/diagnostic_file.dart';
 import '../models/iphone_device.dart';
 import 'command_runner.dart';
+import 'device_facts_parser.dart';
 import 'iphone_service.dart';
 import 'tool_locator.dart';
 import 'usb_probe.dart';
@@ -458,11 +460,100 @@ class LibimobiledeviceService implements IPhoneService {
   }
 
   // ---------------------------------------------------------------------------
+  // Device facts and live log
+
+  @override
+  Future<DeviceFacts> getDeviceFacts() async {
+    final udid = _status.isConnected ? _status.udid : null;
+    final info = _locator.find('ideviceinfo');
+    if (udid == null || info == null) return DeviceFacts.empty;
+    final notes = <String>[];
+
+    Future<String?> out(String tool, List<String> args, String label) async {
+      try {
+        final r = await _runner.run(tool, args, timeout: _infoTimeout);
+        if (r.ok && r.stdout.trim().isNotEmpty) return r.stdout;
+        notes.add(
+          '$label: ${r.combined.isEmpty ? 'exit ${r.exitCode}' : r.combined}',
+        );
+      } catch (e) {
+        notes.add('$label: $e');
+      }
+      return null;
+    }
+
+    Map<String, String> kv(String? s) => s == null ? {} : parseDeviceInfo(s);
+
+    final general = kv(await out(info, ['-u', udid], 'ideviceinfo'));
+    final batteryDomain = kv(
+      await out(info, [
+        '-u',
+        udid,
+        '-q',
+        'com.apple.mobile.battery',
+      ], 'battery domain'),
+    );
+    final disk = kv(
+      await out(info, ['-u', udid, '-q', 'com.apple.disk_usage'], 'disk_usage'),
+    );
+    final amfi = kv(
+      await out(info, [
+        '-u',
+        udid,
+        '-q',
+        'com.apple.security.mac.amfi',
+      ], 'amfi'),
+    );
+    final diag = _locator.find('idevicediagnostics');
+    String? ioreg;
+    if (diag == null) {
+      notes.add('idevicediagnostics: not found');
+    } else {
+      ioreg = await out(diag, [
+        '-u',
+        udid,
+        'ioregentry',
+        'AppleSmartBattery',
+      ], 'AppleSmartBattery');
+    }
+
+    return DeviceFacts(
+      battery: parseBattery(ioreg: ioreg, lockdown: batteryDomain),
+      storage: parseStorage(disk),
+      developerMode: parseDeveloperMode(amfi),
+      basebandVersion: general['BasebandVersion'],
+      wifiAddress: general['WiFiAddress'],
+      notes: notes,
+      readAt: DateTime.now(),
+    );
+  }
+
+  @override
+  Stream<String> syslog() {
+    final udid = _status.udid;
+    final tool = _locator.find('idevicesyslog');
+    if (udid == null || tool == null) {
+      return Stream.error(
+        IPhoneServiceException(
+          tool == null
+              ? IPhoneErrorKind.toolsUnavailable
+              : IPhoneErrorKind.noDevice,
+          tool == null
+              ? 'idevicesyslog could not be found.'
+              : 'Connect and unlock your iPhone first.',
+        ),
+      );
+    }
+    return _runner.stream(tool, ['-u', udid]).map(stripAnsi);
+  }
+
+  // ---------------------------------------------------------------------------
   // Crash reports
 
   @override
   Future<List<DiagnosticFile>> getCrashReports({
     CrashReportProgress? onProgress,
+    Future<void>? cancel,
   }) async {
     final status = _status;
     final udid = status.udid;
@@ -500,6 +591,7 @@ class LibimobiledeviceService implements IPhoneService {
               : target.path,
         ],
         timeout: _crashTimeout,
+        cancel: cancel,
         onStdoutLine: (line) {
           final m = RegExp(r'^(?:Copy|Move):\s*(.+)$').firstMatch(line.trim());
           if (m != null) {
@@ -507,6 +599,11 @@ class LibimobiledeviceService implements IPhoneService {
             onProgress?.call(copied, m.group(1)!.split('/').last);
           }
         },
+      );
+    } on CommandCancelledException {
+      throw const IPhoneServiceException(
+        IPhoneErrorKind.cancelled,
+        'The copy was stopped.',
       );
     } on CommandTimeoutException catch (e) {
       throw IPhoneServiceException(
@@ -678,4 +775,9 @@ String _messageFor(IPhoneErrorKind kind) => switch (kind) {
     'The iPhone refused to share its crash reports.',
   IPhoneErrorKind.communication =>
     'The iPhone is connected but did not respond correctly.',
+  IPhoneErrorKind.cancelled => 'The copy was stopped.',
 };
+
+/// Removes ANSI colour sequences (`idevicesyslog` colours its output).
+String stripAnsi(String line) =>
+    line.replaceAll(RegExp(r'\x1B\[[0-9;]*[A-Za-z]'), '');

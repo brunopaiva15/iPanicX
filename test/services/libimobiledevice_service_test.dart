@@ -43,10 +43,20 @@ class FakeRunner implements CommandRunner {
     List<String> arguments, {
     Duration timeout = const Duration(seconds: 15),
     void Function(String line)? onStdoutLine,
+    Future<void>? cancel,
   }) {
     final tool = executable.split('/').last;
     calls.add('$tool ${arguments.join(' ')}');
     return handler(tool, arguments, onStdoutLine);
+  }
+
+  /// Lines served by [stream] (e.g. a scripted `idevicesyslog`).
+  List<String> streamLines = const [];
+
+  @override
+  Stream<String> stream(String executable, List<String> arguments) {
+    calls.add('${executable.split('/').last} ${arguments.join(' ')}');
+    return Stream.fromIterable(streamLines);
   }
 }
 
@@ -85,6 +95,8 @@ void main() {
       'ideviceinfo',
       'idevicecrashreport',
       'idevicepair',
+      'idevicediagnostics',
+      'idevicesyslog',
     ]) {
       File('${tools.path}/$t').writeAsStringSync('');
     }
@@ -454,6 +466,117 @@ void main() {
       );
       await s.start();
       expect(s.currentStatus.state, DeviceConnectionState.toolsUnavailable);
+      s.dispose();
+    });
+  });
+
+  group('device facts and live log', () {
+    test('reads battery, storage, developer mode, baseband, Wi-Fi', () async {
+      final battery = File(
+        'test/fixtures/device/apple_smart_battery.plist',
+      ).readAsStringSync();
+      final runner = FakeRunner((tool, args, _) async {
+        if (tool == 'idevice_id') return const CommandResult(0, '$_udid\n', '');
+        if (tool == 'idevicediagnostics') {
+          return CommandResult(0, battery, '');
+        }
+        final q = args.contains('-q') ? args[args.indexOf('-q') + 1] : null;
+        return switch (q) {
+          'com.apple.disk_usage' => const CommandResult(
+            0,
+            'TotalDataCapacity: 119000000000\nTotalDataAvailable: 7140000000\n',
+            '',
+          ),
+          'com.apple.security.mac.amfi' => const CommandResult(
+            0,
+            'DeveloperModeStatus: false\n',
+            '',
+          ),
+          'com.apple.mobile.battery' => const CommandResult(
+            0,
+            'BatteryCurrentCapacity: 72\n',
+            '',
+          ),
+          _ => CommandResult(
+            0,
+            '$_info'
+                'BasebandVersion: 2.00.01\nWiFiAddress: a4:83:e7:12:34:56\n',
+            '',
+          ),
+        };
+      });
+      final s = service(runner);
+      await s.start();
+      final f = await s.getDeviceFacts();
+      expect(f.battery!.healthPercent, 76);
+      expect(f.battery!.cycleCount, 843);
+      expect(f.storage!.usedPercent, 94);
+      expect(f.developerMode, isFalse);
+      expect(f.basebandVersion, '2.00.01');
+      expect(f.wifiAddress, 'a4:83:e7:12:34:56');
+      expect(
+        runner.calls,
+        contains('idevicediagnostics -u $_udid ioregentry AppleSmartBattery'),
+      );
+      s.dispose();
+    });
+
+    test('missing values stay missing, with notes', () async {
+      final s = service(
+        FakeRunner((tool, args, _) async {
+          if (tool == 'idevice_id') {
+            return const CommandResult(0, '$_udid\n', '');
+          }
+          if (tool == 'ideviceinfo' && args.length == 2) {
+            return const CommandResult(0, _info, '');
+          }
+          return const CommandResult(255, '', 'ERROR: unsupported');
+        }),
+      );
+      await s.start();
+      final f = await s.getDeviceFacts();
+      expect(f.battery, isNull);
+      expect(f.storage, isNull);
+      expect(f.developerMode, isNull);
+      expect(f.notes, isNotEmpty);
+      s.dispose();
+    });
+
+    test('syslog strips colours', () async {
+      final runner = FakeRunner(
+        (tool, args, _) async => tool == 'idevice_id'
+            ? const CommandResult(0, '$_udid\n', '')
+            : const CommandResult(0, _info, ''),
+      )..streamLines = ['\x1B[0;32mkernel\x1B[0m: watchdog timeout'];
+      final s = service(runner);
+      await s.start();
+      expect(await s.syslog().toList(), ['kernel: watchdog timeout']);
+      s.dispose();
+    });
+
+    test('a cancelled copy is reported as cancelled', () async {
+      final s = service(
+        FakeRunner((tool, args, _) async {
+          if (tool == 'idevice_id') {
+            return const CommandResult(0, '$_udid\n', '');
+          }
+          if (tool == 'idevicecrashreport') {
+            throw const CommandCancelledException('idevicecrashreport');
+          }
+          return const CommandResult(0, _info, '');
+        }),
+      );
+      await s.start();
+      await expectLater(
+        s.getCrashReports(),
+        throwsA(
+          isA<IPhoneServiceException>().having(
+            (e) => e.kind,
+            'kind',
+            IPhoneErrorKind.cancelled,
+          ),
+        ),
+      );
       s.dispose();
     });
   });

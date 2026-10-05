@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../l10n/strings.dart';
+import '../models/device_facts.dart';
 import '../models/device_status.dart';
 import '../models/diagnostic_file.dart';
 import '../models/iphone_device.dart';
@@ -28,9 +29,21 @@ abstract class IPhoneService {
   /// Copies every crash/diagnostic report from the device into a local,
   /// app-owned folder (reports are kept on the iPhone) and returns them
   /// newest first.
+  ///
+  /// Completing [cancel] stops the copy and throws an
+  /// [IPhoneServiceException] of kind [IPhoneErrorKind.cancelled].
   Future<List<DiagnosticFile>> getCrashReports({
     CrashReportProgress? onProgress,
+    Future<void>? cancel,
   });
+
+  /// Battery, storage, Developer Mode, baseband and Wi-Fi details of the
+  /// connected device. Read-only; missing values stay null.
+  Future<DeviceFacts> getDeviceFacts();
+
+  /// Live device log (`idevicesyslog`), one line per event. Cancelling the
+  /// subscription stops it.
+  Stream<String> syslog();
 
   Future<String> readCrashReport(DiagnosticFile file);
 
@@ -59,7 +72,8 @@ enum IPhoneErrorKind {
   communication,
   crashReportsUnavailable,
   toolsUnavailable,
-  timeout;
+  timeout,
+  cancelled;
 
   String get title => tr.errorTitle(name);
 

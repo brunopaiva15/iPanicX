@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../models/device_facts.dart';
 import '../models/device_status.dart';
 import '../models/diagnostic_file.dart';
 import '../models/iphone_device.dart';
@@ -53,6 +54,7 @@ class MockIPhoneService implements IPhoneService {
   static const unknownSample = 'panic-full-2026-09-28-091502.ips';
   static const jetsamSample = 'JetsamEvent-2026-10-02-120144.ips';
   static const forceResetSample = 'forceReset-full-2026-08-08-012443.0002.ips';
+  static const thermalSample = 'panic-full-2026-10-01-083015.ips';
 
   static const device = IPhoneDevice(
     udid: '00008120-001A2B3C4D5E6F7A',
@@ -208,7 +210,10 @@ class MockIPhoneService implements IPhoneService {
   @override
   Future<List<DiagnosticFile>> getCrashReports({
     CrashReportProgress? onProgress,
+    Future<void>? cancel,
   }) async {
+    var cancelled = false;
+    cancel?.then((_) => cancelled = true);
     if (!_status.isConnected) {
       throw IPhoneServiceException(
         IPhoneErrorKind.noDevice,
@@ -233,6 +238,7 @@ class MockIPhoneService implements IPhoneService {
     final unknown = await _loader(unknownSample);
     final jetsam = await _loader(jetsamSample);
     final forceReset = await _loader(forceResetSample);
+    final thermal = await _loader(thermalSample);
 
     // 12 SMC panics + 2 unknown panics + misc files, spread over 3 weeks.
     final now = DateTime.now();
@@ -256,6 +262,26 @@ class MockIPhoneService implements IPhoneService {
         'panic-full',
         unknown,
         latest.subtract(const Duration(days: 17, hours: 2)),
+      ));
+      // Same missing sensor three times: the correlation case.
+      for (final days in const [4, 11, 16]) {
+        entries.add((
+          'panic-full',
+          thermal,
+          latest.subtract(Duration(days: days, hours: 3)),
+        ));
+      }
+    }
+    // App crashes over the last week (headers are enough for the counts).
+    const apps = ['Instagram', 'Instagram', 'Safari', 'Instagram', 'Maps'];
+    for (var i = 0; i < 9; i++) {
+      final app = apps[i % apps.length];
+      entries.add((
+        app,
+        '{"bug_type":"309","app_name":"$app","name":"$app",'
+            '"timestamp":"2026-10-04 17:42:33.00 +0200",'
+            '"os_version":"iPhone OS 26.0.1 (23A355)"}\n{}\n',
+        latest.subtract(Duration(hours: 17 * i + 3)),
       ));
     }
     entries.add((
@@ -286,6 +312,12 @@ class MockIPhoneService implements IPhoneService {
 
     var copied = 0;
     for (final (prefix, template, date) in entries) {
+      if (cancelled) {
+        throw const IPhoneServiceException(
+          IPhoneErrorKind.cancelled,
+          'The copy was stopped.',
+        );
+      }
       // Older reports go to Retired/ like on a real device.
       final retired = now.difference(date).inDays > 10;
       final name = '$prefix-${_fileStamp(date)}.ips';
@@ -303,6 +335,58 @@ class MockIPhoneService implements IPhoneService {
 
   @override
   Future<String> readCrashReport(DiagnosticFile file) => readReportFile(file);
+
+  /// iPhone 14 Pro with a worn battery and an almost full storage.
+  static const facts = DeviceFacts(
+    battery: BatteryInfo(
+      chargePercent: 72,
+      cycleCount: 843,
+      designCapacity: 3200,
+      fullChargeCapacity: 2491,
+      temperatureC: 31.4,
+      isCharging: false,
+    ),
+    storage: StorageInfo(totalBytes: 128000000000, availableBytes: 7300000000),
+    developerMode: false,
+    basebandVersion: '2.00.01',
+    wifiAddress: 'a4:83:e7:12:34:56',
+  );
+
+  @override
+  Future<DeviceFacts> getDeviceFacts() async {
+    await Future<void>.delayed(latency);
+    if (!_status.isConnected) return DeviceFacts.empty;
+    return DeviceFacts(
+      battery: facts.battery,
+      storage: facts.storage,
+      developerMode: facts.developerMode,
+      basebandVersion: facts.basebandVersion,
+      wifiAddress: facts.wifiAddress,
+      readAt: DateTime.now(),
+    );
+  }
+
+  static const _syslogSample = [
+    'kernel[0] <Notice>: AppleSMC: battery temperature nominal',
+    'SpringBoard[58] <Notice>: Application state changed',
+    'thermalmonitord[112] <Error>: Missing sensor(s): TG0B',
+    'kernel[0] <Notice>: memorystatus: memory pressure: critical',
+    'Instagram[2214] <Error>: Terminating app due to uncaught exception',
+    'locationd[88] <Notice>: Location services update',
+    'watchdogd[64] <Error>: userspace watchdog timeout: thermalmonitord',
+    'kernel[0] <Notice>: AppleUSBHostPort: Lightning accessory attached',
+  ];
+
+  @override
+  Stream<String> syslog() {
+    if (!_status.isConnected) return const Stream.empty();
+    var i = 0;
+    return Stream.periodic(const Duration(milliseconds: 700), (_) {
+      final now = DateTime.now();
+      final t = '${_two(now.hour)}:${_two(now.minute)}:${_two(now.second)}';
+      return 'Oct  5 $t iPhone ${_syslogSample[i++ % _syslogSample.length]}';
+    });
+  }
 
   @override
   void dispose() => _controller.close();

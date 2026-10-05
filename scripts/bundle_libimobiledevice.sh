@@ -5,7 +5,8 @@
 #   ./scripts/bundle_libimobiledevice.sh
 #
 # Result: macos/libimobiledevice/bin  (idevice_id, ideviceinfo,
-#                                      idevicecrashreport, idevicepair)
+#                                      idevicecrashreport, idevicepair,
+#                                      idevicediagnostics, idevicesyslog)
 #         macos/libimobiledevice/lib  (every non-system dylib they need)
 #
 # Install names are rewritten to @executable_path/../lib and @loader_path so
@@ -18,7 +19,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${ROOT}/macos/libimobiledevice"
-TOOLS=(idevice_id ideviceinfo idevicecrashreport idevicepair)
+TOOLS=(idevice_id ideviceinfo idevicecrashreport idevicepair idevicediagnostics idevicesyslog)
 BREW_PREFIX="$(brew --prefix 2>/dev/null || echo /opt/homebrew)"
 
 rm -rf "${OUT}"

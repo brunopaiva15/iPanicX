@@ -30,7 +30,7 @@ void main() {
     );
     final scan = await service.scan();
 
-    expect(scan.panics, hasLength(14));
+    expect(scan.panics, hasLength(17));
     expect(scan.countOf(DiagnosticFileType.jetsamEvent), 2);
     expect(scan.countOf(DiagnosticFileType.resetCounter), 1);
     expect(scan.forcedResets, hasLength(2));
@@ -53,7 +53,7 @@ void main() {
     }
 
     final h = scan.health;
-    expect(h.panicCount, 14);
+    expect(h.panicCount, 17);
     expect(h.mostCommonPanic, 'SMC Sensor Failure');
     expect(h.mostCommonCount, 12);
     expect(h.verdict, HealthVerdict.hardwareIssueLikely);

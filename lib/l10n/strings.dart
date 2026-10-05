@@ -300,6 +300,7 @@ class Strings {
       'Impossible de récupérer les rapports',
     ),
     'toolsUnavailable' => toolsUnavailable,
+    'cancelled' => _('Scan cancelled', 'Analyse annulée'),
     _ => _(
       'The iPhone did not respond in time',
       'L’iPhone n’a pas répondu à temps',
@@ -320,6 +321,10 @@ class Strings {
     'toolsUnavailable' => _(
       'The libimobiledevice tools are not installed.',
       'Les outils libimobiledevice ne sont pas installés.',
+    ),
+    'cancelled' => _(
+      'The copy was stopped. Nothing was changed on the iPhone.',
+      'La copie a été arrêtée. Rien n’a été modifié sur l’iPhone.',
     ),
     'timeout' => _(
       'Copying took too long. Keep the iPhone unlocked and try again.',
