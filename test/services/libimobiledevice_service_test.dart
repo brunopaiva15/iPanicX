@@ -305,13 +305,16 @@ void main() {
               return const CommandResult(0, _info, '');
             case 'idevicecrashreport':
               final dir = args.last;
-              File('$dir/panic-full-2026-10-04-174233.ips')
-                  .writeAsStringSync(loadSample(smcSample));
+              File(
+                '$dir/panic-full-2026-10-04-174233.ips',
+              ).writeAsStringSync(loadSample(smcSample));
               Directory('$dir/Retired').createSync();
-              File('$dir/Retired/panic-full-2026-09-28-091502.ips')
-                  .writeAsStringSync(loadSample(unknownSample));
-              File('$dir/JetsamEvent-2026-10-02-120144.ips')
-                  .writeAsStringSync('{}');
+              File(
+                '$dir/Retired/panic-full-2026-09-28-091502.ips',
+              ).writeAsStringSync(loadSample(unknownSample));
+              File(
+                '$dir/JetsamEvent-2026-10-02-120144.ips',
+              ).writeAsStringSync('{}');
               onLine?.call('Copy: panic-full-2026-10-04-174233.ips');
               onLine?.call('Copy: Retired/panic-full-2026-09-28-091502.ips');
               onLine?.call('Copy: JetsamEvent-2026-10-02-120144.ips');

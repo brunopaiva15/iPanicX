@@ -21,3 +21,8 @@ flutter:
   assets:
     - assets/diagnostics/
     - assets/samples/
+  fonts:
+    # Wordmark only. SIL Open Font License: assets/fonts/Orbitron-OFL.txt
+    - family: Orbitron
+      fonts:
+        - asset: assets/fonts/Orbitron-Variable.ttf

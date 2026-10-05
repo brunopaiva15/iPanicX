@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../app/theme.dart';
 import '../../models/diagnostic_result.dart';
 
-/// Small rounded pill (severity, confidence, connection status…).
+/// Pill badge: filled with the signal colour (severity) or a dark chip with a
+/// coloured dot (confidence, states).
 class StatusBadge extends StatelessWidget {
   const StatusBadge({
     super.key,
@@ -17,18 +18,12 @@ class StatusBadge extends StatelessWidget {
   factory StatusBadge.severity(BuildContext context, Severity s) => StatusBadge(
     label: s == Severity.unknown ? 'Unknown severity' : '${s.label} severity',
     color: AppColors.of(context).severity(s),
-    filled: s == Severity.high,
+    filled: s != Severity.unknown,
     uppercase: true,
   );
 
   factory StatusBadge.confidence(BuildContext context, Confidence c) =>
-      StatusBadge(
-        label: c.label,
-        color: AppColors.of(context).confidence(c),
-        icon: c == Confidence.none
-            ? Icons.help_outline
-            : Icons.verified_outlined,
-      );
+      StatusBadge(label: c.label, color: AppColors.of(context).confidence(c));
 
   final String label;
   final Color color;
@@ -38,27 +33,42 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = filled ? Colors.white : color;
+    final colors = AppColors.of(context);
+    final fg = filled ? colors.onSignal : colors.ink;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: filled ? color : color.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(20),
+        color: filled ? color : colors.raised,
+        borderRadius: BorderRadius.circular(999),
+        border: filled ? null : Border.all(color: colors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 13, color: fg),
-            const SizedBox(width: 4),
+          if (!filled) ...[
+            icon != null
+                ? Icon(icon, size: 12, color: color)
+                : Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+            const SizedBox(width: 6),
           ],
-          Text(
-            uppercase ? label.toUpperCase() : label,
-            style: TextStyle(
-              color: fg,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: uppercase ? 0.6 : 0,
+          Flexible(
+            child: Text(
+              uppercase ? label.toUpperCase() : label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: fg,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: uppercase ? 0.7 : 0,
+              ),
             ),
           ),
         ],
@@ -82,9 +92,15 @@ class StatusDot extends StatelessWidget {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 6),
+            ],
+          ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 7),
         Text(
           label,
           style: TextStyle(

@@ -462,8 +462,9 @@ Map<String, String> parseDeviceInfo(String stdout) {
 /// Maps libimobiledevice error output to an [IPhoneErrorKind].
 IPhoneErrorKind classifyToolError(String output) {
   final o = output.toLowerCase();
-  final codeMatch = RegExp(r'\((-\d+)\)|error code:? (-?\d+)|error (-\d+)')
-      .firstMatch(o);
+  final codeMatch = RegExp(
+    r'\((-\d+)\)|error code:? (-?\d+)|error (-\d+)',
+  ).firstMatch(o);
   final code = codeMatch == null
       ? null
       : int.tryParse(
@@ -506,7 +507,8 @@ IPhoneErrorKind classifyToolError(String output) {
 String _messageFor(IPhoneErrorKind kind) => switch (kind) {
   IPhoneErrorKind.trustRequired =>
     'Unlock your iPhone and tap “Trust” to allow this ${HostPlatform.computer} to read diagnostics.',
-  IPhoneErrorKind.pairingDenied => 'Pairing was declined on the iPhone. Unplug and reconnect it, then tap “Trust”.',
+  IPhoneErrorKind.pairingDenied =>
+    'Pairing was declined on the iPhone. Unplug and reconnect it, then tap “Trust”.',
   IPhoneErrorKind.deviceLocked =>
     'Unlock your iPhone with its passcode, then try again.',
   IPhoneErrorKind.timeout =>

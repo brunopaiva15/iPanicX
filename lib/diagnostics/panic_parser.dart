@@ -95,9 +95,9 @@ class PanicParser {
     }
 
     var product = str(['product', 'productType', 'modelCode']);
-    product ??= RegExp(r'\b(iPhone\d+,\d+|iPad\d+,\d+)\b')
-        .firstMatch(text)
-        ?.group(1);
+    product ??= RegExp(
+      r'\b(iPhone\d+,\d+|iPad\d+,\d+)\b',
+    ).firstMatch(text)?.group(1);
 
     final timestamp =
         _parseDate(str(['timestamp'])) ??
@@ -474,8 +474,9 @@ class PanicParser {
     if (by != null) return by.group(1)!.trim();
     // Coprocessor / subsystem named in the panic line (`SMC PANIC`, …).
     final firstLine = PanicReport.panicLineOf(panicString) ?? '';
-    final tag = RegExp(r'\b(SMC|AOP|ANS2?|DCP|SEP|PMGR|SPMI)\b')
-        .firstMatch(firstLine);
+    final tag = RegExp(
+      r'\b(SMC|AOP|ANS2?|DCP|SEP|PMGR|SPMI)\b',
+    ).firstMatch(firstLine);
     if (tag != null) return tag.group(1);
     if (firstLine.contains('watchdog')) return 'watchdog';
     return _panickedProcess(panicString);

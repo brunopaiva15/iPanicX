@@ -162,4 +162,28 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('disconnect while reading a diagnosis returns to overview', (
+    tester,
+  ) async {
+    final (controller, mock) = await pumpApp(tester);
+    await tester.runAsync(controller.scanDiagnostics);
+    await settle(tester);
+    await tester.tap(find.text('Analyze'));
+    await settle(tester);
+    expect(find.text('Charging Port Flex'), findsOneWidget);
+
+    mock.setScenario(MockScenario.noDevice);
+    await settle(tester);
+    expect(find.text('No iPhone connected'), findsOneWidget);
+    expect(find.text('Charging Port Flex'), findsNothing);
+  });
+
+  testWidgets('appearance picker switches theme mode', (tester) async {
+    final (controller, _) = await pumpApp(tester);
+    expect(controller.themeMode, ThemeMode.dark);
+    await tester.tap(find.byTooltip('Light'));
+    await settle(tester);
+    expect(controller.themeMode, ThemeMode.light);
+  });
 }

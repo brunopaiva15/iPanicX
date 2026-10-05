@@ -250,6 +250,26 @@ Runner, puis `xcrun notarytool submit` / `xcrun stapler staple`.
 
 ---
 
+## Design
+
+L'interface s'inspire fortement de [Codenotch](https://github.com/vinzdg/codenotch)
+(licence MIT) : surfaces noir pur, encre blanche et gris `#808080`, **jauges
+circulaires** (piste translucide, arc depuis midi dans le sens horaire,
+pourcentage en semi-gras dessous), barres fines de type « infobulle »,
+couleurs de signal `#00FF88` / `#F2FF00` / `#FF3F00`, et une barre latérale
+inspirée de sa fenêtre de réglages. Thème sombre par défaut, avec un sélecteur
+Sombre / Système / Clair dans la barre latérale.
+
+- Tokens : `lib/app/theme.dart` (`AppColors`) ;
+- composants : `lib/ui/widgets/ring.dart` (`UsageRing`, `RingStat`, `BarRow`),
+  `common.dart` (`SectionCard`, `Group`, `InfoRow`…), `lib/ui/shell.dart`
+  (barre latérale + navigateur imbriqué) ;
+- les jauges de la vue d'ensemble sont des **proportions factuelles** des
+  panics trouvés (signature connue, liée au matériel, même signature), pas un
+  score de santé ;
+- logo : police [Orbitron](https://fonts.google.com/specimen/Orbitron)
+  (SIL Open Font License, `assets/fonts/Orbitron-OFL.txt`).
+
 ## Ajouter une règle de diagnostic
 
 Éditer `assets/diagnostics/knowledge_base.json` :

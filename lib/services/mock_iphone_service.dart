@@ -141,7 +141,8 @@ class MockIPhoneService implements IPhoneService {
       deviceCount: 1,
       message:
           'Unlock your iPhone and tap “Trust” to allow this ${HostPlatform.computer} to read diagnostics.',
-      technicalDetails: 'ERROR: Could not connect to lockdownd: Pairing dialog response pending (-19)',
+      technicalDetails:
+          'ERROR: Could not connect to lockdownd: Pairing dialog response pending (-19)',
     ),
     MockScenario.locked => DeviceStatus(
       state: DeviceConnectionState.locked,

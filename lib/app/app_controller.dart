@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter/widgets.dart';
 
 import '../diagnostics/knowledge_base.dart';
@@ -29,6 +30,17 @@ class AppController extends ChangeNotifier {
   final KnowledgeBase knowledgeBase;
   final DiagnosticService diagnostics;
   final PlatformBridge bridge;
+
+  /// Dark by default (the black Codenotch-style surfaces); switchable from
+  /// the sidebar.
+  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeMode get themeMode => _themeMode;
+
+  void setThemeMode(ThemeMode mode) {
+    if (mode == _themeMode) return;
+    _themeMode = mode;
+    notifyListeners();
+  }
 
   DeviceStatus _status = const DeviceStatus.searching();
   DeviceStatus get status => _status;

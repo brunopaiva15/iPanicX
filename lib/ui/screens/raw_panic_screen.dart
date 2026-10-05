@@ -22,58 +22,48 @@ class RawPanicScreen extends StatelessWidget {
     final truncated = raw.length > _displayLimit;
     final shown = truncated ? raw.substring(0, _displayLimit) : raw;
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            AppToolbar(
-              title: panic.file.name,
-              subtitle: '${formatBytes(raw.length)} · raw panic report',
-              leading: IconButton(
-                tooltip: 'Back',
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Icons.arrow_back_ios_new, size: 16),
+      body: Column(
+        children: [
+          AppToolbar(
+            eyebrow: 'Raw panic report',
+            title: panic.file.name,
+            subtitle: truncated
+                ? '${formatBytes(raw.length)} · showing the first ${formatBytes(_displayLimit)} — use “Copy All” for the full file'
+                : formatBytes(raw.length),
+            leading: const BackPill(),
+            actions: [
+              OutlinedButton.icon(
+                onPressed: () =>
+                    copyToClipboard(context, raw, 'Raw panic copied'),
+                icon: const Icon(Icons.copy_rounded, size: 16),
+                label: const Text('Copy All'),
               ),
-              actions: [
-                OutlinedButton.icon(
-                  onPressed: () =>
-                      copyToClipboard(context, raw, 'Raw panic copied'),
-                  icon: const Icon(Icons.copy, size: 16),
-                  label: const Text('Copy All'),
-                ),
-              ],
-            ),
-            if (truncated)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  'Showing the first ${formatBytes(_displayLimit)}. Use “Copy All” for the full file.',
-                  style: TextStyle(color: colors.orange, fontSize: 12),
-                ),
+            ],
+          ),
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(36, 0, 36, 32),
+              decoration: BoxDecoration(
+                color: colors.codeBackground,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: colors.border),
               ),
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                decoration: BoxDecoration(
-                  color: colors.codeBackground,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colors.border),
-                ),
-                child: Scrollbar(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: SelectableText(
-                        shown,
-                        style: monoStyle(context, size: 12),
-                      ),
+              clipBehavior: Clip.antiAlias,
+              child: Scrollbar(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: SelectableText(
+                      shown,
+                      style: monoStyle(context, size: 12),
                     ),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

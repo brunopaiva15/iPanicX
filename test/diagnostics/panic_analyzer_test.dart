@@ -58,8 +58,9 @@ void main() {
   });
 
   test('same signature on another model falls back to the generic rule', () {
-    final content = loadSample(smcSample)
-        .replaceAll('iPhone15,2', 'iPhone16,1');
+    final content = loadSample(
+      smcSample,
+    ).replaceAll('iPhone15,2', 'iPhone16,1');
     final result = analyzer.analyze(parser.parse(content));
     expect(result.matchedRuleId, 'smc_bsc_generic');
     expect(result.confidence, Confidence.medium);

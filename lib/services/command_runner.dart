@@ -87,8 +87,10 @@ class ProcessCommandRunner implements CommandRunner {
       process.kill(ProcessSignal.sigkill);
       throw CommandTimeoutException(executable, timeout, '$out$err');
     }
-    await Future.wait([outDone, errDone])
-        .timeout(const Duration(seconds: 2), onTimeout: () => const []);
+    await Future.wait([
+      outDone,
+      errDone,
+    ]).timeout(const Duration(seconds: 2), onTimeout: () => const []);
     return CommandResult(code, out.toString(), err.toString());
   }
 }

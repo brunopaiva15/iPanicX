@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_controller.dart';
-import 'router.dart';
+import '../ui/shell.dart';
 import 'theme.dart';
 
 class IPaniXApp extends StatelessWidget {
@@ -13,14 +13,16 @@ class IPaniXApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScope(
       controller: controller,
-      child: MaterialApp(
-        title: 'iPaniX',
-        debugShowCheckedModeBanner: false,
-        theme: buildTheme(Brightness.light),
-        darkTheme: buildTheme(Brightness.dark),
-        themeMode: ThemeMode.system,
-        initialRoute: AppRouter.home,
-        onGenerateRoute: AppRouter.onGenerateRoute,
+      child: ListenableBuilder(
+        listenable: controller,
+        builder: (context, _) => MaterialApp(
+          title: 'iPaniX',
+          debugShowCheckedModeBanner: false,
+          theme: buildTheme(Brightness.light),
+          darkTheme: buildTheme(Brightness.dark),
+          themeMode: controller.themeMode,
+          home: const AppShell(),
+        ),
       ),
     );
   }

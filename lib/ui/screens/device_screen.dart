@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
+import '../../app/host_platform.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../models/diagnostic_file.dart';
@@ -8,7 +9,6 @@ import '../../models/scan_result.dart';
 import '../format.dart';
 import '../widgets/common.dart';
 import '../widgets/panic_card.dart';
-import '../../app/host_platform.dart';
 
 /// Every diagnostic file copied during the last scan, grouped by type.
 class DeviceScreen extends StatelessWidget {
@@ -20,21 +20,16 @@ class DeviceScreen extends StatelessWidget {
     final scan = app.scan;
     final device = app.status.device;
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            AppToolbar(
-              title: 'Diagnostic Files',
-              subtitle: [
-                device?.displayName,
-                if (scan != null)
-                  'scanned ${formatRelativeDate(scan.scannedAt)}',
-              ].whereType<String>().join(' · '),
-              leading: IconButton(
-                tooltip: 'Back',
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Icons.arrow_back_ios_new, size: 16),
-              ),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: AppToolbar(
+              eyebrow: 'Diagnostic files',
+              title: device?.displayName ?? 'Diagnostic Files',
+              subtitle: scan == null
+                  ? null
+                  : '${plural(scan.files.length, 'file')} · scanned ${formatRelativeDate(scan.scannedAt)}',
+              leading: const BackPill(),
               actions: [
                 if (scan != null && scan.directory.isNotEmpty)
                   OutlinedButton.icon(
@@ -46,18 +41,21 @@ class DeviceScreen extends StatelessWidget {
                         showMessage(context, scan.directory);
                       }
                     },
-                    icon: const Icon(Icons.folder_open, size: 16),
+                    icon: const Icon(Icons.folder_open_rounded, size: 16),
                     label: Text(HostPlatform.revealLabel),
                   ),
               ],
             ),
-            Expanded(
-              child: scan == null
-                  ? const Center(child: Text('Run a scan first.'))
-                  : _FileList(scan: scan),
-            ),
-          ],
-        ),
+          ),
+          SliverToBoxAdapter(
+            child: scan == null
+                ? const Padding(
+                    padding: EdgeInsets.all(60),
+                    child: Center(child: Text('Run a scan first.')),
+                  )
+                : _FileList(scan: scan),
+          ),
+        ],
       ),
     );
   }
@@ -76,101 +74,105 @@ class _FileList extends StatelessWidget {
     }
     return PageBody(
       children: [
-        SectionCard(
-          title: 'Kernel panics · ${scan.panics.length}',
-          icon: Icons.bolt,
-          padding: const EdgeInsets.fromLTRB(24, 22, 24, 14),
-          child: scan.panics.isEmpty
-              ? Text(
+        if (scan.panics.isEmpty)
+          Group(
+            label: 'Kernel panics',
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Text(
                   'No panic reports found',
                   style: TextStyle(color: colors.secondaryText),
-                )
-              : Column(
-                  children: [
-                    for (var i = 0; i < scan.panics.length; i++) ...[
-                      if (i > 0) const Divider(indent: 12, endIndent: 12),
-                      PanicCard(
-                        panic: scan.panics[i],
-                        onTap: () =>
-                            AppRouter.openPanic(context, scan.panics[i]),
-                      ),
-                    ],
-                  ],
                 ),
-        ),
+              ),
+            ],
+          )
+        else
+          Group(
+            label: 'Kernel panics · ${scan.panics.length}',
+            children: [
+              for (final p in scan.panics)
+                PanicCard(
+                  panic: p,
+                  onTap: () => AppRouter.openPanic(context, p),
+                ),
+            ],
+          ),
         if (scan.forcedResets.isNotEmpty) ...[
-          const SizedBox(height: 20),
-          SectionCard(
-            title: 'Forced restarts · ${scan.forcedResets.length}',
-            icon: Icons.restart_alt,
-            padding: const EdgeInsets.fromLTRB(24, 22, 24, 14),
-            child: Column(
-              children: [
-                for (var i = 0; i < scan.forcedResets.length; i++) ...[
-                  if (i > 0) const Divider(indent: 12, endIndent: 12),
-                  PanicCard(
-                    panic: scan.forcedResets[i],
-                    onTap: () =>
-                        AppRouter.openPanic(context, scan.forcedResets[i]),
-                  ),
-                ],
-              ],
-            ),
+          const SizedBox(height: 26),
+          Group(
+            label: 'Forced restarts · ${scan.forcedResets.length}',
+            children: [
+              for (final p in scan.forcedResets)
+                PanicCard(
+                  panic: p,
+                  onTap: () => AppRouter.openPanic(context, p),
+                ),
+            ],
           ),
         ],
         for (final type in DiagnosticFileType.values)
           if (others[type] != null) ...[
-            const SizedBox(height: 20),
-            SectionCard(
-              title: '${type.label} · ${others[type]!.length}',
-              icon: Icons.description_outlined,
-              child: Column(
-                children: [
-                  for (final f in others[type]!.take(200))
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              f.relativePath,
-                              overflow: TextOverflow.ellipsis,
-                              style: monoStyle(context, size: 12),
-                            ),
+            const SizedBox(height: 26),
+            Group(
+              label: '${type.label} · ${others[type]!.length}',
+              children: [
+                for (final f in others[type]!.take(200))
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 11,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.description_rounded,
+                          size: 16,
+                          color: colors.secondaryText,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            f.relativePath,
+                            overflow: TextOverflow.ellipsis,
+                            style: monoStyle(context, size: 12),
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            formatBytes(f.sizeBytes),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          formatBytes(f.sizeBytes),
+                          style: TextStyle(
+                            color: colors.tertiaryText,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 18),
+                        SizedBox(
+                          width: 150,
+                          child: Text(
+                            formatRelativeDate(f.date),
+                            textAlign: TextAlign.right,
                             style: TextStyle(
-                              color: colors.tertiaryText,
+                              color: colors.secondaryText,
                               fontSize: 12,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          SizedBox(
-                            width: 150,
-                            child: Text(
-                              formatRelativeDate(f.date),
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                color: colors.secondaryText,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  if (others[type]!.length > 200)
-                    Text(
+                  ),
+                if (others[type]!.length > 200)
+                  Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Text(
                       '…and ${others[type]!.length - 200} more',
                       style: TextStyle(color: colors.tertiaryText),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ],
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
         Text(
           'Kernel panics (panic-full / panic-base) and forced restarts are '
           'analysed. Other files are listed for reference and kept in the '
