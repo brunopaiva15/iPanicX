@@ -29,6 +29,13 @@ class HostPlatform {
   static String get usbServiceHint =>
       isWindows ? tr.usbServiceWindows : tr.usbServiceMac;
 
+  static String get usbServiceTitle =>
+      isWindows ? tr.usbServiceTitleWindows : tr.usbServiceTitleMac;
+
+  /// What to do when usbmuxd / Apple Mobile Device Service is unreachable.
+  static String get usbServiceSteps =>
+      isWindows ? tr.usbServiceStepsWindows : tr.usbServiceMac;
+
   /// Bullet shown under "plugged in but not detected?".
   static String get driverHint =>
       isWindows ? tr.driverHintWindows : tr.driverHintMac;

@@ -186,6 +186,21 @@ void main() {
     );
   });
 
+  testWidgets('Apple Mobile Device Service missing (Windows)', (tester) async {
+    final saved = HostPlatform.isWindows;
+    HostPlatform.isWindows = true;
+    addTearDown(() => HostPlatform.isWindows = saved);
+
+    await pumpApp(tester, scenario: MockScenario.usbServiceDown);
+    expect(
+      find.text('Apple Mobile Device Service not running'),
+      findsOneWidget,
+    );
+    expect(find.text('Open Microsoft Store'), findsOneWidget);
+    expect(find.textContaining('services.msc'), findsOneWidget);
+    expect(find.textContaining('27015'), findsNothing);
+  });
+
   testWidgets('disconnect while reading a diagnosis returns to overview', (
     tester,
   ) async {

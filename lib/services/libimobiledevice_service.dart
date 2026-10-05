@@ -42,7 +42,9 @@ class LibimobiledeviceService implements IPhoneService {
   final Directory _workRoot;
   final Duration pollInterval;
 
-  static const _listTimeout = Duration(seconds: 5);
+  /// libusbmuxd waits up to 5 s for usbmuxd / Apple Mobile Device Service
+  /// before giving up, so the list call must be allowed longer than that.
+  static const _listTimeout = Duration(seconds: 12);
   static const _infoTimeout = Duration(seconds: 12);
   static const _crashTimeout = Duration(minutes: 10);
 
@@ -178,6 +180,21 @@ class LibimobiledeviceService implements IPhoneService {
       );
     }
 
+    // Without usbmuxd / Apple Mobile Device Service, idevice_id blocks ~5 s
+    // on every poll (Windows) and can only fail: say so right away.
+    final mux = await _probe.usbmuxReachable();
+    if (mux == false) {
+      _deniedUdid = null;
+      return DeviceStatus(
+        state: DeviceConnectionState.communicationError,
+        reason: StatusReason.usbServiceUnavailable,
+        message: HostPlatform.usbServiceHint,
+        technicalDetails:
+            '${_toolSummary(ideviceId)}\n'
+            'usbmuxd (${_probe.usbmuxAddress}): not reachable',
+      );
+    }
+
     final CommandResult list;
     try {
       list = await _runner.run(ideviceId, ['-l'], timeout: _listTimeout);
@@ -190,8 +207,25 @@ class LibimobiledeviceService implements IPhoneService {
     } on CommandTimeoutException catch (e) {
       return DeviceStatus(
         state: DeviceConnectionState.communicationError,
+        reason: StatusReason.timeout,
         message: 'Device lookup timed out.',
-        technicalDetails: e.toString(),
+        technicalDetails: [
+          e.toString(),
+          'usbmuxd (${_probe.usbmuxAddress}): '
+              '${mux == true ? 'reachable' : 'unknown'}',
+          if (e.partialOutput.trim().isNotEmpty) e.partialOutput.trim(),
+        ].join('\n'),
+      );
+    }
+    final loaderError = windowsLoaderError(list.exitCode);
+    if (loaderError != null) {
+      return DeviceStatus(
+        state: DeviceConnectionState.toolsUnavailable,
+        message: 'idevice_id could not be started.',
+        technicalDetails:
+            '$ideviceId\nexit ${list.exitCode}: $loaderError\n'
+                    '${list.combined}'
+                .trim(),
       );
     }
     final udids = list.ok ? parseDeviceList(list.stdout) : const <String>[];
@@ -545,6 +579,17 @@ Map<String, String> parseDeviceInfo(String stdout) {
   }
   return out;
 }
+
+/// Windows loader failures (the runner disables the error dialog, so the
+/// process exits with an NTSTATUS instead of waiting on a popup).
+String? windowsLoaderError(int exitCode) => switch (exitCode & 0xFFFFFFFF) {
+  0xC0000135 => 'a required DLL was not found (STATUS_DLL_NOT_FOUND)',
+  0xC0000139 => 'a DLL does not match (STATUS_ENTRYPOINT_NOT_FOUND)',
+  0xC000007B =>
+    'a DLL is for the wrong architecture (STATUS_INVALID_IMAGE_FORMAT)',
+  0xC0000142 => 'a DLL failed to initialize (STATUS_DLL_INIT_FAILED)',
+  _ => null,
+};
 
 /// Maps libimobiledevice error output to an [IPhoneErrorKind].
 IPhoneErrorKind classifyToolError(String output) {

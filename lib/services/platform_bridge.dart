@@ -32,4 +32,8 @@ abstract class PlatformBridge {
 
   /// Shows [path] in Finder / File Explorer.
   Future<bool> revealInFinder(String path);
+
+  /// Opens the Microsoft Store on “Apple Devices” (iPhone USB driver and
+  /// Apple Mobile Device Service). Windows only; false elsewhere.
+  Future<bool> openAppleDevicesInStore();
 }

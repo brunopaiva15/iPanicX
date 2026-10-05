@@ -13,6 +13,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     CreateAndAttachConsole();
   }
 
+  // Child processes (the libimobiledevice tools) inherit this: a missing DLL
+  // then makes them exit with an error code instead of opening a modal
+  // dialog and hanging until someone closes it.
+  ::SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX |
+                 SEM_NOOPENFILEERRORBOX);
+
   // Initialize COM, so that it is available for use in the library and/or
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);

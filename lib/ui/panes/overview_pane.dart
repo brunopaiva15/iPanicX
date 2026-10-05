@@ -125,6 +125,35 @@ class OverviewPane extends StatelessWidget {
           ],
         ),
       ],
+      DeviceConnectionState.communicationError
+          when s.reason == StatusReason.usbServiceUnavailable =>
+        [
+          Group(
+            children: [
+              Item(
+                leading: Glyph(Icons.usb_off, color: c.danger),
+                label: HostPlatform.usbServiceTitle,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Btn(t.retry, onPressed: app.retry),
+                    if (HostPlatform.isWindows) ...[
+                      const SizedBox(width: 8),
+                      Btn(
+                        t.openStore,
+                        primary: true,
+                        onPressed: app.bridge.openAppleDevicesInStore,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              CapItem(HostPlatform.usbServiceSteps),
+              if (s.technicalDetails != null)
+                TechnicalDetails(details: s.technicalDetails!),
+            ],
+          ),
+        ],
       DeviceConnectionState.communicationError => [
         Group(
           children: [
@@ -134,7 +163,7 @@ class OverviewPane extends StatelessWidget {
               trailing: Btn(t.retry, onPressed: app.retry),
             ),
             CapItem(switch (s.reason) {
-              StatusReason.usbServiceUnavailable => HostPlatform.usbServiceHint,
+              StatusReason.timeout when s.udid == null => t.lookupTimeoutHelp,
               StatusReason.timeout => t.timeoutHelp,
               _ => t.commHelp,
             }),

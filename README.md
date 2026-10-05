@@ -130,7 +130,7 @@ affiche le résultat dans **Détails techniques** :
 |---|---|---|
 | **Aucun iPhone connecté** | l'OS ne voit aucun iPhone | câble de données (pas un câble de charge seule), iPhone déverrouillé, autre port |
 | **iPhone non reconnu** | Windows voit l'iPhone mais le service Apple ne le liste pas, ou le pilote est en erreur (code ≠ 0 dans le Gestionnaire de périphériques) | installer/réparer **Apple Devices** ou iTunes, l'ouvrir une fois, rebrancher ; sinon redémarrer *Apple Mobile Device Service* (`services.msc`) |
-| **Impossible de communiquer** (service USB) | Apple Mobile Device Service / usbmuxd injoignable | installer Apple Devices ou iTunes, vérifier que le service est démarré |
+| **Service Apple Mobile Device absent** | rien n'écoute sur `127.0.0.1:27015` : Apple Devices / iTunes pas installé, ou service arrêté | bouton **Ouvrir le Microsoft Store** (Apple Devices), l'ouvrir une fois iPhone branché ; sinon démarrer *Apple Mobile Device Service* dans `services.msc` |
 
 Vérification manuelle (PowerShell) :
 
@@ -139,6 +139,12 @@ Vérification manuelle (PowerShell) :
 Get-CimInstance Win32_PnPEntity -Filter "PNPDeviceID LIKE 'USB\\VID_05AC%'" | Select Name, ConfigManagerErrorCode
 Get-Service "Apple Mobile Device Service"
 ```
+
+Ce test du service est fait **avant** `idevice_id` : sans service, libusbmuxd
+attend 5 s (`CONNECT_TIMEOUT`) à chaque essai avant d'échouer. Le runner
+Windows désactive aussi les boîtes d'erreur système pour les outils lancés
+(`SetErrorMode`) : une DLL manquante donne un code d'erreur
+(`STATUS_DLL_NOT_FOUND`) affiché par iPaniX, au lieu d'une fenêtre qui bloque.
 
 Une passe de détection est bornée à 45 s : l'écran « Recherche d'appareils… »
 ne peut plus rester affiché indéfiniment.

@@ -7,6 +7,9 @@ import 'platform_bridge.dart';
 /// Every call degrades gracefully when the native side is missing (tests,
 /// other platforms): methods return null / false instead of throwing.
 class MacOSBridge implements PlatformBridge {
+  @override
+  Future<bool> openAppleDevicesInStore() async => false;
+
   const MacOSBridge();
 
   static const _methods = MethodChannel('ipanix/bridge');

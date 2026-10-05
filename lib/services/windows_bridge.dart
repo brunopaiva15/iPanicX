@@ -53,6 +53,22 @@ class WindowsBridge implements PlatformBridge {
     }
   }
 
+  /// Store product ID of Apple's “Apple Devices” app.
+  static const appleDevicesProductId = '9NP83LWLPZ9K';
+
+  @override
+  Future<bool> openAppleDevicesInStore() async {
+    try {
+      // Hands the URI to the Store app; iPaniX itself makes no request.
+      await Process.run('explorer.exe', [
+        'ms-windows-store://pdp/?ProductId=$appleDevicesProductId',
+      ]);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Future<bool> revealInFinder(String path) async {
     final native = path.replaceAll('/', r'\');

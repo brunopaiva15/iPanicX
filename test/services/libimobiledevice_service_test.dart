@@ -241,24 +241,67 @@ void main() {
       s.dispose();
     });
 
-    test('usbmuxd unreachable: communication error', () async {
-      final s = service(
-        FakeRunner(
-          (tool, args, _) async => const CommandResult(
-            255,
-            '',
-            'ERROR: Unable to retrieve device list!',
-          ),
-        ),
-        probe: FakeProbe(mux: false),
+    test('usbmuxd unreachable: reported without running idevice_id', () async {
+      final runner = FakeRunner(
+        (tool, args, _) async => const CommandResult(0, '', ''),
       );
+      final s = service(runner, probe: FakeProbe(mux: false));
       await s.start();
       expect(s.currentStatus.state, DeviceConnectionState.communicationError);
       expect(s.currentStatus.reason, StatusReason.usbServiceUnavailable);
-      expect(
-        s.currentStatus.technicalDetails,
-        contains('Unable to retrieve device list'),
+      expect(s.currentStatus.technicalDetails, contains('not reachable'));
+      expect(runner.calls, isEmpty);
+      s.dispose();
+    });
+
+    test(
+      'idevice_id failing for another reason: communication error',
+      () async {
+        final s = service(
+          FakeRunner(
+            (tool, args, _) async => const CommandResult(
+              255,
+              '',
+              'ERROR: Unable to retrieve device list!',
+            ),
+          ),
+        );
+        await s.start();
+        expect(s.currentStatus.state, DeviceConnectionState.communicationError);
+        expect(
+          s.currentStatus.technicalDetails,
+          contains('Unable to retrieve device list'),
+        );
+        s.dispose();
+      },
+    );
+
+    test('list timeout keeps partial output and usbmuxd state', () async {
+      final s = service(
+        FakeRunner(
+          (tool, args, _) async => throw const CommandTimeoutException(
+            'idevice_id',
+            Duration(seconds: 12),
+            'partial',
+          ),
+        ),
       );
+      await s.start();
+      expect(s.currentStatus.reason, StatusReason.timeout);
+      expect(s.currentStatus.technicalDetails, contains('reachable'));
+      expect(s.currentStatus.technicalDetails, contains('partial'));
+      s.dispose();
+    });
+
+    test('Windows loader failure (missing DLL) means broken tools', () async {
+      final s = service(
+        FakeRunner(
+          (tool, args, _) async => const CommandResult(-1073741515, '', ''),
+        ),
+      );
+      await s.start();
+      expect(s.currentStatus.state, DeviceConnectionState.toolsUnavailable);
+      expect(s.currentStatus.technicalDetails, contains('DLL'));
       s.dispose();
     });
 

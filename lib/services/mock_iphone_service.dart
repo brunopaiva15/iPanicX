@@ -19,6 +19,7 @@ enum MockScenario {
   trustRequired('Trust required'),
   locked('Device locked'),
   communicationError('Communication error'),
+  usbServiceDown('Apple Mobile Device Service missing'),
   toolsUnavailable('libimobiledevice unavailable'),
   crashReportError('Crash report copy fails');
 
@@ -167,6 +168,12 @@ class MockIPhoneService implements IPhoneService {
       message: 'Unlock your iPhone with its passcode, then try again.',
       technicalDetails:
           'ERROR: Could not connect to lockdownd: Password protected (-17)',
+    ),
+    MockScenario.usbServiceDown => const DeviceStatus(
+      state: DeviceConnectionState.communicationError,
+      reason: StatusReason.usbServiceUnavailable,
+      message: 'Apple Mobile Device Service is not reachable.',
+      technicalDetails: 'usbmuxd (127.0.0.1:27015): not reachable',
     ),
     MockScenario.communicationError => DeviceStatus(
       state: DeviceConnectionState.communicationError,

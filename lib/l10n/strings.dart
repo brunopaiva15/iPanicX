@@ -387,6 +387,22 @@ class Strings {
     'Unable to list USB devices. Make sure “Apple Devices” or iTunes is installed and the Apple Mobile Device Service is running.',
     'Impossible de lister les appareils USB. Vérifiez que « Appareils Apple » ou iTunes est installé et que le service Apple Mobile Device est lancé.',
   );
+  String get usbServiceTitleWindows => _(
+    'Apple Mobile Device Service not running',
+    'Service Apple Mobile Device absent',
+  );
+  String get usbServiceTitleMac =>
+      _('usbmuxd not running', 'usbmuxd ne répond pas');
+  String get usbServiceStepsWindows => _(
+    '1. Install “Apple Devices” from the Microsoft Store (or iTunes).\n2. Open it once with the iPhone plugged in and unlocked.\n3. If it is already installed: in services.msc, start “Apple Mobile Device Service”.\niPaniX detects the iPhone as soon as the service answers.',
+    '1. Installez « Appareils Apple » depuis le Microsoft Store (ou iTunes).\n2. Ouvrez-le une fois avec l’iPhone branché et déverrouillé.\n3. S’il est déjà installé : dans services.msc, démarrez « Apple Mobile Device Service ».\niPaniX détecte l’iPhone dès que le service répond.',
+  );
+  String get openStore =>
+      _('Open Microsoft Store', 'Ouvrir le Microsoft Store');
+  String get lookupTimeoutHelp => _(
+    'idevice_id did not answer in time. Unplug and reconnect the iPhone, or restart “Apple Mobile Device Service”.',
+    'idevice_id n’a pas répondu à temps. Débranchez et rebranchez l’iPhone, ou redémarrez « Apple Mobile Device Service ».',
+  );
   String get usbServiceMac => _(
     'Unable to list USB devices. Is usbmuxd running?',
     'Impossible de lister les appareils USB. usbmuxd est-il lancé ?',
