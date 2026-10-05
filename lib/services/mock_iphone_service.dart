@@ -7,6 +7,7 @@ import '../models/device_status.dart';
 import '../models/diagnostic_file.dart';
 import '../models/iphone_device.dart';
 import 'iphone_service.dart';
+import '../app/host_platform.dart';
 
 /// Scenarios the mock can simulate (switchable from the UI in mock mode).
 enum MockScenario {
@@ -138,7 +139,8 @@ class MockIPhoneService implements IPhoneService {
       udid: device.udid,
       device: device.copyWith(isPaired: false),
       deviceCount: 1,
-      message: 'Unlock your iPhone and tap “Trust” to allow this Mac to read diagnostics.',
+      message:
+          'Unlock your iPhone and tap “Trust” to allow this ${HostPlatform.computer} to read diagnostics.',
       technicalDetails: 'ERROR: Could not connect to lockdownd: Pairing dialog response pending (-19)',
     ),
     MockScenario.locked => DeviceStatus(

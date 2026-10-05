@@ -52,3 +52,4 @@ app.*.map.json
 
 # Full real-world reports for the corpus test (scripts/fetch_real_samples.sh)
 /test/fixtures/real_full/
+/windows/libimobiledevice/

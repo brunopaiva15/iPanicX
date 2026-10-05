@@ -8,6 +8,7 @@ import '../../models/scan_result.dart';
 import '../format.dart';
 import '../widgets/common.dart';
 import '../widgets/panic_card.dart';
+import '../../app/host_platform.dart';
 
 /// Every diagnostic file copied during the last scan, grouped by type.
 class DeviceScreen extends StatelessWidget {
@@ -46,7 +47,7 @@ class DeviceScreen extends StatelessWidget {
                       }
                     },
                     icon: const Icon(Icons.folder_open, size: 16),
-                    label: const Text('Show in Finder'),
+                    label: Text(HostPlatform.revealLabel),
                   ),
               ],
             ),

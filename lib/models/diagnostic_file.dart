@@ -18,7 +18,7 @@ enum DiagnosticFileType {
   };
 }
 
-/// A diagnostic/crash file copied from the iPhone to the Mac.
+/// A diagnostic/crash file copied from the iPhone to this computer.
 class DiagnosticFile {
   const DiagnosticFile({
     required this.name,
@@ -58,7 +58,7 @@ class DiagnosticFile {
 
   final String name;
 
-  /// Absolute path on the Mac.
+  /// Absolute local path.
   final String path;
 
   /// Path relative to the crash report root (e.g. `Retired/panic-full-…`).
@@ -92,7 +92,7 @@ class DiagnosticFile {
   );
 
   /// Parses `panic-full-2026-10-04-174233.0002.ips` → 2026-10-04 17:42:33
-  /// (device local time, interpreted as Mac local time).
+  /// (device local time, interpreted as local time).
   static DateTime? dateFromFileName(String fileName) {
     final m = _nameDate.firstMatch(fileName);
     if (m == null) return null;

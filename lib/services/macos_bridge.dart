@@ -1,16 +1,19 @@
 import 'package:flutter/services.dart';
 
+import 'platform_bridge.dart';
+
 /// Dart side of `macos/Runner/IPhoneBridge.swift` and `DeviceWatcher.swift`.
 ///
 /// Every call degrades gracefully when the native side is missing (tests,
 /// other platforms): methods return null / false instead of throwing.
-class MacOSBridge {
+class MacOSBridge implements PlatformBridge {
   const MacOSBridge();
 
   static const _methods = MethodChannel('ipanix/bridge');
   static const _usbEvents = EventChannel('ipanix/usb_events');
 
   /// Fires whenever an Apple USB device is attached or detached (IOKit).
+  @override
   Stream<void> get usbDeviceEvents => _usbEvents
       .receiveBroadcastStream()
       .map<void>((_) {})
@@ -18,6 +21,7 @@ class MacOSBridge {
 
   /// Shows an NSSavePanel and writes [contents] to the chosen file.
   /// Returns the saved path, or null if cancelled / unavailable.
+  @override
   Future<String?> saveTextFile({
     required String suggestedName,
     required String contents,
@@ -27,8 +31,10 @@ class MacOSBridge {
   });
 
   /// Shows an NSOpenPanel for `.ips` files. Returns the chosen path.
+  @override
   Future<String?> pickIpsFile() => _invoke<String>('pickIpsFile');
 
+  @override
   Future<bool> revealInFinder(String path) async =>
       await _invoke<bool>('revealInFinder', {'path': path}) ?? false;
 

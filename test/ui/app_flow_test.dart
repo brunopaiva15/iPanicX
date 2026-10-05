@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ipanix/app/app.dart';
 import 'package:ipanix/app/app_controller.dart';
+import 'package:ipanix/app/host_platform.dart';
 import 'package:ipanix/services/mock_iphone_service.dart';
 
 import '../helpers.dart';
@@ -141,6 +142,23 @@ void main() {
     await settle(tester);
     expect(
       find.text('All diagnostic processing is performed locally on your Mac.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Windows wording (PC, File Explorer, MSYS2)', (tester) async {
+    final saved = HostPlatform.isWindows;
+    HostPlatform.isWindows = true;
+    addTearDown(() => HostPlatform.isWindows = saved);
+
+    await pumpApp(tester, scenario: MockScenario.toolsUnavailable);
+    expect(find.textContaining('Apple Devices'), findsOneWidget);
+    expect(find.textContaining('pacman -S'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('About iPaniX'));
+    await settle(tester);
+    expect(
+      find.text('All diagnostic processing is performed locally on your PC.'),
       findsOneWidget,
     );
   });

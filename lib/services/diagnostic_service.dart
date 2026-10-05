@@ -11,7 +11,7 @@ import '../models/scan_result.dart';
 import 'iphone_service.dart';
 
 /// Pulls reports from the device, then parses and analyses every
-/// `panic-full` file. Everything stays on the Mac.
+/// `panic-full` file. Everything stays on this computer.
 class DiagnosticService {
   DiagnosticService({
     required this.iphone,
@@ -85,7 +85,7 @@ class DiagnosticService {
     );
   }
 
-  /// Analyses a `.ips` file chosen manually on the Mac.
+  /// Analyses a `.ips` file chosen manually on this computer.
   Future<AnalyzedPanic> analyzeLocalFile(String path) async {
     final file = File(path);
     final stat = await file.stat();

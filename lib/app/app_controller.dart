@@ -7,7 +7,7 @@ import '../models/device_status.dart';
 import '../models/scan_result.dart';
 import '../services/diagnostic_service.dart';
 import '../services/iphone_service.dart';
-import '../services/macos_bridge.dart';
+import '../services/platform_bridge.dart';
 
 enum ScanPhase { idle, copying, analyzing, done, failed }
 
@@ -16,9 +16,10 @@ class AppController extends ChangeNotifier {
   AppController({
     required this.iphone,
     required this.knowledgeBase,
-    this.bridge = const MacOSBridge(),
+    PlatformBridge? bridge,
     bool useIsolate = true,
-  }) : diagnostics = DiagnosticService(
+  }) : bridge = bridge ?? PlatformBridge.forHost(),
+       diagnostics = DiagnosticService(
          iphone: iphone,
          knowledgeBase: knowledgeBase,
          useIsolate: useIsolate,
@@ -27,7 +28,7 @@ class AppController extends ChangeNotifier {
   final IPhoneService iphone;
   final KnowledgeBase knowledgeBase;
   final DiagnosticService diagnostics;
-  final MacOSBridge bridge;
+  final PlatformBridge bridge;
 
   DeviceStatus _status = const DeviceStatus.searching();
   DeviceStatus get status => _status;

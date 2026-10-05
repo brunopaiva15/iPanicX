@@ -13,6 +13,7 @@ import '../widgets/common.dart';
 import '../widgets/device_card.dart';
 import '../widgets/panic_card.dart';
 import '../widgets/status_badge.dart';
+import '../../app/host_platform.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -86,9 +87,8 @@ class HomeScreen extends StatelessWidget {
           title: 'libimobiledevice unavailable',
           message:
               '${s.message ?? ''}\n'
-              'Install it with Homebrew, or build iPaniX with the bundled tools '
-              '(see README).',
-          code: 'brew install libimobiledevice',
+              '${HostPlatform.installHint}',
+          code: HostPlatform.installCommand,
           technical: s.technicalDetails,
           actions: [
             FilledButton(
@@ -102,7 +102,9 @@ class HomeScreen extends StatelessWidget {
           icon: Icons.verified_user_outlined,
           color: colors.orange,
           title: 'Trust required',
-          message: s.message ?? 'Unlock your iPhone and tap “Trust” to allow this Mac to read diagnostics.',
+          message:
+              s.message ??
+              'Unlock your iPhone and tap “Trust” to allow this ${HostPlatform.computer} to read diagnostics.',
           subtitle: s.device?.modelName,
           technical: s.technicalDetails,
           showProgress: true,
@@ -190,7 +192,7 @@ class _ConnectedView extends StatelessWidget {
           _Hint(
             icon: Icons.shield_outlined,
             text:
-                'Scanning copies the crash reports to this Mac (they stay on '
+                'Scanning copies the crash reports to this ${HostPlatform.computer} (they stay on '
                 'the iPhone) and analyses them locally. Nothing is uploaded.',
           ),
       ],
@@ -240,7 +242,7 @@ class _ScanProgress extends StatelessWidget {
                 ? (app.copiedFiles == 0
                       ? 'Keep the iPhone connected and unlocked.'
                       : '${plural(app.copiedFiles, 'file')} copied')
-                : 'Parsing kernel panic reports on this Mac.',
+                : 'Parsing kernel panic reports on this ${HostPlatform.computer}.',
             style: TextStyle(color: colors.secondaryText),
           ),
           const SizedBox(height: 16),
@@ -727,7 +729,7 @@ class _MockMenu extends StatelessWidget {
 
 // -----------------------------------------------------------------------------
 
-/// NSOpenPanel → parse → detail screen.
+/// File dialog (NSOpenPanel / Windows) → parse → detail screen.
 Future<void> openLocalIps(BuildContext context) async {
   final app = AppScope.read(context);
   final path = await app.bridge.pickIpsFile();
@@ -772,10 +774,10 @@ void showIPaniXAbout(BuildContext context) {
                 children: [
                   Icon(Icons.lock_outline, color: colors.green, size: 18),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'All diagnostic processing is performed locally on your Mac.',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                      'All diagnostic processing is performed locally on your ${HostPlatform.computer}.',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
@@ -784,7 +786,7 @@ void showIPaniXAbout(BuildContext context) {
             const SizedBox(height: 10),
             Text(
               'No analytics, no telemetry, no network requests. Crash reports '
-              'are copied to a temporary folder on this Mac and never uploaded.',
+              'are copied to a temporary folder on this ${HostPlatform.computer} and never uploaded.',
               textAlign: TextAlign.center,
               style: TextStyle(color: colors.secondaryText, fontSize: 12.5),
             ),

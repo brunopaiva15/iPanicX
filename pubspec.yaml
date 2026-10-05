@@ -1,5 +1,5 @@
 name: ipanix
-description: "iPaniX - local iPhone panic diagnostics for macOS"
+description: "iPaniX - local iPhone panic diagnostics for macOS and Windows"
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -7,6 +7,7 @@ environment:
   sdk: ^3.13.5
 
 dependencies:
+  file_selector: ^1.1.0
   flutter:
     sdk: flutter
 

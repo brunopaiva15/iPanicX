@@ -6,7 +6,7 @@ enum DeviceConnectionState {
   noDevice,
   connected,
 
-  /// Device is attached but the Mac is not (yet) trusted.
+  /// Device is attached but this computer is not (yet) trusted.
   trustRequired,
 
   /// Device is attached but locked (passcode required before first unlock /

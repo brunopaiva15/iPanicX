@@ -85,7 +85,14 @@ class AppColors extends ThemeExtension<AppColors> {
 }
 
 const monospaceFont = 'Menlo';
-const monospaceFallback = ['SF Mono', 'Monaco', 'Courier New', 'monospace'];
+const monospaceFallback = [
+  'SF Mono',
+  'Monaco',
+  'Cascadia Mono',
+  'Consolas',
+  'Courier New',
+  'monospace',
+];
 
 TextStyle monoStyle(BuildContext context, {double size = 12}) => TextStyle(
   fontFamily: monospaceFont,
@@ -177,6 +184,7 @@ ThemeData buildTheme(Brightness brightness) {
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
         TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),
+        TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
         TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
       },
     ),

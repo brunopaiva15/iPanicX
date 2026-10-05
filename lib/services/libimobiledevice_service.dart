@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import '../app/host_platform.dart';
 import '../models/device_status.dart';
 import '../models/diagnostic_file.dart';
 import '../models/iphone_device.dart';
@@ -173,7 +174,7 @@ class LibimobiledeviceService implements IPhoneService {
       }
       return DeviceStatus(
         state: DeviceConnectionState.communicationError,
-        message: 'Unable to list USB devices. Is usbmuxd running?',
+        message: HostPlatform.usbServiceHint,
         technicalDetails: list.combined,
       );
     }
@@ -342,7 +343,15 @@ class LibimobiledeviceService implements IPhoneService {
       // -k: keep the reports on the device (copy instead of move).
       result = await _runner.run(
         tool,
-        ['-u', udid, '-k', target.path],
+        [
+          '-u',
+          udid,
+          '-k',
+          // Native separators for the Windows (MinGW) build of the tool.
+          HostPlatform.isWindows
+              ? target.path.replaceAll('/', r'\')
+              : target.path,
+        ],
         timeout: _crashTimeout,
         onStdoutLine: (line) {
           final m = RegExp(r'^(?:Copy|Move):\s*(.+)$').firstMatch(line.trim());
@@ -496,7 +505,7 @@ IPhoneErrorKind classifyToolError(String output) {
 
 String _messageFor(IPhoneErrorKind kind) => switch (kind) {
   IPhoneErrorKind.trustRequired =>
-    'Unlock your iPhone and tap “Trust” to allow this Mac to read diagnostics.',
+    'Unlock your iPhone and tap “Trust” to allow this ${HostPlatform.computer} to read diagnostics.',
   IPhoneErrorKind.pairingDenied => 'Pairing was declined on the iPhone. Unplug and reconnect it, then tap “Trust”.',
   IPhoneErrorKind.deviceLocked =>
     'Unlock your iPhone with its passcode, then try again.',

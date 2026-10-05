@@ -9,6 +9,7 @@ import '../../models/scan_result.dart';
 import '../format.dart';
 import '../widgets/common.dart';
 import '../widgets/diagnostic_card.dart';
+import '../../app/host_platform.dart';
 
 class PanicDetailScreen extends StatelessWidget {
   const PanicDetailScreen({super.key, required this.panic});
@@ -306,7 +307,7 @@ class PanicDetailScreen extends StatelessWidget {
       SnackBar(
         content: Text('Report saved to $saved'),
         action: SnackBarAction(
-          label: 'Show in Finder',
+          label: HostPlatform.revealLabel,
           onPressed: () => app.bridge.revealInFinder(saved),
         ),
       ),

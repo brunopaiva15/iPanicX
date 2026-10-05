@@ -79,7 +79,9 @@ class ReportFormatter {
     }
     b
       ..writeln()
-      ..writeln('All diagnostic processing was performed locally on this Mac.');
+      ..writeln(
+        'All diagnostic processing was performed locally on this computer.',
+      );
     return b.toString();
   }
 }
