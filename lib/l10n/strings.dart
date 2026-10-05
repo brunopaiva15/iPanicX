@@ -372,9 +372,19 @@ class Strings {
     'macOS voit un iPhone en USB, mais usbmuxd ne le liste pas. Déverrouillez l’iPhone, puis débranchez-le et rebranchez-le.',
   );
   String get driverProblem => _(
-    'Windows sees the iPhone, but its Apple USB driver is missing or not working. Install or repair “Apple Devices” (Microsoft Store) or iTunes, then unplug and reconnect the iPhone. In Device Manager it appears with a warning sign under “Portable Devices” or “Universal Serial Bus controllers”.',
-    'Windows voit l’iPhone, mais son pilote USB Apple est absent ou ne fonctionne pas. Installez ou réparez « Appareils Apple » (Microsoft Store) ou iTunes, puis débranchez et rebranchez l’iPhone. Dans le Gestionnaire de périphériques, il apparaît avec un avertissement sous « Appareils mobiles » ou « Contrôleurs de bus USB ».',
+    'Windows sees the iPhone, but its Apple USB driver does not start, so neither Apple Devices nor iPaniX can see it. Usually fixed in this order:\n'
+        '1. Restart the PC: the driver installed with Apple Devices is often only active after a restart.\n'
+        '2. Unlock the iPhone, plug it directly into the PC (no hub) and tap “Trust”.\n'
+        '3. Still failing: Device Manager → right-click “Apple Mobile Device USB Composite Device” (or “Apple iPhone”) → Uninstall device (tick “delete the driver” if offered) → unplug and reconnect the iPhone.\n'
+        '4. Otherwise: Settings › Windows Update › Advanced options › Optional updates → install the “Apple, Inc.” drivers offered.',
+    'Windows voit l’iPhone, mais son pilote USB Apple ne démarre pas : ni Apple Devices ni iPaniX ne peuvent donc le voir. Ça se règle en général dans cet ordre :\n'
+        '1. Redémarrez le PC : le pilote installé avec Apple Devices n’est souvent actif qu’après un redémarrage.\n'
+        '2. Déverrouillez l’iPhone, branchez-le directement sur le PC (sans hub) et touchez « Se fier ».\n'
+        '3. Si ça persiste : Gestionnaire de périphériques → clic droit sur « Apple Mobile Device USB Composite Device » (ou « Apple iPhone ») → Désinstaller l’appareil (cochez « Supprimer le pilote » si proposé) → débranchez et rebranchez l’iPhone.\n'
+        '4. Sinon : Paramètres › Windows Update › Options avancées › Mises à jour facultatives → installez les pilotes « Apple, Inc. » proposés.',
   );
+  String get openDeviceManager =>
+      _('Open Device Manager', 'Gestionnaire de périphériques');
   String get installHintWindows => _(
     'This build of iPaniX does not include the libimobiledevice tools. Rebuild it with “flutter build windows” (or “flutter run -d windows”) while online: the build downloads them once and puts them next to iPaniX.exe. Alternatively, install them with MSYS2:',
     'Cette version d’iPaniX n’inclut pas les outils libimobiledevice. Recompilez-la avec « flutter build windows » (ou « flutter run -d windows ») avec une connexion Internet : le build les télécharge une fois et les place à côté d’iPaniX.exe. Sinon, installez-les avec MSYS2 :',

@@ -39,4 +39,7 @@ abstract class PlatformBridge {
 
   /// Opens the Windows Services console (services.msc). Windows only.
   Future<bool> openServicesConsole();
+
+  /// Opens Device Manager (devmgmt.msc). Windows only.
+  Future<bool> openDeviceManager();
 }

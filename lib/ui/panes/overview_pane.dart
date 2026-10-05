@@ -69,7 +69,20 @@ class OverviewPane extends StatelessWidget {
             Item(
               leading: Glyph(Icons.usb, color: c.danger),
               label: t.notRecognized,
-              trailing: Btn(t.checkAgain, onPressed: app.retry),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Btn(t.checkAgain, onPressed: app.retry),
+                  if (HostPlatform.isWindows) ...[
+                    const SizedBox(width: 8),
+                    Btn(
+                      t.openDeviceManager,
+                      primary: s.reason == StatusReason.driverProblem,
+                      onPressed: app.bridge.openDeviceManager,
+                    ),
+                  ],
+                ],
+              ),
             ),
             CapItem(
               s.reason == StatusReason.driverProblem

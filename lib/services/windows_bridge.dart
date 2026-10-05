@@ -70,11 +70,14 @@ class WindowsBridge implements PlatformBridge {
   }
 
   @override
-  Future<bool> openServicesConsole() async {
+  Future<bool> openServicesConsole() => _openConsole('services.msc');
+
+  @override
+  Future<bool> openDeviceManager() => _openConsole('devmgmt.msc');
+
+  static Future<bool> _openConsole(String snapIn) async {
     try {
-      await Process.start('mmc.exe', [
-        'services.msc',
-      ], mode: ProcessStartMode.detached);
+      await Process.start('mmc.exe', [snapIn], mode: ProcessStartMode.detached);
       return true;
     } catch (_) {
       return false;

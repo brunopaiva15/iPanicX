@@ -117,6 +117,19 @@ void main() {
     expect(find.textContaining('PID_12A8'), findsNothing);
   });
 
+  testWidgets('driver error on Windows: steps and Device Manager', (
+    tester,
+  ) async {
+    final saved = HostPlatform.isWindows;
+    HostPlatform.isWindows = true;
+    addTearDown(() => HostPlatform.isWindows = saved);
+
+    await pumpApp(tester, scenario: MockScenario.notRecognized);
+    expect(find.text('Open Device Manager'), findsOneWidget);
+    expect(find.textContaining('Restart the PC'), findsOneWidget);
+    expect(find.textContaining('Optional updates'), findsOneWidget);
+  });
+
   testWidgets('trust required → pairing → connected', (tester) async {
     final (_, mock) = await pumpApp(
       tester,
