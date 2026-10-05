@@ -220,7 +220,7 @@ lib/
               windows_bridge.dart (file_selector + explorer.exe)
   diagnostics/ panic_parser, panic_analyzer, diagnostic_rule, knowledge_base,
               knowledge_base_loader, report_formatter
-  ui/         shell.dart (barre latérale), kit.dart, notch.dart, format.dart,
+  ui/         shell.dart (barre latérale), kit.dart, ring.dart, format.dart,
               panes/ (overview, panics, files, general, panic + rapport brut)
 assets/diagnostics/knowledge_base.json   règles de diagnostic
 assets/samples/                          rapports utilisés par le mock
