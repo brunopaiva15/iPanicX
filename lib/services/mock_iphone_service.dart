@@ -15,6 +15,7 @@ enum MockScenario {
   multipleDevices('Two iPhones connected'),
   noPanics('Connected, no panic reports'),
   noDevice('No iPhone'),
+  notRecognized('iPhone not recognized (driver)'),
   trustRequired('Trust required'),
   locked('Device locked'),
   communicationError('Communication error'),
@@ -133,7 +134,22 @@ class MockIPhoneService implements IPhoneService {
       udid: device.udid,
       deviceCount: 2,
     ),
-    MockScenario.noDevice => const DeviceStatus.noDevice(),
+    MockScenario.noDevice => const DeviceStatus.noDevice(
+      technicalDetails:
+          'idevice_id -l: exit 0, no output\n'
+          'usbmuxd (127.0.0.1:27015): reachable\n'
+          'USB: no Apple device attached',
+    ),
+    MockScenario.notRecognized => const DeviceStatus(
+      state: DeviceConnectionState.notRecognized,
+      reason: StatusReason.driverProblem,
+      message: 'Windows sees the iPhone, but its Apple driver is not working.',
+      technicalDetails:
+          'idevice_id -l: exit 0, no output\n'
+          'usbmuxd (127.0.0.1:27015): reachable\n'
+          'USB: Apple device attached (driver error)\n'
+          '28|Apple Mobile Device USB Composite Device|USB\\VID_05AC&PID_12A8\\00008120001A2B3C4D5E6F7A',
+    ),
     MockScenario.trustRequired => DeviceStatus(
       state: DeviceConnectionState.trustRequired,
       udid: device.udid,

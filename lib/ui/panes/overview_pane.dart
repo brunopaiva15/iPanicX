@@ -46,11 +46,46 @@ class OverviewPane extends StatelessWidget {
       DeviceConnectionState.noDevice => [
         Group(
           children: [
-            Item(leading: spinner, label: 'No iPhone connected'),
-            const CapItem(
-              'Connect an iPhone using USB.\n'
-              'Unlock the device and tap “Trust” if asked.',
+            Item(
+              leading: const Glyph(Icons.phone_iphone),
+              label: 'No iPhone connected',
+              trailing: Btn('Check Again', onPressed: app.retry),
             ),
+            const CapItem(
+              'Connect an iPhone using USB, unlock it and tap “Trust” if '
+              'asked. iPaniX checks again every few seconds.',
+            ),
+            if (s.technicalDetails != null)
+              TechnicalDetails(details: s.technicalDetails!),
+          ],
+        ),
+        const Sec('iPhone plugged in but not detected?'),
+        Group(
+          children: [
+            const CapItem(
+              '• Use a data cable: some cables only charge.\n'
+              '• Unlock the iPhone. A locked iPhone may refuse new USB '
+              'connections.',
+            ),
+            CapItem(HostPlatform.driverHint),
+          ],
+        ),
+      ],
+      DeviceConnectionState.notRecognized => [
+        Group(
+          children: [
+            Item(
+              leading: Glyph(Icons.usb, color: c.danger),
+              label: 'iPhone not recognized',
+              trailing: Btn('Check Again', onPressed: app.retry),
+            ),
+            CapItem(
+              s.reason == StatusReason.driverProblem
+                  ? HostPlatform.driverProblemHint
+                  : HostPlatform.notRecognizedHint,
+            ),
+            if (s.technicalDetails != null)
+              TechnicalDetails(details: s.technicalDetails!),
           ],
         ),
       ],

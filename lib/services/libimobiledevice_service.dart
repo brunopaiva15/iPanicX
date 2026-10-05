@@ -8,6 +8,7 @@ import '../models/iphone_device.dart';
 import 'command_runner.dart';
 import 'iphone_service.dart';
 import 'tool_locator.dart';
+import 'usb_probe.dart';
 
 /// Real device access through the libimobiledevice command-line tools
 /// (`idevice_id`, `ideviceinfo`, `idevicecrashreport`, `idevicepair`).
@@ -19,11 +20,14 @@ class LibimobiledeviceService implements IPhoneService {
   LibimobiledeviceService({
     CommandRunner? runner,
     ToolLocator? locator,
+    UsbProbe? probe,
     Stream<void>? usbEvents,
     this.pollInterval = const Duration(seconds: 2),
     Directory? workRoot,
   }) : _runner = runner ?? const ProcessCommandRunner(),
        _locator = locator ?? ToolLocator(),
+       _probe =
+           probe ?? UsbProbe(runner: runner ?? const ProcessCommandRunner()),
        // ignore: prefer_initializing_formals
        _usbEvents = usbEvents,
        _workRoot =
@@ -32,6 +36,7 @@ class LibimobiledeviceService implements IPhoneService {
 
   final CommandRunner _runner;
   final ToolLocator _locator;
+  final UsbProbe _probe;
   final Stream<void>? _usbEvents;
   final Directory _workRoot;
   final Duration pollInterval;
@@ -39,6 +44,16 @@ class LibimobiledeviceService implements IPhoneService {
   static const _listTimeout = Duration(seconds: 5);
   static const _infoTimeout = Duration(seconds: 12);
   static const _crashTimeout = Duration(minutes: 10);
+
+  /// Upper bound for one whole detection pass, so the UI can never stay on
+  /// "Looking for devices…" if a tool or OS query hangs.
+  static const _detectTimeout = Duration(seconds: 45);
+
+  /// The OS-level USB query (PowerShell / ioreg) is slower than
+  /// `idevice_id`; while nothing is listed it runs at most this often.
+  static const _presenceTtl = Duration(seconds: 12);
+  UsbPresence? _presence;
+  DateTime? _presenceAt;
 
   final _controller = StreamController<DeviceStatus>.broadcast();
   DeviceStatus _status = const DeviceStatus.searching();
@@ -120,7 +135,18 @@ class LibimobiledeviceService implements IPhoneService {
     if (_copying && !force) return;
     _polling = true;
     try {
-      _emit(await _detect(force: force));
+      _emit(await _detect(force: force).timeout(_detectTimeout));
+    } on TimeoutException {
+      _emit(
+        DeviceStatus(
+          state: DeviceConnectionState.communicationError,
+          reason: StatusReason.timeout,
+          message: 'Looking for devices took too long.',
+          technicalDetails:
+              'Device detection did not finish within '
+              '${_detectTimeout.inSeconds}s.\n${_toolSummary()}',
+        ),
+      );
     } catch (e) {
       _emit(
         DeviceStatus(
@@ -167,23 +193,13 @@ class LibimobiledeviceService implements IPhoneService {
         technicalDetails: e.toString(),
       );
     }
-    if (!list.ok) {
-      final kind = classifyToolError(list.combined);
-      if (kind == IPhoneErrorKind.noDevice) {
-        return const DeviceStatus.noDevice();
-      }
-      return DeviceStatus(
-        state: DeviceConnectionState.communicationError,
-        message: HostPlatform.usbServiceHint,
-        technicalDetails: list.combined,
-      );
-    }
-
-    final udids = parseDeviceList(list.stdout);
+    final udids = list.ok ? parseDeviceList(list.stdout) : const <String>[];
     if (udids.isEmpty) {
       _deniedUdid = null;
-      return const DeviceStatus.noDevice();
+      return _nothingListed(ideviceId, list, force: force);
     }
+    _presence = null;
+    _presenceAt = null;
 
     // Keep the current selection stable while it stays connected.
     final previous = _status.udid;
@@ -209,6 +225,7 @@ class LibimobiledeviceService implements IPhoneService {
         device: _status.device,
         deviceCount: udids.length,
         message: _messageFor(IPhoneErrorKind.pairingDenied),
+        reason: StatusReason.pairingDenied,
         technicalDetails: _status.technicalDetails,
       );
     }
@@ -225,6 +242,7 @@ class LibimobiledeviceService implements IPhoneService {
         udid: udid,
         deviceCount: udids.length,
         message: _messageFor(IPhoneErrorKind.timeout),
+        reason: StatusReason.timeout,
         technicalDetails: e.toString(),
       );
     } on CommandNotFoundException catch (e) {
@@ -275,11 +293,79 @@ class LibimobiledeviceService implements IPhoneService {
       device: partial,
       deviceCount: udids.length,
       message: _messageFor(kind),
+      reason: switch (kind) {
+        IPhoneErrorKind.pairingDenied => StatusReason.pairingDenied,
+        IPhoneErrorKind.timeout => StatusReason.timeout,
+        _ => null,
+      },
       technicalDetails: info.combined.isEmpty
           ? 'ideviceinfo exited with code ${info.exitCode}'
           : info.combined,
     );
   }
+
+  /// `idevice_id` listed nothing (or failed): find out whether the iPhone is
+  /// really absent, or attached but invisible to usbmuxd.
+  Future<DeviceStatus> _nothingListed(
+    String tool,
+    CommandResult list, {
+    required bool force,
+  }) async {
+    final failed =
+        !list.ok &&
+        classifyToolError(list.combined) != IPhoneErrorKind.noDevice;
+    final mux = await _probe.usbmuxReachable();
+
+    final now = DateTime.now();
+    if (force ||
+        _presenceAt == null ||
+        now.difference(_presenceAt!) >= _presenceTtl) {
+      _presence = await _probe.appleDeviceOnUsb();
+      _presenceAt = DateTime.now();
+    }
+    final presence = _presence;
+
+    final details = [
+      _toolSummary(tool),
+      'idevice_id -l: exit ${list.exitCode}'
+          '${list.combined.isEmpty ? ', no output' : '\n${list.combined}'}',
+      'usbmuxd (${_probe.usbmuxAddress}): '
+          '${switch (mux) {
+            true => 'reachable',
+            false => 'not reachable',
+            null => 'unknown',
+          }}',
+      'USB: ${presence == null
+          ? 'not checked'
+          : presence.present
+          ? 'Apple device attached${presence.driverProblem ? ' (driver error)' : ''}'
+                '${presence.details.isEmpty ? '' : '\n${presence.details}'}'
+          : 'no Apple device attached'}',
+    ].join('\n');
+
+    if (mux == false || failed) {
+      return DeviceStatus(
+        state: DeviceConnectionState.communicationError,
+        reason: StatusReason.usbServiceUnavailable,
+        message: HostPlatform.usbServiceHint,
+        technicalDetails: details,
+      );
+    }
+    if (presence != null && presence.present) {
+      return DeviceStatus(
+        state: DeviceConnectionState.notRecognized,
+        reason: presence.driverProblem ? StatusReason.driverProblem : null,
+        message: presence.driverProblem
+            ? 'Windows sees the iPhone, but its Apple driver is not working.'
+            : 'The iPhone is plugged in but was not recognized.',
+        technicalDetails: details,
+      );
+    }
+    return DeviceStatus.noDevice(technicalDetails: details);
+  }
+
+  String _toolSummary([String? tool]) =>
+      'Tools: ${tool == null ? backendDescription : File(tool).parent.path}';
 
   IPhoneDevice _deviceFrom(
     String udid,

@@ -7,6 +7,7 @@ import 'package:ipanix/services/command_runner.dart';
 import 'package:ipanix/services/iphone_service.dart';
 import 'package:ipanix/services/libimobiledevice_service.dart';
 import 'package:ipanix/services/tool_locator.dart';
+import 'package:ipanix/services/usb_probe.dart';
 
 import '../helpers.dart';
 
@@ -49,6 +50,25 @@ class FakeRunner implements CommandRunner {
   }
 }
 
+/// Host USB checks with fixed answers.
+class FakeProbe extends UsbProbe {
+  FakeProbe({this.mux = true, this.presence})
+    : super(isWindows: true, isMacOS: false, environment: const {});
+
+  final bool? mux;
+  final UsbPresence? presence;
+  int presenceQueries = 0;
+
+  @override
+  Future<bool?> usbmuxReachable() async => mux;
+
+  @override
+  Future<UsbPresence?> appleDeviceOnUsb() async {
+    presenceQueries++;
+    return presence;
+  }
+}
+
 void main() {
   late Directory tmp;
   late Directory tools;
@@ -68,19 +88,23 @@ void main() {
 
   tearDown(() => tmp.deleteSync(recursive: true));
 
-  LibimobiledeviceService service(FakeRunner runner, {bool withTools = true}) =>
-      LibimobiledeviceService(
-        runner: runner,
-        locator: ToolLocator(
-          environment: {
-            'IPANIX_TOOLS_DIR': withTools ? tools.path : '${tmp.path}/none',
-            'PATH': '',
-          },
-          resolvedExecutable: '${tmp.path}/App.app/Contents/MacOS/app',
-        ),
-        workRoot: Directory('${tmp.path}/work'),
-        pollInterval: const Duration(hours: 1),
-      );
+  LibimobiledeviceService service(
+    FakeRunner runner, {
+    bool withTools = true,
+    UsbProbe? probe,
+  }) => LibimobiledeviceService(
+    runner: runner,
+    probe: probe ?? FakeProbe(),
+    locator: ToolLocator(
+      environment: {
+        'IPANIX_TOOLS_DIR': withTools ? tools.path : '${tmp.path}/none',
+        'PATH': '',
+      },
+      resolvedExecutable: '${tmp.path}/App.app/Contents/MacOS/app',
+    ),
+    workRoot: Directory('${tmp.path}/work'),
+    pollInterval: const Duration(hours: 1),
+  );
 
   group('output parsing', () {
     test('parseDeviceList handles suffixes, blanks and duplicates', () {
@@ -180,6 +204,75 @@ void main() {
       await s.start();
       expect(s.currentStatus.state, DeviceConnectionState.noDevice);
       expect(await s.getCurrentDevice(), isNull);
+      s.dispose();
+    });
+
+    test(
+      'nothing listed and nothing on USB: no device, with details',
+      () async {
+        final probe = FakeProbe(presence: const UsbPresence(present: false));
+        final s = service(
+          FakeRunner((tool, args, _) async => const CommandResult(0, '', '')),
+          probe: probe,
+        );
+        await s.start();
+        expect(s.currentStatus.state, DeviceConnectionState.noDevice);
+        expect(s.currentStatus.technicalDetails, contains('no Apple device'));
+        expect(s.currentStatus.technicalDetails, contains('127.0.0.1:27015'));
+        s.dispose();
+      },
+    );
+
+    test('iPhone on USB but not listed: not recognized', () async {
+      final s = service(
+        FakeRunner((tool, args, _) async => const CommandResult(0, '', '')),
+        probe: FakeProbe(
+          presence: const UsbPresence(
+            present: true,
+            driverProblem: true,
+            details: '28|Apple Mobile Device USB Composite Device|USB\\X',
+          ),
+        ),
+      );
+      await s.start();
+      expect(s.currentStatus.state, DeviceConnectionState.notRecognized);
+      expect(s.currentStatus.reason, StatusReason.driverProblem);
+      expect(s.currentStatus.technicalDetails, contains('driver error'));
+      s.dispose();
+    });
+
+    test('usbmuxd unreachable: communication error', () async {
+      final s = service(
+        FakeRunner(
+          (tool, args, _) async => const CommandResult(
+            255,
+            '',
+            'ERROR: Unable to retrieve device list!',
+          ),
+        ),
+        probe: FakeProbe(mux: false),
+      );
+      await s.start();
+      expect(s.currentStatus.state, DeviceConnectionState.communicationError);
+      expect(s.currentStatus.reason, StatusReason.usbServiceUnavailable);
+      expect(
+        s.currentStatus.technicalDetails,
+        contains('Unable to retrieve device list'),
+      );
+      s.dispose();
+    });
+
+    test('OS USB query is throttled between polls', () async {
+      final probe = FakeProbe(presence: const UsbPresence(present: false));
+      final s = service(
+        FakeRunner((tool, args, _) async => const CommandResult(0, '', '')),
+        probe: probe,
+      );
+      await s.start();
+      await s.getCurrentDevice();
+      expect(probe.presenceQueries, 1);
+      await s.refresh(); // explicit retry: queries again
+      expect(probe.presenceQueries, 2);
       s.dispose();
     });
 
@@ -398,6 +491,46 @@ void main() {
         throwsA(isA<IPhoneServiceException>()),
       );
       s.dispose();
+    });
+  });
+
+  group('USB probe parsing', () {
+    test('Windows PnP lines', () {
+      final ok = parseWindowsPnp(
+        '0|Apple Mobile Device USB Composite Device|USB\\VID_05AC&PID_12A8\\0000\r\n'
+        '0|Apple iPhone|USB\\VID_05AC&PID_12A8&MI_00\\6&1\r\n',
+      );
+      expect(ok.present, isTrue);
+      expect(ok.driverProblem, isFalse);
+      final bad = parseWindowsPnp(
+        '28|Apple iPhone|USB\\VID_05AC&PID_12A8\\0\n',
+      );
+      expect(bad.present, isTrue);
+      expect(bad.driverProblem, isTrue);
+      expect(parseWindowsPnp('').present, isFalse);
+    });
+
+    test('macOS ioreg', () {
+      final p = parseMacIoreg(
+        '  | +-o iPhone@01100000  <class IOUSBHostDevice>\n'
+        '  |     "USB Product Name" = "iPhone"\n'
+        '  |     "USB Product Name" = "Magic Keyboard"\n',
+      );
+      expect(p.present, isTrue);
+      expect(p.details, 'iPhone');
+      expect(parseMacIoreg('"USB Product Name" = "Mouse"').present, isFalse);
+    });
+
+    test('Windows query is valid PowerShell text', () {
+      expect(UsbProbe.windowsQuery, contains(r"'USB\\VID_05AC&PID_12%'"));
+      expect(
+        UsbProbe(isWindows: true, environment: const {}).usbmuxAddress,
+        '127.0.0.1:27015',
+      );
+      expect(
+        UsbProbe(isWindows: false, environment: const {}).usbmuxAddress,
+        '/var/run/usbmuxd',
+      );
     });
   });
 

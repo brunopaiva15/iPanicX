@@ -4,6 +4,10 @@ enum DeviceConnectionState {
   /// First lookup has not finished yet.
   searching,
   noDevice,
+
+  /// The OS sees an iPhone on USB but usbmuxd / Apple Mobile Device Service
+  /// does not list it (driver missing, service stuck, USB restricted mode).
+  notRecognized,
   connected,
 
   /// Device is attached but this computer is not (yet) trusted.
@@ -20,6 +24,22 @@ enum DeviceConnectionState {
   toolsUnavailable,
 }
 
+/// Why a non-connected state was reached, when the state alone is not
+/// enough to word the explanation.
+enum StatusReason {
+  /// The user tapped "Don't Trust".
+  pairingDenied,
+
+  /// The device did not answer in time.
+  timeout,
+
+  /// usbmuxd / Apple Mobile Device Service could not be reached.
+  usbServiceUnavailable,
+
+  /// Windows lists the iPhone with a device-manager error.
+  driverProblem,
+}
+
 /// Snapshot of what the service currently knows about the USB connection.
 class DeviceStatus {
   const DeviceStatus({
@@ -28,12 +48,17 @@ class DeviceStatus {
     this.udid,
     this.deviceCount = 0,
     this.message,
+    this.reason,
     this.technicalDetails,
   });
 
   const DeviceStatus.searching() : this(state: DeviceConnectionState.searching);
 
-  const DeviceStatus.noDevice() : this(state: DeviceConnectionState.noDevice);
+  const DeviceStatus.noDevice({String? technicalDetails})
+    : this(
+        state: DeviceConnectionState.noDevice,
+        technicalDetails: technicalDetails,
+      );
 
   final DeviceConnectionState state;
 
@@ -50,6 +75,8 @@ class DeviceStatus {
   /// Short user-facing explanation.
   final String? message;
 
+  final StatusReason? reason;
+
   /// Raw tool output, shown only in the optional technical section.
   final String? technicalDetails;
 
@@ -64,9 +91,17 @@ class DeviceStatus {
       other.udid == udid &&
       other.deviceCount == deviceCount &&
       other.message == message &&
+      other.reason == reason &&
       other.technicalDetails == technicalDetails;
 
   @override
-  int get hashCode =>
-      Object.hash(state, device, udid, deviceCount, message, technicalDetails);
+  int get hashCode => Object.hash(
+    state,
+    device,
+    udid,
+    deviceCount,
+    message,
+    reason,
+    technicalDetails,
+  );
 }

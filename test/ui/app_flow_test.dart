@@ -102,7 +102,16 @@ void main() {
   testWidgets('no iPhone connected', (tester) async {
     await pumpApp(tester, scenario: MockScenario.noDevice);
     expect(find.text('No iPhone connected'), findsOneWidget);
-    expect(find.textContaining('Connect an iPhone using USB.'), findsOneWidget);
+    expect(find.textContaining('Connect an iPhone using USB'), findsOneWidget);
+    expect(find.text('iPhone plugged in but not detected?'), findsOneWidget);
+  });
+
+  testWidgets('iPhone on USB but not recognized', (tester) async {
+    await pumpApp(tester, scenario: MockScenario.notRecognized);
+    expect(find.text('iPhone not recognized'), findsOneWidget);
+    expect(find.textContaining('Apple USB driver'), findsOneWidget);
+    // OS query output stays in the technical section.
+    expect(find.textContaining('PID_12A8'), findsNothing);
   });
 
   testWidgets('trust required → pairing → connected', (tester) async {
