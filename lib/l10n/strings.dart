@@ -1,6 +1,8 @@
 // User-facing strings, English and French. Pure Dart (also used by models,
 // services and the report formatter).
 
+import '../app/app_version.dart' as app_version;
+
 enum AppLang {
   en,
   fr;
@@ -246,11 +248,86 @@ class Strings {
     'Tous les diagnostics sont traités localement sur votre $computer.',
   );
   String privacyDetail(String computer) => _(
-    'No analytics, no telemetry, no network requests. Crash reports are copied to a temporary folder on this $computer and never uploaded.',
-    'Aucune statistique, aucune télémétrie, aucune requête réseau. Les rapports sont copiés dans un dossier temporaire de ce $computer et ne sont jamais envoyés.',
+    'No analytics, no telemetry. The only network request is the update check on GitHub, which can be turned off below. Crash reports are copied to a temporary folder on this $computer and never uploaded.',
+    'Aucune statistique, aucune télémétrie. La seule requête réseau est la recherche de mises à jour sur GitHub, désactivable ci-dessous. Les rapports sont copiés dans un dossier temporaire de ce $computer et ne sont jamais envoyés.',
   );
+
+  // ---------------------------------------------------------------- updates
+  String get updatesSection => _('Updates', 'Mises à jour');
+  String get autoUpdateCheck => _(
+    'Check for updates automatically',
+    'Rechercher les mises à jour automatiquement',
+  );
+  String get autoUpdateHint => _(
+    'At most once a day at launch, iPanicX asks GitHub for its latest release. Nothing about you or your devices is sent.',
+    'Au plus une fois par jour au lancement, iPanicX demande à GitHub sa dernière version. Rien sur vous ni sur vos appareils n’est envoyé.',
+  );
+  String get checkNow => _('Check Now', 'Rechercher');
+  String get updateChecking => _('Checking…', 'Recherche…');
+  String get upToDate => _('iPanicX is up to date', 'iPanicX est à jour');
+  String lastChecked(String when) =>
+      _('Last checked: $when', 'Dernière vérification : $when');
+  String updateAvailable(String v) =>
+      _('iPanicX $v is available', 'iPanicX $v est disponible');
+  String updateSidebar(String v) => _('Update $v', 'Mise à jour $v');
+  String get installAndRestart =>
+      _('Install and Restart', 'Installer et redémarrer');
+  String get downloadUpdate => _('Download', 'Télécharger');
+  String get releasePage => _('Release Page', 'Page de la version');
+  String get whatsNew => _('What’s new', 'Nouveautés');
+  String downloadingUpdate(int? percent) => percent == null
+      ? _('Downloading…', 'Téléchargement…')
+      : _('Downloading… $percent %', 'Téléchargement… $percent %');
+  String get installingUpdate => _(
+    'Installing… iPanicX will restart.',
+    'Installation… iPanicX va redémarrer.',
+  );
+  String get updateInstallHint => _(
+    'The package is checked against the release’s SHA-256 checksums, then iPanicX quits, replaces itself and restarts.',
+    'Le paquet est vérifié avec les sommes SHA-256 de la version, puis iPanicX se ferme, se remplace et redémarre.',
+  );
+  String get updateWaitScan => _(
+    'Available once the scan is finished.',
+    'Disponible une fois l’analyse terminée.',
+  );
+  String updateError(String kind) => switch (kind) {
+    'network' => _(
+      'Could not reach GitHub. Check the internet connection and try again.',
+      'Impossible de joindre GitHub. Vérifiez la connexion Internet et réessayez.',
+    ),
+    'noPackage' => _(
+      'This release has no package for this computer.',
+      'Cette version n’a pas de paquet pour cet ordinateur.',
+    ),
+    'checksum' => _(
+      'The downloaded file is damaged (checksum mismatch). Nothing was installed.',
+      'Le fichier téléchargé est endommagé (somme de contrôle différente). Rien n’a été installé.',
+    ),
+    _ => _(
+      'The update could not be started. Download it from the release page.',
+      'La mise à jour n’a pas pu démarrer. Téléchargez-la depuis la page de la version.',
+    ),
+  };
+  String installBlocked(String reason) => switch (reason) {
+    'translocated' => _(
+      'Move iPanicX to the Applications folder to install updates automatically.',
+      'Déplacez iPanicX dans le dossier Applications pour installer les mises à jour automatiquement.',
+    ),
+    'notWritable' => _(
+      'iPanicX cannot write to its folder: download the update from the release page.',
+      'iPanicX ne peut pas écrire dans son dossier : téléchargez la mise à jour depuis la page de la version.',
+    ),
+    'debugBuild' => _(
+      'Development build: the update opens the release page.',
+      'Version de développement : la mise à jour ouvre la page de la version.',
+    ),
+    _ => _(
+      'Automatic install is not available on this system.',
+      'L’installation automatique n’est pas disponible sur ce système.',
+    ),
+  };
   String get about => _('About', 'À propos');
-  String get version => 'Version 0.1.2';
+  String get version => 'Version ${app_version.appVersion}';
   String get knowledgeBase => _('Knowledge base', 'Base de connaissances');
   String signatures(int n) => plural(n, 'signature', 'signature');
   String get kbDisclaimer => _(

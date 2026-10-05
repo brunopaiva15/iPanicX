@@ -22,8 +22,14 @@ faulty.
   colleague.
 - English and French.
 
-**100 % local.** No account, no analytics, no network requests. Everything
-stays on your computer.
+**100 % local.** No account, no analytics, no telemetry. Diagnostics never
+leave your computer. The only network request is the update check: at most
+once a day, iPanicX asks GitHub for its latest release (it can be turned off
+in **General › Updates**).
+
+**Automatic updates.** When a new version is out, iPanicX shows it in the
+sidebar; *Install and Restart* downloads it, checks its SHA-256 checksum,
+replaces the app and restarts it (Windows and macOS).
 
 ## Download
 

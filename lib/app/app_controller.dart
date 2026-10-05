@@ -15,6 +15,7 @@ import '../services/history_store.dart';
 import '../services/iphone_service.dart';
 import '../services/platform_bridge.dart';
 import 'console_controller.dart';
+import 'update_controller.dart';
 
 enum ScanPhase { idle, copying, analyzing, done, failed }
 
@@ -27,7 +28,9 @@ class AppController extends ChangeNotifier {
     bool useIsolate = true,
     String? systemLocale,
     HistoryStore? history,
+    UpdateController? updates,
   }) : history = history ?? HistoryStore(),
+       updates = updates ?? UpdateController(),
        _systemLang = AppLang.fromLocale(
          systemLocale ?? PlatformDispatcher.instance.locale.toLanguageTag(),
        ),
@@ -38,7 +41,16 @@ class AppController extends ChangeNotifier {
          useIsolate: useIsolate,
        ) {
     L10n.lang = language;
+    // Device tools must not hold files of the install folder while the
+    // updater replaces it.
+    this.updates.beforeQuit = () async {
+      if (console.running) console.stop();
+      iphone.dispose();
+    };
   }
+
+  /// Update check and install (General › Updates).
+  final UpdateController updates;
 
   final IPhoneService iphone;
   final KnowledgeBase knowledgeBase;
@@ -187,6 +199,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> start() async {
     _sub = iphone.status.listen(_onStatus);
+    unawaited(updates.checkOnLaunch());
     await iphone.start();
   }
 
@@ -274,6 +287,7 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _sub?.cancel();
     console.dispose();
+    updates.dispose();
     iphone.dispose();
     super.dispose();
   }

@@ -215,6 +215,23 @@ class _Sidebar extends StatelessWidget {
             onTap: () => onSelect(Section.general),
           ),
           const Spacer(),
+          ListenableBuilder(
+            listenable: AppScope.of(context).updates,
+            builder: (context, _) {
+              final u = AppScope.of(context).updates;
+              final r = u.release;
+              if (!u.hasUpdate || r == null) return const SizedBox.shrink();
+              return _Row(
+                badge: const SideBadge(
+                  Icons.system_update_alt,
+                  SideBadge.green,
+                ),
+                label: t.updateSidebar(r.version),
+                selected: false,
+                onTap: () => onSelect(Section.general),
+              );
+            },
+          ),
           _Row(
             badge: const SideBadge(Icons.description, SideBadge.gray),
             label: t.openIps,

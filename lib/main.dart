@@ -10,6 +10,9 @@ import 'services/iphone_service.dart';
 import 'services/libimobiledevice_service.dart';
 import 'services/platform_bridge.dart';
 import 'services/mock_iphone_service.dart';
+import 'services/settings_store.dart';
+import 'services/update_service.dart';
+import 'app/update_controller.dart';
 
 /// `flutter run -d macos|windows --dart-define=USE_MOCK_DEVICE=true`
 /// (the `USE_MOCK_DEVICE=true` environment variable works too).
@@ -37,6 +40,10 @@ Future<void> main() async {
     iphone: iphone,
     knowledgeBase: knowledgeBase,
     bridge: bridge,
+    updates: UpdateController(
+      service: UpdateService(),
+      settings: SettingsStore(),
+    ),
   );
   runApp(IPanicXApp(controller: controller));
   await controller.start();

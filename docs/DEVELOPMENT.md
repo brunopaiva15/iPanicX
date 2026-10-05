@@ -6,9 +6,10 @@ Application de bureau **macOS et Windows** (Flutter, avec du natif Swift sur
 macOS) qui lit les rapports de diagnostic d'un iPhone branché en USB, analyse automatiquement les **kernel panics**
 (`panic-full*.ips`, `panic-base*.ips`) et affiche un diagnostic lisible.
 
-> **100 % local.** Aucun analytics, aucune télémétrie, aucune API externe,
-> aucun serveur. Les rapports sont copiés dans un dossier temporaire de
-> l'ordinateur et analysés sur place.
+> **100 % local.** Aucun analytics, aucune télémétrie, aucun serveur. Les
+> rapports sont copiés dans un dossier temporaire de l'ordinateur et analysés
+> sur place. Seule requête réseau : la recherche de mises à jour sur GitHub
+> (voir « Mises à jour »), désactivable dans Général.
 
 Chaîne : **iPhone USB → copie des crash reports → parsing → analyse par la
 base de connaissances → corrélation → bilan de santé → export `.txt`.**
@@ -290,7 +291,9 @@ lib/
   main.dart                      choix mock / réel, chargement de la base
   app/        app.dart, theme.dart (tokens Codenotch), app_controller.dart (état,
               langue, infos appareil, historique), console_controller.dart,
-              host_platform.dart (textes et chemins selon l'OS)
+              host_platform.dart (textes et chemins selon l'OS),
+              app_version.dart (version comparée aux releases),
+              update_controller.dart (état des mises à jour)
   l10n/       strings.dart (tous les textes EN/FR, Dart pur), lang_scope.dart
   models/     iphone_device, device_status, diagnostic_file, panic_report,
               diagnostic_result, scan_result
@@ -298,6 +301,8 @@ lib/
               libimobiledevice_service.dart (réel, via CommandRunner)
               mock_iphone_service.dart, command_runner.dart, tool_locator.dart
               usb_probe.dart (service USB Apple joignable ? iPhone vu par l'OS ?)
+              update_service.dart (GitHub Releases, SHA-256, scripts
+              d'installation), settings_store.dart (settings.json)
               device_facts_parser.dart + plist.dart (batterie, stockage, amfi)
               history_store.dart (résumés de scans, par UDID haché)
               diagnostic_service.dart (scan → parse → analyse → synthèse)
@@ -332,11 +337,46 @@ installé par l'utilisateur.
 
 **Distribution hors Mac App Store** : la sandbox est désactivée
 (`DebugProfile/Release.entitlements`) car l'app doit lancer les outils et parler
-à usbmuxd ; aucun entitlement réseau en release. Pour la notarisation : signer
+à usbmuxd ; pas d'entitlement réseau nécessaire hors sandbox (requêtes HTTPS de la
+mise à jour). Pour la notarisation : signer
 avec un certificat Developer ID, activer le Hardened Runtime sur la cible
 Runner, puis `xcrun notarytool submit` / `xcrun stapler staple`.
 
 ---
+
+## Mises à jour
+
+Au lancement, au plus une fois toutes les 20 h (réglable dans **Général ›
+Mises à jour**, enregistré dans `settings.json` du dossier de l'app), iPanicX
+appelle `GET https://api.github.com/repos/brunopaiva15/iPanicX/releases/latest`
+(User-Agent `iPanicX/<version>`, aucun identifiant). Les brouillons et
+pré-releases sont ignorés. Si la version est plus récente que
+`lib/app/app_version.dart`, une ligne **Mise à jour x.y.z** apparaît dans la
+barre latérale.
+
+*Installer et redémarrer* :
+1. télécharge `iPanicX-<v>-windows-x64.zip` ou `iPanicX-<v>-macos.zip` et
+   `SHA256SUMS.txt` de la release (HTTPS, `github.com/brunopaiva15/iPanicX/
+   releases/download/…` uniquement) ;
+2. vérifie le SHA-256 du paquet (sinon : rien n'est installé) ;
+3. arrête la console et les outils libimobiledevice, écrit un script dans
+   le dossier temporaire et le lance détaché, puis quitte ;
+4. le script attend la fin du processus, décompresse à côté de l'app
+   (`iPanicX.update-new`), échange les dossiers (`iPanicX.update-old`,
+   restauré en cas d'échec) et relance iPanicX. Journal : `install.log`
+   dans `%TEMP%\iPanicX-update` ou `$TMPDIR/iPanicX-update`.
+   - Windows : PowerShell (`Expand-Archive`, `Move-Item`) ;
+   - macOS : bash (`ditto`, `mv`, `xattr -dr com.apple.quarantine`, `open`).
+
+L'installation est remplacée par l'ouverture de la page de la release
+quand : build de développement (`flutter run`), app lancée depuis
+Téléchargements sur macOS (App Translocation : la déplacer dans
+Applications), dossier parent non accessible en écriture, ou Linux.
+
+**Publier une version** : mettre la même version dans `pubspec.yaml` et
+`lib/app/app_version.dart` (un test le vérifie), écrire
+`docs/releases/vX.Y.Z.md`, puis lancer le workflow **Release** avec le tag
+`vX.Y.Z`. Les noms des paquets ne doivent pas changer : l'updater les attend.
 
 ## Design
 

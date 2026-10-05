@@ -5,6 +5,7 @@ import '../../app/host_platform.dart';
 import '../../app/theme.dart';
 import '../../services/mock_iphone_service.dart';
 import '../kit.dart';
+import 'update_section.dart';
 import '../../l10n/lang_scope.dart';
 import '../../l10n/strings.dart';
 
@@ -90,6 +91,10 @@ class GeneralPane extends StatelessWidget {
               ),
             ],
           ),
+        ],
+        if (app.updates.supported) ...[
+          Sec(t.updatesSection),
+          const UpdateSection(),
         ],
         Sec(t.privacy),
         Group(

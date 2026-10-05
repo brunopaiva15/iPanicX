@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../app/host_platform.dart';
+import 'settings_store.dart';
 
 /// Short summary of one scan, kept locally to compare scans of a device.
 /// No report content and no UDID is stored.
@@ -84,17 +84,8 @@ class HistoryStore {
 
   Directory get directory => _root;
 
-  static Directory _defaultRoot(Map<String, String> env) {
-    if (HostPlatform.isWindows) {
-      final appData = env['APPDATA'] ?? env['LOCALAPPDATA'] ?? '.';
-      return Directory('$appData/iPanicX/history');
-    }
-    final home = env['HOME'] ?? '.';
-    if (Platform.isMacOS) {
-      return Directory('$home/Library/Application Support/iPanicX/history');
-    }
-    return Directory('$home/.ipanicx/history');
-  }
+  static Directory _defaultRoot(Map<String, String> env) =>
+      Directory('${appSupportDir(env).path}/history');
 
   /// FNV-1a 64-bit: stable, not reversible to the UDID from the file name.
   static String deviceKey(String udid) {

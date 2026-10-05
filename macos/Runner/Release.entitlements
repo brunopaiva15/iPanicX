@@ -5,7 +5,8 @@
 	<!--
 	Distributed outside the Mac App Store (Developer ID + notarization).
 	No sandbox: the app launches the embedded libimobiledevice tools and talks to
-	usbmuxd. No network entitlement is requested: iPanicX works fully offline.
+	usbmuxd. Outside the sandbox no network entitlement is needed for the update
+	check (HTTPS requests to GitHub Releases only).
 	-->
 	<key>com.apple.security.app-sandbox</key>
 	<false/>

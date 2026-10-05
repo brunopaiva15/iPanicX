@@ -9,6 +9,11 @@ import 'package:ipanicx/l10n/strings.dart';
 import 'package:ipanicx/services/history_store.dart';
 import 'package:ipanicx/ui/panes/shared.dart';
 import 'package:ipanicx/services/mock_iphone_service.dart';
+import 'package:ipanicx/app/update_controller.dart';
+import 'package:ipanicx/services/settings_store.dart';
+import 'package:ipanicx/services/update_service.dart';
+
+import '../services/update_service_test.dart' show FakeTransport, releaseJson;
 
 import '../helpers.dart';
 
@@ -29,6 +34,7 @@ void main() {
     WidgetTester tester, {
     MockScenario scenario = MockScenario.connected,
     String locale = 'en_US',
+    UpdateController? updates,
   }) async {
     tester.view.physicalSize = const Size(1200, 900);
     tester.view.devicePixelRatio = 1;
@@ -46,6 +52,7 @@ void main() {
       useIsolate: false,
       systemLocale: locale,
       history: HistoryStore(root: Directory('${tmp.path}/history')),
+      updates: updates,
     );
     await tester.pumpWidget(IPanicXApp(controller: controller));
     await tester.runAsync(controller.start);
@@ -183,6 +190,45 @@ void main() {
       find.text('All diagnostic processing is performed locally on your Mac.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('update available: sidebar row, General › Updates', (
+    tester,
+  ) async {
+    final opened = <String>[];
+    final updates = UpdateController(
+      service: UpdateService(
+        transport: FakeTransport(latest: releaseJson('v9.0.0')),
+        os: UpdateOs.macos,
+        releaseBuild: false,
+        startDetached: (exe, args, {workingDirectory}) async =>
+            opened.addAll(args),
+      ),
+      settings: MemorySettingsStore(),
+    );
+    await pumpApp(tester, updates: updates);
+    expect(find.text('Updates'), findsNothing);
+    await tester.runAsync(() => updates.check());
+    await settle(tester);
+
+    await tester.tap(find.text('Update 9.0.0'));
+    await settle(tester);
+    expect(find.text('iPanicX 9.0.0 is available'), findsOneWidget);
+    // A development build never replaces itself: it opens the page.
+    expect(
+      find.text('Development build: the update opens the release page.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('What’s new'));
+    await settle(tester);
+    expect(find.textContaining('• Faster'), findsOneWidget);
+    expect(find.textContaining('Download\n'), findsNothing);
+    expect(find.text('Check for updates automatically'), findsOneWidget);
+
+    await tester.tap(find.text('Download'));
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await settle(tester);
+    expect(opened.single, contains('/releases/tag/v9.0.0'));
   });
 
   testWidgets('Windows wording (PC, File Explorer, MSYS2)', (tester) async {
