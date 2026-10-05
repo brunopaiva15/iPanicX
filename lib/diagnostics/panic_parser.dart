@@ -373,10 +373,43 @@ class PanicParser {
     }
     for (final source in [panicString, text]) {
       if (source == null) continue;
+      // iOS 17+: `S.sensor array 0 - 5 is 0, 1310720, 0, 0, 0` lists one
+      // status word per sensor bank; the failing bits are the non-zero
+      // word. Checked first, or the older pattern would read the "0" of
+      // "array 0 - 5".
+      final listed = _maskFromList(source);
+      if (listed != null) return listed.value;
       final m = _maskInText.firstMatch(source);
       if (m != null) return _parseInt(m.group(1));
     }
     return null;
+  }
+
+  static final RegExp _sensorList = RegExp(
+    r'(?:\b([A-Z])\.)?sensor\s+array\s+\d+\s*-\s*\d+\s+is\s+((?:0x[0-9a-fA-F]+|\d+)(?:\s*,\s*(?:0x[0-9a-fA-F]+|\d+))*)',
+    caseSensitive: false,
+  );
+
+  /// `(found, mask)` from the listed form: the first non-zero word of the
+  /// `S.` (status) array, else of any listed array. `found` with a null
+  /// mask means the arrays are listed but all zero.
+  static ({int? value})? _maskFromList(String source) {
+    final matches = _sensorList.allMatches(source).toList();
+    if (matches.isEmpty) return null;
+    int? firstNonZero(RegExpMatch m) {
+      for (final v in m.group(2)!.split(',')) {
+        final n = _parseInt(v.trim());
+        if (n != null && n != 0) return n;
+      }
+      return null;
+    }
+
+    final status = matches.where((m) => m.group(1)?.toUpperCase() == 'S');
+    for (final m in [...status, ...matches]) {
+      final v = firstNonZero(m);
+      if (v != null) return (value: v);
+    }
+    return (value: null);
   }
 
   static List<String> _missingSensors(String text) {

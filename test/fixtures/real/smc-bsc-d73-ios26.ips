@@ -1,0 +1,15 @@
+{"bug_type": "210", "timestamp": "2026-10-04 17:42:33.00 +0200", "os_version": "iPhone OS 26.6 (23G71)", "roots_installed": 0, "incident_id": "00000000-0000-4000-8000-000000000000"}
+{
+  "build": "iPhone OS 26.6 (23G71)",
+  "product": "iPhone15,2",
+  "socId": "8120",
+  "kernel": "Darwin Kernel Version 25.6.0: root:xnu-12377.162.13~2/RELEASE_ARM64_T8120",
+  "socRevision": "11",
+  "incident": "00000000-0000-4000-8000-000000000000",
+  "date": "2026-10-04 17:42:33.94 +0200",
+  "panicString": "panic(cpu 3 caller 0xfffffff03b9d5688): SMC PANIC - ASSERT: target/d73/target.cpp:320: 0, SMC BSC failure, TAOP TAOJ\nspreadsheet ver(*10) 150\nS.sensor array 0 - 5 is 0, 1310720, 0, 0, 0\nF.sensor array 0 - 1 is 0\n\n - Misc(2) OUTBOX1 not ready\nASSERT: target/d73/target.cpp:320: 0, SMC BSC failure, TAOP TAOJ\nspreadsheet ver(*10) 150\nS.sensor array 0 - 5 is 0, 1310720, 0, 0, 0\nF.sensor array 0 - 1 is 0\n\nRTKit: RTKit-3255.160.4.release - Client: AppleSMCFirmware_H15-6164.160.4.d73.REL\n!UUID: e7280ac1-b45f-3493-b444-2e45c5aed0a9\nASLR slide: 0x0000000000000000\nTime: 0x0000000110c56c45\n\nFaulting task 2 Call Stack: 0x0000000000044d3c\nChinook ASC Async error info: \ni2c_err_sts 0x5000fbfc00000000\n\nMailbox (0): (0)\n Inbox AKF_KIC_INBOX_CTRL = 0x00020001\nThread stats (last 34.161 ms)\n\nSleep Count: 58504\nWake Count: 41079\nOUTBOX not ready \n\nCORE 3 is the one that panicked. Check the full backtrace for details.\nCompressor Info: 21% of compressed pages limit (OK) and 10% of segments limit (OK) with 1 swapfiles and OK swap space\nPanicked task 0xfffffffeecd7a1890: 0 pages, 527 threads: pid 0: kernel_task\nPanicked thread: 0xfffffffeecd722960, backtrace: 0xfffffffde54ccf6a0, tid: 625\n\t\t  lr: 0xfffffff03bc79304  fp: 0xfffffffde54ccf720\n      Kernel Extensions in backtrace:\n         com.apple.driver.IOSlaveProcessor(1.0)[BC82E913-CEE9-32A4-9042-66394C65E491]@0xfffffff03b6c0130->0xfffffff03b6c198b\n         com.apple.driver.RTBuddy(1.0)[1057BA88-64F0-3511-AD46-FF81A7A631AB]@0xfffffff03b9af8c0->0xfffffff03b9f1937\n            dependency: com.apple.driver.AppleA7IOP(1.0.2)[18D6A1F0-24D9-3188-A4A6-D23B4275DA79]@0xfffffff039f5d910->0xfffffff039f63b97\n\nloaded kexts:\ncom.apple.driver.AppleSMC\t1.0\n",
+  "panicFlags": "0x40802",
+  "bug_type": "210",
+  "panicInitiator": "SMC",
+  "otherString": "\n** Stackshot Succeeded ** Bytes Traced 366178 (Uncompressed 853264) **\n"
+}

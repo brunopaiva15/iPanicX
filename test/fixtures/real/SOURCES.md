@@ -18,3 +18,9 @@ were removed. Full files can be fetched with `scripts/fetch_real_samples.sh`.
 | `app-crash-legacy-109.ips` | https://raw.githubusercontent.com/doronz88/pycrashreport/634dff127fa6d4d3df948a64a3e254fe208a99dc/tests/user_mode_crash_report_ios14_non_symbolicated_abort.ips |
 | `app-crash-309.ips` | https://raw.githubusercontent.com/danijel-tolj/objectbox_crash/115dc89470942891742c291d03883a64b1a1de16/logs/Runner-2023-10-20-131018.ips |
 | `stacks-288.ips` | https://raw.githubusercontent.com/witchfindertr/pegasus_spyware_detection_utils_ios_aos/b97f6b9b755dbb35955cc8b0349a285b1dc26f5d/iOS_Legacy_Data_Analysis/_iPhone9,1_12.1_Wed-Nov-28-2018-12_11_42-CST/Retired/stacks%2Bbackboardd-2018-11-26-155947.ips |
+
+- `smc-bsc-d73-ios26.ips`: iPhone 14 Pro (iPhone15,2, D73), iOS 26.6 (23G71),
+  SMC BSC failure with the iOS 26 sensor list format
+  (`S.sensor array 0 - 5 is 0, 1310720, 0, 0, 0`). Transcribed from photos of
+  a real report shared by the project owner; incident IDs zeroed, long
+  mailbox/thread dumps shortened.

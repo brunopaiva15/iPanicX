@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -95,5 +96,45 @@ void main() {
       expect(d.title, 'Not a Kernel Panic', reason: f);
       expect(d.isKnownSignature, isFalse);
     }
+  });
+
+  test('iOS 26 SMC BSC report: sensor list format → 0x140000, exact rule', () {
+    final r = const PanicParser().parse(
+      File('test/fixtures/real/smc-bsc-d73-ios26.ips').readAsStringSync(),
+    );
+    expect(r.product, 'iPhone15,2');
+    expect(r.sensorMask, 1310720);
+    expect(r.sensorMaskHex, '0x140000');
+    expect(r.sensorKeys, ['TAOP', 'TAOJ']);
+    expect(r.panicInitiator, 'SMC');
+    final d = analyzer.analyze(r);
+    expect(d.matchedRuleId, 'smc_bsc_iphone15_2_140000');
+    expect(d.confidence, Confidence.high);
+    expect(d.suspectedComponents, ['Charging Port Flex', 'Power Button Flex']);
+  });
+
+  test('sensor list: first non-zero word of the S. array; all zero → none', () {
+    PanicReport reportOf(String p) => const PanicParser().parse(
+      '{"bug_type":"210"}\n${jsonEncode({'product': 'iPhone15,2', 'panicString': p})}',
+    );
+    expect(
+      reportOf(
+        'panic(cpu 0 caller 0x1): SMC PANIC - ASSERT: x, SMC BSC failure\n'
+        'F.sensor array 0 - 1 is 0, 8\nS.sensor array 0 - 5 is 0, 0, 0x4000, 0',
+      ).sensorMask,
+      0x4000,
+    );
+    expect(
+      reportOf(
+        'panic(cpu 0 caller 0x1): SMC PANIC\nS.sensor array 0 - 5 is 0, 0, 0',
+      ).sensorMask,
+      isNull,
+    );
+    expect(
+      reportOf(
+        'panic(cpu 0 caller 0x1): SMC BSC failure: sensor array 1310720',
+      ).sensorMask,
+      1310720,
+    );
   });
 }
