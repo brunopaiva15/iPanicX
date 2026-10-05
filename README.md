@@ -265,16 +265,13 @@ L'interface reprend celle de [Codenotch](https://github.com/vinzdg/codenotch)
   - groupes arrondis à 10 px, lignes de 40 px séparées par des filets ;
   - valeurs en gris à droite, boutons `.btn`, contrôle segmenté ;
   - texte en 13,5 px.
-- **Encoche** : la colonne d'anneaux et la carte infobulle avec sa pointe,
-  aux proportions de `Sources/Notch/NotchLayout.swift` (×1,25), couleurs
-  `#00FF88` / `#F2FF00` / `#FF3F00` et seuils 50 % / 70 %. Un anneau par
-  signature de panic (part des panics) ; survoler un anneau affiche sa carte,
-  cliquer ouvre le dernier panic de cette signature.
+- **Anneaux** : le petit anneau des listes (confiance, couleur de gravité)
+  reprend la jauge de Codenotch (piste 15,5 px, arc 8 px depuis midi).
 - **Apparence** : suit le système par défaut, réglable dans General
   (Système / Clair / Sombre).
 
 Code : `lib/app/theme.dart` (tokens), `lib/ui/kit.dart` (volet, groupes,
-lignes, boutons), `lib/ui/notch.dart` (anneau, encoche, carte infobulle),
+lignes, boutons), `lib/ui/ring.dart` (anneau),
 `lib/ui/shell.dart` (barre latérale), `lib/ui/panes/` (Overview, Panics,
 Files, General, diagnostic, rapport brut).
 

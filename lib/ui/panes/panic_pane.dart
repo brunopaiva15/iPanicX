@@ -7,7 +7,7 @@ import '../../models/iphone_device.dart';
 import '../../models/scan_result.dart';
 import '../format.dart';
 import '../kit.dart';
-import '../notch.dart';
+import '../ring.dart';
 import '../shell.dart';
 import 'shared.dart';
 

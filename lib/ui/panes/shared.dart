@@ -5,7 +5,7 @@ import '../../models/diagnostic_result.dart';
 import '../../models/scan_result.dart';
 import '../format.dart';
 import '../kit.dart';
-import '../notch.dart';
+import '../ring.dart';
 import '../shell.dart';
 
 double confidenceFraction(Confidence c) => switch (c) {
@@ -15,7 +15,7 @@ double confidenceFraction(Confidence c) => switch (c) {
   Confidence.none => 0,
 };
 
-/// Monochrome glyph per signature family, like Codenotch's provider glyphs.
+/// Monochrome glyph per signature family.
 IconData glyphFor(DiagnosticResult r) {
   final id = r.matchedRuleId ?? '';
   if (id.startsWith('smc') || id.startsWith('aop')) return Icons.sensors;
@@ -50,57 +50,6 @@ List<SignatureGroup> groupBySignature(List<AnalyzedPanic> panics) {
   final groups = [for (final e in map.entries) SignatureGroup(e.key, e.value)]
     ..sort((a, b) => b.panics.length.compareTo(a.panics.length));
   return groups;
-}
-
-/// Notch cells for the most frequent signatures (at most [max]).
-List<NotchCell> notchCells(
-  BuildContext context,
-  List<AnalyzedPanic> panics, {
-  int max = 3,
-}) {
-  final shell = ShellScope.of(context);
-  final total = panics.length;
-  return [
-    for (final g in groupBySignature(panics).take(max))
-      () {
-        final r = g.latest.result;
-        final share = g.panics.length / total;
-        final severity = Notch.severity(r.severity);
-        return NotchCell(
-          icon: glyphFor(r),
-          fraction: share,
-          color: severity,
-          reading: '${(share * 100).round()}%',
-          onOpen: () => shell.openPanic(g.latest),
-          card: TooltipCardData(
-            icon: glyphFor(r),
-            title: r.isKnownSignature ? r.title : 'Unknown signature',
-            blocks: [
-              TooltipBlock(
-                label: 'Kernel panics',
-                note: 'Latest ${formatShortDate(g.latest.date)}',
-                fraction: share,
-                color: Notch.band(share),
-                reading: '${g.panics.length} of $total',
-              ),
-              TooltipBlock(
-                label: 'Confidence',
-                note: r.severity == Severity.unknown
-                    ? 'Severity unknown'
-                    : '${r.severity.label} severity',
-                fraction: r.isKnownSignature
-                    ? confidenceFraction(r.confidence)
-                    : 0,
-                color: severity,
-                reading: r.isKnownSignature
-                    ? r.confidence.label
-                    : 'Not in the knowledge base',
-              ),
-            ],
-          ),
-        );
-      }(),
-  ];
 }
 
 /// A row for one panic: small ring (confidence, severity colour), title,

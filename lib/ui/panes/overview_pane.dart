@@ -7,7 +7,7 @@ import '../../models/device_status.dart';
 import '../../models/scan_result.dart';
 import '../format.dart';
 import '../kit.dart';
-import '../notch.dart';
+import '../ring.dart';
 import '../shell.dart';
 import 'shared.dart';
 
@@ -264,32 +264,9 @@ class OverviewPane extends StatelessWidget {
         ),
       ],
     );
-    final notch = NotchPanel(cells: notchCells(context, scan.panics));
     return [
       const Sec('Kernel Panics'),
-      LayoutBuilder(
-        builder: (context, box) {
-          final notchWidth = NL.cardWidth + NL.tailLength + NL.notchWidth;
-          if (box.maxWidth < notchWidth + 300) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                health,
-                const SizedBox(height: 16),
-                Align(alignment: Alignment.centerRight, child: notch),
-              ],
-            );
-          }
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: health),
-              const SizedBox(width: 20),
-              notch,
-            ],
-          );
-        },
-      ),
+      health,
       const Sec('Recent'),
       Group(
         children: [
