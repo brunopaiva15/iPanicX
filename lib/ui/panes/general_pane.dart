@@ -104,7 +104,7 @@ class GeneralPane extends StatelessWidget {
         Sec(t.about),
         Group(
           children: [
-            Item(label: 'iPaniX', value: t.version),
+            Item(label: 'iPanicX', value: t.version),
             Item(
               label: t.knowledgeBase,
               value:

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Prepares a self-contained copy of the libimobiledevice tools for iPaniX.
+# Prepares a self-contained copy of the libimobiledevice tools for iPanicX.
 #
 #   brew install libimobiledevice
 #   ./scripts/bundle_libimobiledevice.sh
@@ -9,7 +9,7 @@
 #         macos/libimobiledevice/lib  (every non-system dylib they need)
 #
 # Install names are rewritten to @executable_path/../lib and @loader_path so
-# the tools run from inside iPaniX.app without Homebrew. The Xcode build phase
+# the tools run from inside iPanicX.app without Homebrew. The Xcode build phase
 # (scripts/embed_libimobiledevice.sh) copies and signs them.
 #
 # libimobiledevice and its dependencies are LGPL-2.1 / other open-source

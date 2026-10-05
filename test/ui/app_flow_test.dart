@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ipanix/app/app.dart';
-import 'package:ipanix/app/app_controller.dart';
-import 'package:ipanix/app/host_platform.dart';
-import 'package:ipanix/l10n/strings.dart';
-import 'package:ipanix/services/mock_iphone_service.dart';
+import 'package:ipanicx/app/app.dart';
+import 'package:ipanicx/app/app_controller.dart';
+import 'package:ipanicx/app/host_platform.dart';
+import 'package:ipanicx/l10n/strings.dart';
+import 'package:ipanicx/services/mock_iphone_service.dart';
 
 import '../helpers.dart';
 
@@ -20,7 +20,7 @@ Future<void> settle(WidgetTester tester) async {
 
 void main() {
   late Directory tmp;
-  setUp(() => tmp = Directory.systemTemp.createTempSync('ipanix_ui_'));
+  setUp(() => tmp = Directory.systemTemp.createTempSync('ipanicx_ui_'));
   tearDown(() => tmp.deleteSync(recursive: true));
 
   Future<(AppController, MockIPhoneService)> pumpApp(
@@ -44,7 +44,7 @@ void main() {
       useIsolate: false,
       systemLocale: locale,
     );
-    await tester.pumpWidget(IPaniXApp(controller: controller));
+    await tester.pumpWidget(IPanicXApp(controller: controller));
     await tester.runAsync(controller.start);
     await settle(tester);
     return (controller, mock);

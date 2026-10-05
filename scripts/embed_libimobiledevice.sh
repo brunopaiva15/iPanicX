@@ -3,10 +3,10 @@
 #
 # Copies macos/libimobiledevice/{bin,lib} (produced by
 # scripts/bundle_libimobiledevice.sh) into
-# iPaniX.app/Contents/Resources/libimobiledevice and signs every Mach-O file
+# iPanicX.app/Contents/Resources/libimobiledevice and signs every Mach-O file
 # with the identity used for the app, so the bundle can be notarized.
 #
-# If the folder does not exist the phase is a no-op: at runtime iPaniX then
+# If the folder does not exist the phase is a no-op: at runtime iPanicX then
 # falls back to Homebrew (/opt/homebrew/bin, /usr/local/bin) or $PATH.
 set -e
 
@@ -14,7 +14,7 @@ SRC="${SRCROOT}/libimobiledevice"
 DST="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/libimobiledevice"
 
 if [ ! -d "${SRC}/bin" ]; then
-  echo "note: ${SRC} not found; iPaniX will use a system libimobiledevice at runtime."
+  echo "note: ${SRC} not found; iPanicX will use a system libimobiledevice at runtime."
   exit 0
 fi
 

@@ -38,6 +38,6 @@ Future<void> main() async {
     knowledgeBase: knowledgeBase,
     bridge: bridge,
   );
-  runApp(IPaniXApp(controller: controller));
+  runApp(IPanicXApp(controller: controller));
   await controller.start();
 }

@@ -1,4 +1,4 @@
-# iPaniX
+# iPanicX
 
 Application de bureau **macOS et Windows** (Flutter, avec du natif Swift sur
 macOS) qui lit les rapports de diagnostic d'un iPhone branché en USB, analyse automatiquement les **kernel panics**
@@ -50,10 +50,10 @@ brew install libimobiledevice
 idevice_id -l                      # doit afficher l'UDID de l'iPhone branché
 ```
 
-iPaniX cherche les outils dans cet ordre :
+iPanicX cherche les outils dans cet ordre :
 
-1. `$IPANIX_TOOLS_DIR` ;
-2. les outils embarqués dans l'app : `iPaniX.app/Contents/Resources/libimobiledevice/bin` ;
+1. `$IPANICX_TOOLS_DIR` ;
+2. les outils embarqués dans l'app : `iPanicX.app/Contents/Resources/libimobiledevice/bin` ;
 3. `/opt/homebrew/bin`, `/usr/local/bin`, `/opt/local/bin` ;
 4. le `PATH`.
 
@@ -83,13 +83,13 @@ Sans ce dossier, la phase ne fait rien et l'app retombe sur Homebrew.
    paquets officiels MSYS2 UCRT64 de libimobiledevice, vérifie leur SHA-256,
    et installe `idevice_id.exe`, `ideviceinfo.exe`, `idevicecrashreport.exe`,
    `idevicepair.exe` et leurs 6 DLL dans `libimobiledevice\` à côté de
-   `iPaniX.exe` (`windows/libimobiledevice.cmake`). Le cache est dans
+   `iPanicX.exe` (`windows/libimobiledevice.cmake`). Le cache est dans
    `build\windows\x64\libimobiledevice\`. L'app elle-même reste hors ligne.
 
    Versions figées : libimobiledevice 1.3.0-17, libimobiledevice-glue 1.3.2,
    libplist 2.7.0, libusbmuxd 2.1.1, OpenSSL 3.6.5. Pour les mettre à jour,
    changer noms et SHA-256 dans `windows/libimobiledevice.cmake`. Pour
-   désactiver le téléchargement : `-DIPANIX_FETCH_LIBIMOBILEDEVICE=OFF`.
+   désactiver le téléchargement : `-DIPANICX_FETCH_LIBIMOBILEDEVICE=OFF`.
 
 Si le build ne voit pas les outils (build hors ligne, ancienne copie du dossier
 `build`), lancer `flutter clean` puis `flutter run -d windows`, ou les
@@ -99,8 +99,8 @@ installer avec [MSYS2](https://www.msys2.org/) dans le shell **UCRT64** :
 pacman -S --needed mingw-w64-ucrt-x86_64-libimobiledevice
 ```
 
-iPaniX cherche les outils (`*.exe`) dans cet ordre : `%IPANIX_TOOLS_DIR%`,
-`<dossier de iPaniX.exe>\libimobiledevice[\bin]`, `C:\msys64\{ucrt64,mingw64,clang64}\bin`,
+iPanicX cherche les outils (`*.exe`) dans cet ordre : `%IPANICX_TOOLS_DIR%`,
+`<dossier de iPanicX.exe>\libimobiledevice[\bin]`, `C:\msys64\{ucrt64,mingw64,clang64}\bin`,
 `%ProgramFiles%\libimobiledevice`, `%LOCALAPPDATA%\Programs\libimobiledevice`, puis le `Path`.
 
 **Outils d'une installation MSYS2 locale** (prioritaires sur le
@@ -116,7 +116,7 @@ des paquets téléchargés.
 
 ### iPhone branché mais non détecté
 
-Quand `idevice_id -l` ne liste rien, iPaniX vérifie aussi côté ordinateur et
+Quand `idevice_id -l` ne liste rien, iPanicX vérifie aussi côté ordinateur et
 affiche le résultat dans **Détails techniques** :
 
 - **le service USB d'Apple répond-il ?** `127.0.0.1:27015` (Apple Mobile
@@ -146,7 +146,7 @@ Ce test du service est fait **avant** `idevice_id` : sans service, libusbmuxd
 attend 5 s (`CONNECT_TIMEOUT`) à chaque essai avant d'échouer. Le runner
 Windows désactive aussi les boîtes d'erreur système pour les outils lancés
 (`SetErrorMode`) : une DLL manquante donne un code d'erreur
-(`STATUS_DLL_NOT_FOUND`) affiché par iPaniX, au lieu d'une fenêtre qui bloque.
+(`STATUS_DLL_NOT_FOUND`) affiché par iPanicX, au lieu d'une fenêtre qui bloque.
 
 Une passe de détection est bornée à 45 s : l'écran « Recherche d'appareils… »
 ne peut plus rester affiché indéfiniment.
@@ -180,8 +180,8 @@ flutter run -d windows --dart-define=USE_MOCK_DEVICE=true
 Build release :
 
 ```bash
-flutter build macos --release      # build/macos/Build/Products/Release/iPaniX.app
-flutter build windows --release    # build\windows\x64\runner\Release\iPaniX.exe (+ DLL, data\, libimobiledevice\)
+flutter build macos --release      # build/macos/Build/Products/Release/iPanicX.app
+flutter build windows --release    # build\windows\x64\runner\Release\iPanicX.exe (+ DLL, data\, libimobiledevice\)
 ```
 
 Sous Windows, distribuer **tout le dossier** `Release\` (l'exe seul ne suffit
@@ -204,7 +204,7 @@ absent, échec de la copie.
 
 1. **Détection** — `idevice_id -l` toutes les 2 s ; sur macOS aussi
    immédiatement à chaque branchement/débranchement USB Apple (notification
-   IOKit de `DeviceWatcher.swift` via l'EventChannel `ipanix/usb_events`).
+   IOKit de `DeviceWatcher.swift` via l'EventChannel `ipanicx/usb_events`).
 2. **Infos appareil** — `ideviceinfo -u <UDID>` (DeviceName, ProductType,
    ProductVersion, BuildVersion). Si l'appareil n'est pas appairé,
    `ideviceinfo -s` fournit au moins le modèle ; l'UDID est toujours masqué.
@@ -214,7 +214,7 @@ absent, échec de la copie.
    absents → *libimobiledevice unavailable*. La sortie brute n'apparaît que dans
    la section repliable *Technical details*.
 4. **Copie** — `idevicecrashreport -u <UDID> -k <dossier>` : `-k` **conserve**
-   les rapports sur l'iPhone. Dossier : `<temp>/iPaniX/CrashReports/<appareil>/<date>`
+   les rapports sur l'iPhone. Dossier : `<temp>/iPanicX/CrashReports/<appareil>/<date>`
    (`$TMPDIR` sur macOS, `%TEMP%` sur Windows)
    (le scan précédent du même appareil est supprimé).
 5. **Classement** — scan récursif, tri par date (nom de fichier puis date de
@@ -281,7 +281,7 @@ macos/Runner/IPhoneBridge.swift          NSSavePanel, NSOpenPanel, Finder
 macos/Runner/DeviceWatcher.swift         notifications USB IOKit
 macos/Runner/MainFlutterWindow.swift     fenêtre (min 900×600), branchement des bridges
 windows/runner/                          runner Win32 (titre, taille, min 900×600 via WM_GETMINMAXINFO)
-windows/CMakeLists.txt                   installe windows/libimobiledevice/ à côté de iPaniX.exe
+windows/CMakeLists.txt                   installe windows/libimobiledevice/ à côté de iPanicX.exe
 scripts/                                 bundle/embed libimobiledevice (macOS, Windows), corpus réel
 tool/analyze_corpus.dart                 analyse en ligne de commande d'un dossier
 ```
@@ -292,7 +292,7 @@ C/Swift ne touche ni l'UI ni le moteur de diagnostic. `lib/diagnostics/` et
 `lib/models/` sont en Dart pur (aucune dépendance Flutter).
 
 **Distribution Windows** : pas de signature dans la V0 ; pour distribuer,
-signer `iPaniX.exe` et les outils embarqués (Authenticode, `signtool`) et
+signer `iPanicX.exe` et les outils embarqués (Authenticode, `signtool`) et
 fournir un installeur. Le pilote Apple (Apple Devices / iTunes) doit être
 installé par l'utilisateur.
 

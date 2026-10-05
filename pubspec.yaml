@@ -1,5 +1,5 @@
-name: ipanix
-description: "iPaniX - local iPhone panic diagnostics for macOS and Windows"
+name: ipanicx
+description: "iPanicX - local iPhone panic diagnostics for macOS and Windows"
 publish_to: 'none'
 version: 0.1.0+1
 

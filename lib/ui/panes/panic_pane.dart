@@ -250,7 +250,7 @@ class PanicPane extends StatelessWidget {
     final app = AppScope.read(context);
     final base = panic.file.name.replaceAll(RegExp(r'\.ips.*$'), '');
     final saved = await app.bridge.saveTextFile(
-      suggestedName: 'iPaniX-$base.txt',
+      suggestedName: 'iPanicX-$base.txt',
       contents: ReportFormatter.diagnosis(current, device: device),
     );
     if (saved != null && context.mounted) {

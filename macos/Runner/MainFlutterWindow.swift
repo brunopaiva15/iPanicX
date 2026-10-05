@@ -9,11 +9,11 @@ class MainFlutterWindow: NSWindow {
     let flutterViewController = FlutterViewController()
     self.contentViewController = flutterViewController
 
-    self.title = "iPaniX"
+    self.title = "iPanicX"
     self.contentMinSize = NSSize(width: 900, height: 600)
     self.setContentSize(NSSize(width: 1120, height: 780))
     self.center()
-    self.setFrameAutosaveName("iPaniXMainWindow")
+    self.setFrameAutosaveName("iPanicXMainWindow")
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 

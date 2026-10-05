@@ -33,7 +33,7 @@ class LibimobiledeviceService implements IPhoneService {
        _usbEvents = usbEvents,
        _workRoot =
            workRoot ??
-           Directory('${Directory.systemTemp.path}/iPaniX/CrashReports');
+           Directory('${Directory.systemTemp.path}/iPanicX/CrashReports');
 
   final CommandRunner _runner;
   final ToolLocator _locator;
@@ -173,7 +173,7 @@ class LibimobiledeviceService implements IPhoneService {
     if (ideviceId == null || ideviceInfo == null) {
       return DeviceStatus(
         state: DeviceConnectionState.toolsUnavailable,
-        message: 'iPaniX could not find the libimobiledevice tools.',
+        message: 'iPanicX could not find the libimobiledevice tools.',
         technicalDetails:
             'Missing: ${_locator.missingTools().join(', ')}\n'
             'Searched:\n${_locator.searchDirectories.join('\n')}',
@@ -543,7 +543,7 @@ class LibimobiledeviceService implements IPhoneService {
   @override
   Future<String> readCrashReport(DiagnosticFile file) => readReportFile(file);
 
-  /// `<tmp>/iPaniX/CrashReports/<device-key>/<timestamp>`; older scans of
+  /// `<tmp>/iPanicX/CrashReports/<device-key>/<timestamp>`; older scans of
   /// the same device are removed.
   Future<Directory> _prepareTargetDirectory(String udid) async {
     final key = udid.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');

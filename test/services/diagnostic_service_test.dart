@@ -1,16 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ipanix/models/diagnostic_file.dart';
-import 'package:ipanix/models/scan_result.dart';
-import 'package:ipanix/services/diagnostic_service.dart';
-import 'package:ipanix/services/mock_iphone_service.dart';
+import 'package:ipanicx/models/diagnostic_file.dart';
+import 'package:ipanicx/models/scan_result.dart';
+import 'package:ipanicx/services/diagnostic_service.dart';
+import 'package:ipanicx/services/mock_iphone_service.dart';
 
 import '../helpers.dart';
 
 void main() {
   late Directory tmp;
-  setUp(() => tmp = Directory.systemTemp.createTempSync('ipanix_scan_'));
+  setUp(() => tmp = Directory.systemTemp.createTempSync('ipanicx_scan_'));
   tearDown(() => tmp.deleteSync(recursive: true));
 
   MockIPhoneService mock([MockScenario s = MockScenario.connected]) =>

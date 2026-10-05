@@ -1,6 +1,6 @@
 {
   "version": "0.4.0",
-  "description": "iPaniX V0 knowledge base. A small set of EXAMPLE signatures used to demonstrate the matching engine. It is NOT exhaustive and must be extended and validated against real repair data. Generic rule categories were informed by the open-source projects listed in README (ideas only, no code or data copied).",
+  "description": "iPanicX V0 knowledge base. A small set of EXAMPLE signatures used to demonstrate the matching engine. It is NOT exhaustive and must be extended and validated against real repair data. Generic rule categories were informed by the open-source projects listed in README (ideas only, no code or data copied).",
   "rules": [
     {
       "id": "smc_bsc_iphone15_2_140000",

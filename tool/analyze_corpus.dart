@@ -1,4 +1,4 @@
-// Analyses every report in a folder with the iPaniX engine, offline.
+// Analyses every report in a folder with the iPanicX engine, offline.
 //
 //   dart run tool/analyze_corpus.dart <folder-or-file> [...]
 //
@@ -8,9 +8,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:ipanix/diagnostics/knowledge_base.dart';
-import 'package:ipanix/diagnostics/panic_analyzer.dart';
-import 'package:ipanix/diagnostics/panic_parser.dart';
+import 'package:ipanicx/diagnostics/knowledge_base.dart';
+import 'package:ipanicx/diagnostics/panic_analyzer.dart';
+import 'package:ipanicx/diagnostics/panic_parser.dart';
 
 void main(List<String> args) {
   if (args.isEmpty) {

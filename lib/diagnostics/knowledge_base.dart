@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'diagnostic_rule.dart';
 
-/// Panic signatures known to iPaniX.
+/// Panic signatures known to iPanicX.
 ///
 /// The V0 base is intentionally small and is **not** exhaustive.
 class KnowledgeBase {

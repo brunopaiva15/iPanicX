@@ -77,7 +77,7 @@ class PanicReport {
   /// `bug_type` 151: forced restart (`forceReset-*`, e.g. `btn_rst`).
   bool get isForcedReset => bugType == '151';
 
-  /// Kernel-level report iPaniX can analyse (panic or forced reset).
+  /// Kernel-level report iPanicX can analyse (panic or forced reset).
   bool get isKernelReport => isFullPanic || isForcedReset;
 
   /// Human label for [bugType] (only types observed in real reports).

@@ -18,8 +18,8 @@ class MacOSBridge implements PlatformBridge {
 
   const MacOSBridge();
 
-  static const _methods = MethodChannel('ipanix/bridge');
-  static const _usbEvents = EventChannel('ipanix/usb_events');
+  static const _methods = MethodChannel('ipanicx/bridge');
+  static const _usbEvents = EventChannel('ipanicx/usb_events');
 
   /// Fires whenever an Apple USB device is attached or detached (IOKit).
   @override

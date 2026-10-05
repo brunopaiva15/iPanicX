@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "iPaniX" "\0"
-            VALUE "FileDescription", "iPaniX - iPhone panic diagnostics" "\0"
+            VALUE "CompanyName", "iPanicX" "\0"
+            VALUE "FileDescription", "iPanicX - iPhone panic diagnostics" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "iPaniX" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 iPaniX. All rights reserved." "\0"
-            VALUE "OriginalFilename", "iPaniX.exe" "\0"
-            VALUE "ProductName", "iPaniX" "\0"
+            VALUE "InternalName", "iPanicX" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 iPanicX. All rights reserved." "\0"
+            VALUE "OriginalFilename", "iPanicX.exe" "\0"
+            VALUE "ProductName", "iPanicX" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

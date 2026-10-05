@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<!--
-	iPaniX is distributed outside the Mac App Store (Developer ID + notarization).
+	iPanicX is distributed outside the Mac App Store (Developer ID + notarization).
 	The App Sandbox is disabled because the app must launch the libimobiledevice
 	tools and talk to usbmuxd (/var/run/usbmuxd), which the sandbox forbids.
 	-->

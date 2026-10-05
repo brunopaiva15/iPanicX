@@ -5,10 +5,10 @@ import '../app/host_platform.dart';
 /// Finds the libimobiledevice executables.
 ///
 /// Search order:
-///  1. `IPANIX_TOOLS_DIR` environment variable;
+///  1. `IPANICX_TOOLS_DIR` environment variable;
 ///  2. tools embedded with the app:
-///     - macOS: `iPaniX.app/Contents/Resources/libimobiledevice/bin`
-///     - Windows: `<folder of iPaniX.exe>\libimobiledevice[\bin]`
+///     - macOS: `iPanicX.app/Contents/Resources/libimobiledevice/bin`
+///     - Windows: `<folder of iPanicX.exe>\libimobiledevice[\bin]`
 ///  3. package managers:
 ///     - macOS: Homebrew (`/opt/homebrew/bin`, `/usr/local/bin`), MacPorts
 ///     - Windows: MSYS2 (`C:\msys64\ucrt64\bin`, `mingw64\bin`, `clang64\bin`)
@@ -42,7 +42,7 @@ class ToolLocator {
 
   List<String> get searchDirectories {
     final dirs = <String>[];
-    final override = _env['IPANIX_TOOLS_DIR'];
+    final override = _env['IPANICX_TOOLS_DIR'];
     if (override != null && override.isNotEmpty) dirs.add(override);
 
     final exeDir = _parent(_exe);

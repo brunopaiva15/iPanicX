@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ipanix/diagnostics/panic_parser.dart';
+import 'package:ipanicx/diagnostics/panic_parser.dart';
 
 import '../helpers.dart';
 

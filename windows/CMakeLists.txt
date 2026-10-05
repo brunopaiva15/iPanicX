@@ -1,10 +1,10 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
-project(ipanix LANGUAGES CXX)
+project(ipanicx LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "iPaniX")
+set(BINARY_NAME "iPanicX")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -107,14 +107,14 @@ install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
 
-# libimobiledevice tools, installed next to iPaniX.exe in "libimobiledevice\"
+# libimobiledevice tools, installed next to iPanicX.exe in "libimobiledevice\"
 # (see libimobiledevice.cmake: local bundle, else pinned MSYS2 packages
 # downloaded once at configure time).
 include("${CMAKE_CURRENT_SOURCE_DIR}/libimobiledevice.cmake")
-ipanix_prepare_libimobiledevice("${CMAKE_CURRENT_SOURCE_DIR}"
-  "${CMAKE_BINARY_DIR}" IPANIX_LIBIMOBILEDEVICE_DIR)
-if(IPANIX_LIBIMOBILEDEVICE_DIR)
-  install(DIRECTORY "${IPANIX_LIBIMOBILEDEVICE_DIR}/"
+ipanicx_prepare_libimobiledevice("${CMAKE_CURRENT_SOURCE_DIR}"
+  "${CMAKE_BINARY_DIR}" IPANICX_LIBIMOBILEDEVICE_DIR)
+if(IPANICX_LIBIMOBILEDEVICE_DIR)
+  install(DIRECTORY "${IPANICX_LIBIMOBILEDEVICE_DIR}/"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/libimobiledevice"
     COMPONENT Runtime
     PATTERN ".stamp-*" EXCLUDE)

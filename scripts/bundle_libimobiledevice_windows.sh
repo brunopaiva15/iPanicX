@@ -1,6 +1,6 @@
 #!/bin/bash
 # Prepares a self-contained copy of the libimobiledevice tools for the
-# Windows build of iPaniX. Run it from an MSYS2 UCRT64 (or MINGW64) shell:
+# Windows build of iPanicX. Run it from an MSYS2 UCRT64 (or MINGW64) shell:
 #
 #   pacman -S --needed mingw-w64-ucrt-x86_64-libimobiledevice
 #   ./scripts/bundle_libimobiledevice_windows.sh
@@ -9,7 +9,7 @@
 #                                    idevicecrashreport.exe, idevicepair.exe
 #                                    + every non-system DLL they load.
 #
-# `flutter build windows` then installs that folder next to iPaniX.exe
+# `flutter build windows` then installs that folder next to iPanicX.exe
 # (see the end of windows/CMakeLists.txt). Windows loads DLLs from the
 # executable's own folder, so no path rewriting is needed.
 #

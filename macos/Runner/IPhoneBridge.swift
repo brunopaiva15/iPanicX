@@ -4,13 +4,13 @@ import UniformTypeIdentifiers
 
 /// Native macOS services used by the Dart side (`lib/services/macos_bridge.dart`).
 ///
-/// Channel: `ipanix/bridge`
+/// Channel: `ipanicx/bridge`
 ///  - `saveTextFile` {suggestedName, contents} -> String? (saved path)
 ///  - `pickIpsFile` -> String? (chosen path)
 ///  - `revealInFinder` {path} -> Bool
 ///  - `bundledToolsPath` -> String? (libimobiledevice inside the app bundle)
 final class IPhoneBridge: NSObject {
-  static let channelName = "ipanix/bridge"
+  static let channelName = "ipanicx/bridge"
 
   private let channel: FlutterMethodChannel
   private weak var window: NSWindow?
@@ -33,7 +33,7 @@ final class IPhoneBridge: NSObject {
     switch call.method {
     case "saveTextFile":
       saveTextFile(
-        suggestedName: args["suggestedName"] as? String ?? "iPaniX-report.txt",
+        suggestedName: args["suggestedName"] as? String ?? "iPanicX-report.txt",
         contents: args["contents"] as? String ?? "",
         result: result)
     case "pickIpsFile":

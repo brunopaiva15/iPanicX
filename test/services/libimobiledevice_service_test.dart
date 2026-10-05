@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ipanix/models/device_status.dart';
-import 'package:ipanix/models/diagnostic_file.dart';
-import 'package:ipanix/services/command_runner.dart';
-import 'package:ipanix/services/iphone_service.dart';
-import 'package:ipanix/services/libimobiledevice_service.dart';
-import 'package:ipanix/services/tool_locator.dart';
-import 'package:ipanix/services/usb_probe.dart';
+import 'package:ipanicx/models/device_status.dart';
+import 'package:ipanicx/models/diagnostic_file.dart';
+import 'package:ipanicx/services/command_runner.dart';
+import 'package:ipanicx/services/iphone_service.dart';
+import 'package:ipanicx/services/libimobiledevice_service.dart';
+import 'package:ipanicx/services/tool_locator.dart';
+import 'package:ipanicx/services/usb_probe.dart';
 
 import '../helpers.dart';
 
@@ -78,7 +78,7 @@ void main() {
   late Directory tools;
 
   setUp(() {
-    tmp = Directory.systemTemp.createTempSync('ipanix_test_');
+    tmp = Directory.systemTemp.createTempSync('ipanicx_test_');
     tools = Directory('${tmp.path}/bin')..createSync();
     for (final t in [
       'idevice_id',
@@ -101,7 +101,7 @@ void main() {
     probe: probe ?? FakeProbe(),
     locator: ToolLocator(
       environment: {
-        'IPANIX_TOOLS_DIR': withTools ? tools.path : '${tmp.path}/none',
+        'IPANICX_TOOLS_DIR': withTools ? tools.path : '${tmp.path}/none',
         'PATH': '',
       },
       resolvedExecutable: '${tmp.path}/App.app/Contents/MacOS/app',

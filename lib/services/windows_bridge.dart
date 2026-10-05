@@ -59,7 +59,7 @@ class WindowsBridge implements PlatformBridge {
   @override
   Future<bool> openAppleDevicesInStore() async {
     try {
-      // Hands the URI to the Store app; iPaniX itself makes no request.
+      // Hands the URI to the Store app; iPanicX itself makes no request.
       await Process.run('explorer.exe', [
         'ms-windows-store://pdp/?ProductId=$appleDevicesProductId',
       ]);

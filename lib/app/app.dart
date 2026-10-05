@@ -8,8 +8,8 @@ import 'app_controller.dart';
 import '../ui/shell.dart';
 import 'theme.dart';
 
-class IPaniXApp extends StatelessWidget {
-  const IPaniXApp({super.key, required this.controller});
+class IPanicXApp extends StatelessWidget {
+  const IPanicXApp({super.key, required this.controller});
 
   final AppController controller;
 
@@ -20,7 +20,7 @@ class IPaniXApp extends StatelessWidget {
       child: ListenableBuilder(
         listenable: controller,
         builder: (context, _) => MaterialApp(
-          title: 'iPaniX',
+          title: 'iPanicX',
           debugShowCheckedModeBanner: false,
           theme: buildTheme(Brightness.light),
           darkTheme: buildTheme(Brightness.dark),

@@ -47,7 +47,7 @@ class MockIPhoneService implements IPhoneService {
            ((name) => rootBundle.loadString('assets/samples/$name')),
        _workRoot =
            workRoot ??
-           Directory('${Directory.systemTemp.path}/iPaniX/MockReports');
+           Directory('${Directory.systemTemp.path}/iPanicX/MockReports');
 
   static const smcSample = 'panic-full-2026-10-04-174233.ips';
   static const unknownSample = 'panic-full-2026-09-28-091502.ips';
@@ -200,7 +200,7 @@ class MockIPhoneService implements IPhoneService {
     ),
     MockScenario.toolsUnavailable => const DeviceStatus(
       state: DeviceConnectionState.toolsUnavailable,
-      message: 'iPaniX could not find the libimobiledevice tools.',
+      message: 'iPanicX could not find the libimobiledevice tools.',
       technicalDetails: 'Missing: idevice_id, ideviceinfo, idevicecrashreport',
     ),
   };

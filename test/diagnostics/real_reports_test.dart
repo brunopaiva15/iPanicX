@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ipanix/diagnostics/panic_analyzer.dart';
-import 'package:ipanix/diagnostics/panic_parser.dart';
-import 'package:ipanix/models/diagnostic_file.dart';
-import 'package:ipanix/models/diagnostic_result.dart';
-import 'package:ipanix/models/panic_report.dart';
+import 'package:ipanicx/diagnostics/panic_analyzer.dart';
+import 'package:ipanicx/diagnostics/panic_parser.dart';
+import 'package:ipanicx/models/diagnostic_file.dart';
+import 'package:ipanicx/models/diagnostic_result.dart';
+import 'package:ipanicx/models/panic_report.dart';
 
 import '../helpers.dart';
 

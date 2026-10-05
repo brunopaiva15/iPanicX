@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ipanix/diagnostics/knowledge_base.dart';
-import 'package:ipanix/diagnostics/panic_analyzer.dart';
-import 'package:ipanix/diagnostics/panic_parser.dart';
-import 'package:ipanix/models/diagnostic_result.dart';
+import 'package:ipanicx/diagnostics/knowledge_base.dart';
+import 'package:ipanicx/diagnostics/panic_analyzer.dart';
+import 'package:ipanicx/diagnostics/panic_parser.dart';
+import 'package:ipanicx/models/diagnostic_result.dart';
 
 import '../helpers.dart';
 
@@ -81,7 +81,7 @@ void main() {
     expect(result.confidence, Confidence.none);
     expect(
       result.summary,
-      contains('not currently present in the iPaniX knowledge base'),
+      contains('not currently present in the iPanicX knowledge base'),
     );
     expect(result.technicalReason, contains('AppleH16CamIn'));
     expect(result.rawCodes, contains('bug_type 210'));

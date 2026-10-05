@@ -3,13 +3,13 @@ import FlutterMacOS
 import IOKit
 import IOKit.usb
 
-/// Emits an event on `ipanix/usb_events` whenever an Apple USB device is
+/// Emits an event on `ipanicx/usb_events` whenever an Apple USB device is
 /// attached or detached, so the Dart side re-queries libimobiledevice
 /// immediately instead of waiting for its next poll.
 ///
 /// Event payload: `{"event": "attached" | "detached"}`.
 final class DeviceWatcher: NSObject, FlutterStreamHandler {
-  static let channelName = "ipanix/usb_events"
+  static let channelName = "ipanicx/usb_events"
   private static let appleVendorId = 0x05AC
 
   private let channel: FlutterEventChannel

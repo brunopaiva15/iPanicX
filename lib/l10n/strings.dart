@@ -75,8 +75,8 @@ class Strings {
       _('Looking for devices…', 'Recherche d’appareils…');
   String get noIPhone => _('No iPhone connected', 'Aucun iPhone connecté');
   String get noIPhoneHelp => _(
-    'Connect an iPhone using USB, unlock it and tap “Trust” if asked. iPaniX checks again every few seconds.',
-    'Branchez un iPhone en USB, déverrouillez-le et touchez « Se fier » si demandé. iPaniX revérifie automatiquement toutes les deux secondes.',
+    'Connect an iPhone using USB, unlock it and tap “Trust” if asked. iPanicX checks again every few seconds.',
+    'Branchez un iPhone en USB, déverrouillez-le et touchez « Se fier » si demandé. iPanicX revérifie automatiquement toutes les deux secondes.',
   );
   String get notDetectedSection => _(
     'iPhone plugged in but not detected?',
@@ -123,8 +123,8 @@ class Strings {
       _('libimobiledevice unavailable', 'libimobiledevice introuvable');
   String get checkAgain => _('Check Again', 'Vérifier à nouveau');
   String multipleDevices(int n) => _(
-    '$n devices are connected. iPaniX is showing the first one. Disconnect the others to choose a device.',
-    '$n appareils sont connectés. iPaniX affiche le premier. Débranchez les autres pour choisir un appareil.',
+    '$n devices are connected. iPanicX is showing the first one. Disconnect the others to choose a device.',
+    '$n appareils sont connectés. iPanicX affiche le premier. Débranchez les autres pour choisir un appareil.',
   );
   String get technicalDetails => _('Technical details', 'Détails techniques');
   String get copy => _('Copy', 'Copier');
@@ -372,12 +372,12 @@ class Strings {
     'macOS voit un iPhone en USB, mais usbmuxd ne le liste pas. Déverrouillez l’iPhone, puis débranchez-le et rebranchez-le.',
   );
   String get driverProblem => _(
-    'Windows sees the iPhone, but its Apple USB driver does not start, so neither Apple Devices nor iPaniX can see it. Usually fixed in this order:\n'
+    'Windows sees the iPhone, but its Apple USB driver does not start, so neither Apple Devices nor iPanicX can see it. Usually fixed in this order:\n'
         '1. Restart the PC: the driver installed with Apple Devices is often only active after a restart.\n'
         '2. Unlock the iPhone, plug it directly into the PC (no hub) and tap “Trust”.\n'
         '3. Still failing: Device Manager → right-click “Apple Mobile Device USB Composite Device” (or “Apple iPhone”) → Uninstall device (tick “delete the driver” if offered) → unplug and reconnect the iPhone.\n'
         '4. Otherwise: Settings › Windows Update › Advanced options › Optional updates → install the “Apple, Inc.” drivers offered.',
-    'Windows voit l’iPhone, mais son pilote USB Apple ne démarre pas : ni Apple Devices ni iPaniX ne peuvent donc le voir. Ça se règle en général dans cet ordre :\n'
+    'Windows voit l’iPhone, mais son pilote USB Apple ne démarre pas : ni Apple Devices ni iPanicX ne peuvent donc le voir. Ça se règle en général dans cet ordre :\n'
         '1. Redémarrez le PC : le pilote installé avec Apple Devices n’est souvent actif qu’après un redémarrage.\n'
         '2. Déverrouillez l’iPhone, branchez-le directement sur le PC (sans hub) et touchez « Se fier ».\n'
         '3. Si ça persiste : Gestionnaire de périphériques → clic droit sur « Apple Mobile Device USB Composite Device » (ou « Apple iPhone ») → Désinstaller l’appareil (cochez « Supprimer le pilote » si proposé) → débranchez et rebranchez l’iPhone.\n'
@@ -386,12 +386,12 @@ class Strings {
   String get openDeviceManager =>
       _('Open Device Manager', 'Gestionnaire de périphériques');
   String get installHintWindows => _(
-    'This build of iPaniX does not include the libimobiledevice tools. Rebuild it with “flutter build windows” (or “flutter run -d windows”) while online: the build downloads them once and puts them next to iPaniX.exe. Alternatively, install them with MSYS2:',
-    'Cette version d’iPaniX n’inclut pas les outils libimobiledevice. Recompilez-la avec « flutter build windows » (ou « flutter run -d windows ») avec une connexion Internet : le build les télécharge une fois et les place à côté d’iPaniX.exe. Sinon, installez-les avec MSYS2 :',
+    'This build of iPanicX does not include the libimobiledevice tools. Rebuild it with “flutter build windows” (or “flutter run -d windows”) while online: the build downloads them once and puts them next to iPanicX.exe. Alternatively, install them with MSYS2:',
+    'Cette version d’iPanicX n’inclut pas les outils libimobiledevice. Recompilez-la avec « flutter build windows » (ou « flutter run -d windows ») avec une connexion Internet : le build les télécharge une fois et les place à côté d’iPanicX.exe. Sinon, installez-les avec MSYS2 :',
   );
   String get installHintMac => _(
-    'Install it with Homebrew, or build iPaniX with the bundled tools (see README).',
-    'Installez-le avec Homebrew, ou compilez iPaniX avec les outils embarqués (voir README).',
+    'Install it with Homebrew, or build iPanicX with the bundled tools (see README).',
+    'Installez-le avec Homebrew, ou compilez iPanicX avec les outils embarqués (voir README).',
   );
   String get usbServiceWindows => _(
     'Unable to list USB devices. Make sure “Apple Devices” or iTunes is installed and the Apple Mobile Device Service is running.',
@@ -404,16 +404,16 @@ class Strings {
   String get usbServiceTitleMac =>
       _('usbmuxd not running', 'usbmuxd ne répond pas');
   String get usbServiceStepsWindows => _(
-    '1. Install “Apple Devices” from the Microsoft Store (or iTunes).\n2. Open it once with the iPhone plugged in and unlocked.\n3. If it is already installed: in services.msc, start “Apple Mobile Device Service”.\niPaniX detects the iPhone as soon as the service answers.',
-    '1. Installez « Appareils Apple » depuis le Microsoft Store (ou iTunes).\n2. Ouvrez-le une fois avec l’iPhone branché et déverrouillé.\n3. S’il est déjà installé : dans services.msc, démarrez « Apple Mobile Device Service ».\niPaniX détecte l’iPhone dès que le service répond.',
+    '1. Install “Apple Devices” from the Microsoft Store (or iTunes).\n2. Open it once with the iPhone plugged in and unlocked.\n3. If it is already installed: in services.msc, start “Apple Mobile Device Service”.\niPanicX detects the iPhone as soon as the service answers.',
+    '1. Installez « Appareils Apple » depuis le Microsoft Store (ou iTunes).\n2. Ouvrez-le une fois avec l’iPhone branché et déverrouillé.\n3. S’il est déjà installé : dans services.msc, démarrez « Apple Mobile Device Service ».\niPanicX détecte l’iPhone dès que le service répond.',
   );
   String get openStore =>
       _('Open Microsoft Store', 'Ouvrir le Microsoft Store');
   String get appleDevicesMissingTitle =>
       _('Apple Devices is not installed', 'Apple Devices n’est pas installé');
   String get appleDevicesMissingHelp => _(
-    'iPaniX needs Apple’s “Apple Devices” app (or iTunes) to talk to an iPhone: it installs Apple’s USB driver and the Apple Mobile Device Service. Install it once from the Microsoft Store, open it with the iPhone plugged in, then come back: iPaniX detects the iPhone automatically.',
-    'iPaniX a besoin de l’app « Apple Devices » d’Apple (ou d’iTunes) pour communiquer avec un iPhone : elle installe le pilote USB d’Apple et le service Apple Mobile Device. Installez-la une fois depuis le Microsoft Store, ouvrez-la avec l’iPhone branché, puis revenez ici : iPaniX détecte l’iPhone automatiquement.',
+    'iPanicX needs Apple’s “Apple Devices” app (or iTunes) to talk to an iPhone: it installs Apple’s USB driver and the Apple Mobile Device Service. Install it once from the Microsoft Store, open it with the iPhone plugged in, then come back: iPanicX detects the iPhone automatically.',
+    'iPanicX a besoin de l’app « Apple Devices » d’Apple (ou d’iTunes) pour communiquer avec un iPhone : elle installe le pilote USB d’Apple et le service Apple Mobile Device. Installez-la une fois depuis le Microsoft Store, ouvrez-la avec l’iPhone branché, puis revenez ici : iPanicX détecte l’iPhone automatiquement.',
   );
   String get installAppleDevices =>
       _('Install Apple Devices', 'Installer Apple Devices');
@@ -441,8 +441,8 @@ class Strings {
     'Ce diagnostic repose sur une signature de panic connue et doit être confirmé par une inspection matérielle.',
   );
   String get knownSignatureSummary => _(
-    'This panic matches a known signature in the iPaniX knowledge base.',
-    'Ce panic correspond à une signature connue de la base iPaniX.',
+    'This panic matches a known signature in the iPanicX knowledge base.',
+    'Ce panic correspond à une signature connue de la base iPanicX.',
   );
   String get defaultAction => _(
     'Inspect the suspected components and their connectors before restoring the device.',
@@ -451,8 +451,8 @@ class Strings {
   String get unknownTitle =>
       _('Unknown Hardware Panic', 'Panic matériel inconnu');
   String get unknownSummary => _(
-    'The panic was successfully parsed, but this signature is not currently present in the iPaniX knowledge base.',
-    'Le panic a bien été lu, mais cette signature n’est pas encore dans la base de connaissances iPaniX.',
+    'The panic was successfully parsed, but this signature is not currently present in the iPanicX knowledge base.',
+    'Le panic a bien été lu, mais cette signature n’est pas encore dans la base de connaissances iPanicX.',
   );
   List<String> get unknownActions => _fr
       ? const [
@@ -480,8 +480,8 @@ class Strings {
         ];
   String get notPanicTitle => _('Not a Kernel Panic', 'Pas un kernel panic');
   String notPanicSummary(String kind, String? bugType) => _(
-    'This file is a ${kind.toLowerCase()} report (bug_type $bugType), not a kernel panic. iPaniX only diagnoses kernel panics in this version.',
-    'Ce fichier est un rapport « $kind » (bug_type $bugType), pas un kernel panic. Cette version d’iPaniX ne diagnostique que les kernel panics.',
+    'This file is a ${kind.toLowerCase()} report (bug_type $bugType), not a kernel panic. iPanicX only diagnoses kernel panics in this version.',
+    'Ce fichier est un rapport « $kind » (bug_type $bugType), pas un kernel panic. Cette version d’iPanicX ne diagnostique que les kernel panics.',
   );
   String get notPanicAction => _(
     'Open a panic-full or panic-base file to get a hardware diagnosis.',
@@ -500,7 +500,7 @@ class Strings {
 
   // --------------------------------------------------------- text report
   String get reportTitle =>
-      _('iPaniX diagnostic report', 'Rapport de diagnostic iPaniX');
+      _('iPanicX diagnostic report', 'Rapport de diagnostic iPanicX');
   String get reportLocal => _(
     'All diagnostic processing was performed locally on this computer.',
     'Tout le diagnostic a été effectué localement sur cet ordinateur.',

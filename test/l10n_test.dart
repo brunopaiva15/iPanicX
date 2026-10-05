@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ipanix/diagnostics/panic_analyzer.dart';
-import 'package:ipanix/diagnostics/panic_parser.dart';
-import 'package:ipanix/diagnostics/report_formatter.dart';
-import 'package:ipanix/l10n/strings.dart';
-import 'package:ipanix/models/diagnostic_file.dart';
-import 'package:ipanix/models/scan_result.dart';
-import 'package:ipanix/ui/format.dart';
+import 'package:ipanicx/diagnostics/panic_analyzer.dart';
+import 'package:ipanicx/diagnostics/panic_parser.dart';
+import 'package:ipanicx/diagnostics/report_formatter.dart';
+import 'package:ipanicx/l10n/strings.dart';
+import 'package:ipanicx/models/diagnostic_file.dart';
+import 'package:ipanicx/models/scan_result.dart';
+import 'package:ipanicx/ui/format.dart';
 
 import 'helpers.dart';
 
@@ -75,7 +75,7 @@ void main() {
         result: PanicAnalyzer(kb, lang: AppLang.fr).analyze(report),
       ),
     );
-    expect(text, startsWith('Rapport de diagnostic iPaniX'));
+    expect(text, startsWith('Rapport de diagnostic iPanicX'));
     expect(text, contains('Gravité : Élevée'));
     expect(text, contains('Composants suspectés :'));
     expect(text, contains('effectué localement'));

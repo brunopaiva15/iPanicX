@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:ipanix/diagnostics/knowledge_base.dart';
+import 'package:ipanicx/diagnostics/knowledge_base.dart';
 
 /// Real knowledge base shipped with the app.
 KnowledgeBase loadKnowledgeBase() => KnowledgeBase.fromJsonString(
