@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/logo/iPanicX.png" width="160" alt="iPanicX"></p>
+
 # iPanicX
 
 Application de bureau **macOS et Windows** (Flutter, avec du natif Swift sur
@@ -322,6 +324,14 @@ L'interface reprend celle de [Codenotch](https://github.com/vinzdg/codenotch)
   reprend la jauge de Codenotch (piste 15,5 px, arc 8 px depuis midi).
 - **Apparence** : suit le système par défaut, réglable dans General
   (Système / Clair / Sombre).
+
+**Logo** : même famille que l'icône de Codenotch (carré arrondi rempli de
+peinture fluide, encoche noire à droite avec l'anneau de jauge), en palette
+« panic » (noir, violet, magenta, rouge `#FF3F00`, ambre) et en 3D : épaisseur,
+biseau, reflet, encoche creusée, anneau et « ! » en relief. Il est généré
+par `tool/logo/generate_logo.py` (Python, numpy/scipy/Pillow, graine fixe) ;
+`--install` met à jour l'icône macOS, `app_icon.ico` (Windows) et
+`assets/logo/iPanicX.png`.
 
 Code : `lib/app/theme.dart` (tokens), `lib/ui/kit.dart` (volet, groupes,
 lignes, boutons), `lib/ui/ring.dart` (anneau),
