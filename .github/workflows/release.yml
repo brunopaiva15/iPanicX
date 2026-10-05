@@ -1,0 +1,122 @@
+# Builds iPanicX for Windows and macOS and publishes a GitHub Release.
+#
+#   git tag v0.1.0 && git push origin v0.1.0      -> build + release
+#   Actions > Release > Run workflow               -> build only (artifacts)
+#
+# Release notes: docs/releases/<tag>.md
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  windows:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # windows/libimobiledevice.cmake downloads the pinned MSYS2 packages
+      # (SHA-256 checked) and installs the tools next to iPanicX.exe.
+      - run: flutter build windows --release
+      - name: Package
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path pubspec.yaml -Pattern '^version:\s*([0-9.]+)').Matches[0].Groups[1].Value
+          $src = "build\windows\x64\runner\Release"
+          if (-not (Test-Path "$src\libimobiledevice\idevice_id.exe")) { throw "libimobiledevice tools missing from the build" }
+          $dst = "dist\iPanicX"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          Copy-Item -Recurse "$src\*" $dst
+          # App-local Visual C++ runtime, so no separate redistributable is needed.
+          foreach ($dll in 'msvcp140.dll','vcruntime140.dll','vcruntime140_1.dll') {
+            Copy-Item "$env:WINDIR\System32\$dll" $dst
+          }
+          Compress-Archive -Path $dst -DestinationPath "dist\iPanicX-$version-windows-x64.zip"
+          Get-ChildItem dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*.zip
+          if-no-files-found: error
+
+  macos:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Bundle libimobiledevice
+        run: |
+          brew install libimobiledevice
+          ./scripts/bundle_libimobiledevice.sh
+      - run: flutter pub get
+      - run: flutter build macos --release
+      - name: Package
+        run: |
+          version=$(sed -n 's/^version: *\([0-9.]*\).*/\1/p' pubspec.yaml)
+          app="build/macos/Build/Products/Release/iPanicX.app"
+          test -x "$app/Contents/Resources/libimobiledevice/bin/idevice_id" \
+            || { echo "libimobiledevice tools missing from the app"; exit 1; }
+          codesign --verify --deep --verbose=2 "$app"
+          mkdir -p dist/dmg
+          cp -R "$app" dist/dmg/
+          ln -s /Applications dist/dmg/Applications
+          hdiutil create -volname iPanicX -srcfolder dist/dmg -ov -format UDZO \
+            "dist/iPanicX-$version-macos.dmg"
+          ditto -c -k --keepParent "$app" "dist/iPanicX-$version-macos.zip"
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: iPanicX ${{ github.ref_name }}
+          body_path: docs/releases/${{ github.ref_name }}.md
+          files: dist/*
+          fail_on_unmatched_files: true
